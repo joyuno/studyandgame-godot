@@ -1,0 +1,117 @@
+# Quiz pack JSON parser & validator.
+# Ported from src/main/services/packParser.ts. Same error codes so save/error
+# UX stays consistent with the Electron version.
+#
+# Godot port uses JSON natively (no YAML parser bundled). Convert .yml packs
+# from the workbook plugin with: `node -e "..."` or `python -c "import yaml,json;..."`
+# See README §Pack format for the one-liner.
+
+class_name PackParser
+extends RefCounted
+
+const MAX_FILE_BYTES: int = 5_000_000  # 5 MB
+
+# Returns { "ok": true, "pack": Dictionary } on success
+# or       { "ok": false, "code": String, "message": String, "line": int (optional) } on failure.
+static func parse_file(path: String) -> Dictionary:
+	if not (path.ends_with(".json") or path.ends_with(".yml") or path.ends_with(".yaml")):
+		return _err("ERR_UNSUPPORTED_EXT", "지원 확장자: .json (.yml/.yaml은 사전 변환 필요)")
+
+	if path.ends_with(".yml") or path.ends_with(".yaml"):
+		return _err("ERR_YAML_NOT_SUPPORTED",
+			"Godot 포트는 .json만 받습니다. workbook 플러그인의 YAML을 JSON으로 변환하세요.")
+
+	if not FileAccess.file_exists(path):
+		return _err("ERR_FILE_NOT_FOUND", "파일이 없음: %s" % path)
+
+	var size := FileAccess.get_size(path)
+	if size > MAX_FILE_BYTES:
+		return _err("ERR_FILE_TOO_LARGE", "파일이 5 MB 초과: %d bytes" % size)
+
+	var src := FileAccess.get_file_as_string(path)
+	if src.is_empty():
+		return _err("ERR_EMPTY_FILE", "빈 파일")
+
+	return parse_string(src)
+
+
+static func parse_string(src: String) -> Dictionary:
+	var parsed = JSON.parse_string(src)
+	if parsed == null:
+		return _err("ERR_JSON_PARSE", "JSON 파싱 실패 — 따옴표/괄호/콤마 확인")
+
+	if typeof(parsed) != TYPE_DICTIONARY:
+		return _err("ERR_ROOT_NOT_OBJECT", "최상위는 객체여야 합니다")
+
+	var pack: Dictionary = parsed
+	var validation := _validate_pack(pack)
+	if not validation.is_empty():
+		return validation
+
+	return { "ok": true, "pack": pack }
+
+
+static func _validate_pack(pack: Dictionary) -> Dictionary:
+	var meta = pack.get("meta", null)
+	if typeof(meta) != TYPE_DICTIONARY:
+		return _err("ERR_META_MISSING", "meta 객체가 없음")
+
+	var title = meta.get("title", "")
+	if typeof(title) != TYPE_STRING or title.is_empty():
+		return _err("ERR_META_TITLE_MISSING", "meta.title이 비어있거나 문자열이 아님")
+	if title.length() > 80:
+		return _err("ERR_META_TITLE_TOO_LONG", "meta.title 80자 초과 (%d자)" % title.length())
+
+	var questions = pack.get("questions", null)
+	if typeof(questions) != TYPE_ARRAY:
+		return _err("ERR_QUESTIONS_NOT_ARRAY", "questions가 배열이 아님")
+	if (questions as Array).is_empty():
+		return _err("ERR_NO_QUESTIONS", "questions가 비어있음")
+
+	for i in (questions as Array).size():
+		var q = questions[i]
+		var q_err := _validate_question(q, i)
+		if not q_err.is_empty():
+			return q_err
+
+	return {}
+
+
+static func _validate_question(q, idx: int) -> Dictionary:
+	if typeof(q) != TYPE_DICTIONARY:
+		return _err("ERR_QUESTION_NOT_OBJECT", "question[%d]가 객체가 아님" % idx)
+
+	var qtype = q.get("type", "")
+	if qtype != "mcq" and qtype != "ox":
+		return _err("ERR_UNKNOWN_TYPE", "question[%d].type='%s' — mcq/ox만 허용" % [idx, qtype])
+
+	var q_text = q.get("q", "")
+	if typeof(q_text) != TYPE_STRING or q_text.is_empty():
+		return _err("ERR_Q_MISSING", "question[%d].q가 비어있음" % idx)
+
+	match qtype:
+		"mcq":
+			var choices = q.get("choices", null)
+			if typeof(choices) != TYPE_ARRAY:
+				return _err("ERR_CHOICES_NOT_ARRAY", "question[%d].choices가 배열이 아님" % idx)
+			var n_choices := (choices as Array).size()
+			if n_choices < 2 or n_choices > 6:
+				return _err("ERR_CHOICES_COUNT", "question[%d].choices는 2~6개 (현재 %d)" % [idx, n_choices])
+			var answer = q.get("answer", -1)
+			if typeof(answer) != TYPE_INT and typeof(answer) != TYPE_FLOAT:
+				return _err("ERR_MCQ_ANSWER_NOT_INT", "question[%d].answer가 정수가 아님" % idx)
+			var a_int := int(answer)
+			if a_int < 0 or a_int >= n_choices:
+				return _err("ERR_MCQ_ANSWER_OUT_OF_RANGE",
+					"question[%d].answer=%d, choices=%d개" % [idx, a_int, n_choices])
+		"ox":
+			var answer = q.get("answer", null)
+			if typeof(answer) != TYPE_BOOL:
+				return _err("ERR_OX_ANSWER_NOT_BOOL",
+					"question[%d].answer가 boolean이 아님 (\"true\" 문자열 금지)" % idx)
+
+	return {}
+
+
+static func _err(code: String, message: String) -> Dictionary:
+	return { "ok": false, "code": code, "message": message }

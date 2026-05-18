@@ -1,0 +1,29 @@
+# Godot 4+ specific ignores
+.godot/
+.import/
+
+# Imported translations (automatically generated from CSV files)
+*.translation
+
+# Mono-specific ignores (we use GDScript but keep these in case)
+.mono/
+data_*/
+mono_crash.*.json
+
+# System
+.DS_Store
+Thumbs.db
+*.log
+
+# Editor / OS
+.vscode/
+.idea/
+*.swp
+
+# Exported builds
+exports/
+release/
+*.exe
+*.dmg
+*.apk
+*.pck

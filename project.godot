@@ -1,0 +1,45 @@
+; Godot project configuration file.
+;
+; The format is INI-like. Lines starting with ";" are comments.
+; This file was hand-authored as part of porting study_game (Electron/React)
+; to Godot 4. Engine will fill in additional sections on first open.
+
+config_version=5
+
+[application]
+
+config/name="StudyGame (Godot port)"
+config/description="방치형 + 강화 + 가차 학습 퀴즈 게임 — Electron 원본의 Godot 4 포팅."
+run/main_scene="res://scenes/Home.tscn"
+config/features=PackedStringArray("4.6", "GL Compatibility")
+config/icon="res://icon.svg"
+boot_splash/show_image=false
+
+[autoload]
+
+ProgressStore="*res://scripts/autoload/progress_store.gd"
+PackStore="*res://scripts/autoload/pack_store.gd"
+ThemeStore="*res://scripts/autoload/theme_store.gd"
+
+[display]
+
+window/size/viewport_width=1280
+window/size/viewport_height=800
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+
+[input]
+
+ui_skip={
+"deadzone": 0.5,
+"events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":32,"physical_keycode":0,"key_label":0,"unicode":32,"location":0,"echo":false,"script":null)
+]
+}
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+textures/canvas_textures/default_texture_filter=0
+2d/snap/snap_2d_transforms_to_pixel=true
+2d/snap/snap_2d_vertices_to_pixel=true
