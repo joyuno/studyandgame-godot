@@ -20,10 +20,11 @@ Thumbs.db
 .idea/
 *.swp
 
-# Exported builds
+# Exported builds (large binaries — ship via GitHub Releases, not git)
 exports/
 release/
 *.exe
 *.dmg
 *.apk
 *.pck
+*.zip
