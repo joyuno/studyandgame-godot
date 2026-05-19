@@ -119,9 +119,10 @@ func _build_layout() -> void:
 	_splash_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_splash_layer)
 
-	# Auto-attack idle loop (visual only — real damage routes through feedback)
+	# Auto-attack idle loop (visual only — real damage routes through feedback).
+	# Interval is level-scaled via CombatStats.attack_interval().
 	_attack_timer = Timer.new()
-	_attack_timer.wait_time = 1.5
+	_attack_timer.wait_time = CombatStats.attack_interval(ProgressStore.get_level())
 	_attack_timer.autostart = true
 	_attack_timer.timeout.connect(_ambient_attack)
 	add_child(_attack_timer)
@@ -154,6 +155,9 @@ func _refresh_sprites() -> void:
 
 
 func _on_progress_changed() -> void:
+	# Re-tune the auto-attack cadence as the player levels up.
+	if _attack_timer:
+		_attack_timer.wait_time = CombatStats.attack_interval(ProgressStore.get_level())
 	var new_stage := Leveling.effect_stage_from_level(ProgressStore.get_level())
 	if new_stage != _current_stage:
 		_apply_stage_for_level(ProgressStore.get_level())
@@ -180,7 +184,8 @@ func _process(delta: float) -> void:
 # Cosmetic-only periodic attack — visualizes the "always fighting" loop.
 # Does NOT change HP. Real damage flows through _on_feedback.
 func _ambient_attack() -> void:
-	_spawn_projectile(Color("#a8e6ff"), 0.6, 0.4)
+	var style := WeaponStyles.for_theme(ProgressStore.get_selected_theme_id())
+	_spawn_projectile(style, 0.7, 0.4)
 	_lunge(_character_rect, +12.0, 0.18)
 
 
@@ -192,13 +197,13 @@ func _on_feedback(correct: bool, _explanation: String) -> void:
 
 
 func _strike_correct() -> void:
-	var multiplier := Weapon.weapon_damage_multiplier(ProgressStore.get_weapon_level())
-	var damage: int = max(1, int(round(1 * multiplier)))
+	var damage := CombatStats.final_damage(ProgressStore.get_level(), ProgressStore.get_weapon_level())
 	_current_hp = max(0, _current_hp - damage)
 	_hp_bar.value = _current_hp
 
 	_lunge(_character_rect, +20.0, 0.15)
-	_spawn_projectile(Color("#fde047"), 1.0, 0.32, func():
+	var style := WeaponStyles.for_theme(ProgressStore.get_selected_theme_id())
+	_spawn_projectile(style, 1.2, 0.32, func():
 		_recoil(_boss_rect, +18.0, 0.18)
 		_flash(_boss_rect, Color(1, 0.4, 0.4))
 		_spawn_damage_number(damage)
@@ -242,28 +247,104 @@ func _flash(rect: TextureRect, color: Color) -> void:
 	tw.tween_property(rect, "modulate", Color.WHITE, 0.25).set_trans(Tween.TRANS_QUAD)
 
 
-func _spawn_projectile(color: Color, radius: float, duration: float, on_hit: Callable = func(): pass) -> void:
+func _spawn_projectile(style: Dictionary, scale: float, duration: float, on_hit: Callable = func(): pass) -> void:
 	if size.x <= 0:
 		return
-	var proj := ColorRect.new()
-	var r := int(8 * radius)
-	proj.color = color
-	proj.custom_minimum_size = Vector2(r * 2, r * 2)
-	proj.size = proj.custom_minimum_size
-	proj.position = Vector2(size.x * CHARACTER_X_RATIO + 20, size.y * (GROUND_Y_RATIO - 0.30))
-	proj.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_projectile_layer.add_child(proj)
-	# Round the corners so the ColorRect reads as a glowing orb
-	proj.set("theme_override_styles/panel", null)
-	var target_x := size.x * BOSS_X_RATIO - r
+	var node := _build_projectile_node(style, scale)
+	var half := node.size.x * 0.5
+	node.position = Vector2(size.x * CHARACTER_X_RATIO + 24 - half, size.y * (GROUND_Y_RATIO - 0.30))
+	_projectile_layer.add_child(node)
+
+	var target_x := size.x * BOSS_X_RATIO - 24 - half
 	var target_y := size.y * (GROUND_Y_RATIO - 0.28)
 	var tw := create_tween().set_parallel(true)
-	tw.tween_property(proj, "position", Vector2(target_x, target_y), duration).set_trans(Tween.TRANS_QUAD)
-	tw.tween_property(proj, "modulate:a", 0.6, duration)
+	tw.tween_property(node, "position", Vector2(target_x, target_y), duration).set_trans(Tween.TRANS_QUAD)
+	tw.tween_property(node, "modulate:a", 0.7, duration)
+	if style.get("shape", "") == "star":
+		tw.tween_property(node, "rotation", TAU * 2.0, duration)
 	tw.chain().tween_callback(func():
-		proj.queue_free()
+		node.queue_free()
 		on_hit.call()
 	)
+
+
+# Build a projectile node based on the weapon style (color + shape).
+# Uses Polygon2D for shapes that need rotation, ColorRect for simple ones.
+func _build_projectile_node(style: Dictionary, scale: float) -> Control:
+	var base_size: int = int(style.get("size", 14)) * scale
+	var color: Color = style.get("color", Color.WHITE)
+	var shape: String = style.get("shape", "orb")
+	var holder := Control.new()
+	holder.custom_minimum_size = Vector2(base_size, base_size)
+	holder.size = holder.custom_minimum_size
+	holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	holder.pivot_offset = Vector2(base_size * 0.5, base_size * 0.5)
+
+	var poly := Polygon2D.new()
+	poly.color = color
+	poly.polygon = _shape_polygon(shape, base_size)
+	holder.add_child(poly)
+
+	# Outline for crispness
+	var outline := Line2D.new()
+	outline.default_color = Color(0, 0, 0, 0.55)
+	outline.width = 2.0
+	outline.points = poly.polygon
+	outline.closed = true
+	holder.add_child(outline)
+
+	return holder
+
+
+# Returns vertex array for the given shape, centered around (size/2, size/2).
+func _shape_polygon(shape: String, s: float) -> PackedVector2Array:
+	var hs := s * 0.5
+	var verts := PackedVector2Array()
+	match shape:
+		"square":
+			# Code-snippet block
+			verts.append(Vector2(0, 0))
+			verts.append(Vector2(s, 0))
+			verts.append(Vector2(s, s))
+			verts.append(Vector2(0, s))
+		"orb":
+			# Fireball — 12-vertex circle
+			var n := 14
+			for i in n:
+				var a: float = TAU * i / n
+				verts.append(Vector2(hs + cos(a) * hs, hs + sin(a) * hs))
+		"star":
+			# Shuriken — 4-point star
+			verts.append(Vector2(hs, 0))
+			verts.append(Vector2(hs + s * 0.18, hs - s * 0.18))
+			verts.append(Vector2(s, hs))
+			verts.append(Vector2(hs + s * 0.18, hs + s * 0.18))
+			verts.append(Vector2(hs, s))
+			verts.append(Vector2(hs - s * 0.18, hs + s * 0.18))
+			verts.append(Vector2(0, hs))
+			verts.append(Vector2(hs - s * 0.18, hs - s * 0.18))
+		"arrow":
+			# Horizontal arrow → head right
+			verts.append(Vector2(0, hs * 0.6))
+			verts.append(Vector2(s * 0.6, hs * 0.6))
+			verts.append(Vector2(s * 0.6, hs * 0.3))
+			verts.append(Vector2(s, hs))
+			verts.append(Vector2(s * 0.6, hs * 1.7))
+			verts.append(Vector2(s * 0.6, hs * 1.4))
+			verts.append(Vector2(0, hs * 1.4))
+		"pot":
+			# Hot pot — rounded trapezoid
+			verts.append(Vector2(s * 0.18, s * 0.30))
+			verts.append(Vector2(s * 0.82, s * 0.30))
+			verts.append(Vector2(s, s * 0.95))
+			verts.append(Vector2(0, s * 0.95))
+		_:
+			# Default to a small diamond
+			verts.append(Vector2(hs, 0))
+			verts.append(Vector2(s, hs))
+			verts.append(Vector2(hs, s))
+			verts.append(Vector2(0, hs))
+	return verts
 
 
 func _spawn_damage_number(damage: int) -> void:

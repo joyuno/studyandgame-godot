@@ -22,8 +22,11 @@ const SRC_DIRS = [
 // Pass 2: drop-shadow cleanup (light-grey low-saturation pixels, but only
 // reachable via flood from edges so we never touch character interior).
 const WHITE_THRESHOLD = 235;
-const SHADOW_VALUE_MIN = 160;   // dim greys this dark still belong to the shadow
-const SHADOW_SATURATION_MAX = 12; // |R-G|, |G-B|, |R-B| all under this == greyscale
+// Boss shadows sample as ~RGB(170-220, 200-220, 195-215) — light cool greys
+// with channel deltas up to ~30. Character body outlines bottom out around
+// V=30-50, so V_MIN=145 keeps them safe while still catching shadow falloff.
+const SHADOW_VALUE_MIN = 145;
+const SHADOW_SATURATION_MAX = 35;
 
 function maxChannelDiff(r, g, b) {
   return Math.max(Math.abs(r - g), Math.abs(g - b), Math.abs(r - b));

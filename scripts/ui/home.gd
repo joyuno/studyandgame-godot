@@ -69,6 +69,18 @@ func _build_layout() -> void:
 	_weapon_badge.modulate = Color(1, 0.85, 0.2)
 	title_bar.add_child(_weapon_badge)
 
+	# 차분 모드 — 게임 UI(캐릭터·전투 이펙트)를 완전히 끄고 순수 퀴즈만.
+	# Electron 원본의 quietMode 토글 그대로.
+	var quiet_check := CheckBox.new()
+	quiet_check.text = "차분 모드"
+	quiet_check.add_theme_font_size_override("font_size", 14)
+	quiet_check.button_pressed = ProgressStore.is_quiet_mode()
+	quiet_check.toggled.connect(func(on: bool):
+		ProgressStore.set_quiet_mode(on)
+		_apply_quiet_mode()
+	)
+	title_bar.add_child(quiet_check)
+
 	# ── Hero stage — same side-scrolling combat scene Quiz uses, so the
 	# Home screen also "feels alive" (idle bob + auto-attack projectile loop).
 	# Real damage stays gated behind quiz answers (PackStore.feedback).
@@ -84,6 +96,8 @@ func _build_layout() -> void:
 	_character_slot = CHARACTER_DISPLAY.instantiate()
 	_character_slot.set_anchors_preset(Control.PRESET_FULL_RECT)
 	stage_wrap.add_child(_character_slot)
+	# Honour the saved quiet mode setting on load.
+	_apply_quiet_mode()
 
 	# ── Theme picker row
 	var picker_row := HBoxContainer.new()
@@ -133,6 +147,11 @@ func _build_layout() -> void:
 	_status_label.text = "샘플을 누르거나 .json / .yml 파일을 창에 드롭"
 	_status_label.modulate = Color(0.55, 0.6, 0.72)
 	root.add_child(_status_label)
+
+
+func _apply_quiet_mode() -> void:
+	if _character_slot:
+		_character_slot.visible = not ProgressStore.is_quiet_mode()
 
 
 func _make_button(label: String, size: Vector2) -> Button:
