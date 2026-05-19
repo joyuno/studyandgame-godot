@@ -1,14 +1,32 @@
-# Character + boss display + pulse FX. Re-tuned for the Kenney aliens which
-# are crisp single-PNG sprites (~70x100). Uses STRETCH_KEEP_ASPECT_CENTERED
-# so they scale up cleanly to fill the slot without distortion.
+# Side-scrolling idle RPG combat stage.
+#
+# Replaces the static VS layout with a continuous auto-attack loop:
+#   character (anchored bottom-left) shoots a projectile every ~1.5 sec at
+#   boss (anchored bottom-right). The projectile does NOT damage the boss
+#   on its own — that's just idle eye-candy. Real damage comes from
+#   PackStore.feedback (correct answer): bigger projectile, damage number,
+#   HP bar drops by `weapon_damage_multiplier(weapon level)`.
+#
+# Layout philosophy: both sprites stand on the same ground line, face each
+# other, animate (bob, lunge, recoil) so the screen never looks frozen.
+# Background is a simple sky + grass gradient — a forest .png can drop in
+# later by swapping the bg ColorRects for a TextureRect.
 
 extends Control
 
+var _bg_sky: ColorRect
+var _bg_grass: ColorRect
+var _ground_line: ColorRect
 var _character_rect: TextureRect
 var _boss_rect: TextureRect
 var _hp_bar: ProgressBar
-var _splash_label: Label
 var _boss_name_label: Label
+var _splash_layer: Control     # holds floating damage numbers & status splashes
+var _projectile_layer: Control # holds in-flight projectiles
+
+# Idle attack loop
+var _attack_timer: Timer
+var _idle_t: float = 0.0       # ambient bob
 
 const BOSS_MAX_HP_PER_STAGE := {
 	Leveling.EffectStage.NOVICE: 5,
@@ -20,6 +38,10 @@ const BOSS_MAX_HP_PER_STAGE := {
 var _current_stage: int = Leveling.EffectStage.NOVICE
 var _current_hp: int = 5
 
+const CHARACTER_X_RATIO := 0.22
+const BOSS_X_RATIO := 0.74
+const GROUND_Y_RATIO := 0.84  # sprites' baseline (= top of the grass band)
+
 
 func _ready() -> void:
 	_build_layout()
@@ -28,76 +50,98 @@ func _ready() -> void:
 	ProgressStore.theme_changed.connect(func(_id): _refresh_sprites())
 	ProgressStore.progress_changed.connect(_on_progress_changed)
 	PackStore.feedback.connect(_on_feedback)
+	set_process(true)
 
 
 func _build_layout() -> void:
-	# Tinted backdrop so the slot reads as a stage.
-	var bg := ColorRect.new()
-	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-	bg.color = Color("#13182380")  # darker than the page bg, semi-transparent
-	add_child(bg)
+	# Sky (top half) + grass (bottom half) for that idle-RPG outdoor feel.
+	_bg_sky = ColorRect.new()
+	_bg_sky.color = Color("#1d2a47")  # dusk blue
+	_bg_sky.anchors_preset = Control.PRESET_FULL_RECT
+	_bg_sky.set_offsets_preset(Control.PRESET_FULL_RECT)
+	add_child(_bg_sky)
 
-	# Center the character vs boss face-off
-	var center := CenterContainer.new()
-	center.set_anchors_preset(Control.PRESET_FULL_RECT)
-	add_child(center)
+	_bg_grass = ColorRect.new()
+	_bg_grass.color = Color("#1e3a2a")  # mossy green
+	_bg_grass.anchor_left = 0.0
+	_bg_grass.anchor_right = 1.0
+	_bg_grass.anchor_top = GROUND_Y_RATIO
+	_bg_grass.anchor_bottom = 1.0
+	add_child(_bg_grass)
 
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 120)
-	row.size_flags_vertical = SIZE_EXPAND_FILL
-	center.add_child(row)
+	_ground_line = ColorRect.new()
+	_ground_line.color = Color("#0d1a14")
+	_ground_line.anchor_left = 0.0
+	_ground_line.anchor_right = 1.0
+	_ground_line.anchor_top = GROUND_Y_RATIO
+	_ground_line.anchor_bottom = GROUND_Y_RATIO
+	_ground_line.offset_bottom = 3.0
+	add_child(_ground_line)
 
-	# Character on the left
-	_character_rect = _make_sprite_rect()
-	_character_rect.name = "character"
-	row.add_child(_character_rect)
-
-	# VS in the middle
-	var vs := Label.new()
-	vs.text = "VS"
-	vs.add_theme_font_size_override("font_size", 26)
-	vs.modulate = Color(0.5, 0.55, 0.7)
-	vs.size_flags_vertical = SIZE_SHRINK_CENTER
-	row.add_child(vs)
-
-	# Boss on the right (vertical stack: name + HP + sprite)
-	var boss_col := VBoxContainer.new()
-	boss_col.alignment = BoxContainer.ALIGNMENT_CENTER
-	boss_col.add_theme_constant_override("separation", 6)
-	row.add_child(boss_col)
-
+	# Boss name + HP bar (top right of the stage, away from the boss sprite)
 	_boss_name_label = Label.new()
 	_boss_name_label.add_theme_font_size_override("font_size", 14)
-	_boss_name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_boss_name_label.modulate = Color(1, 0.7, 0.7)
-	boss_col.add_child(_boss_name_label)
+	_boss_name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_boss_name_label.modulate = Color(1, 0.85, 0.85)
+	_boss_name_label.anchor_left = 0.50
+	_boss_name_label.anchor_right = 0.96
+	_boss_name_label.anchor_top = 0.03
+	_boss_name_label.anchor_bottom = 0.10
+	add_child(_boss_name_label)
 
 	_hp_bar = ProgressBar.new()
 	_hp_bar.show_percentage = false
-	_hp_bar.custom_minimum_size = Vector2(200, 12)
+	_hp_bar.anchor_left = 0.55
+	_hp_bar.anchor_right = 0.96
+	_hp_bar.anchor_top = 0.11
+	_hp_bar.anchor_bottom = 0.14
 	_hp_bar.value = 100
-	boss_col.add_child(_hp_bar)
+	add_child(_hp_bar)
 
-	_boss_rect = _make_sprite_rect()
+	# Character sprite — anchored at bottom-left, sprite baseline at GROUND_Y
+	_character_rect = _make_sprite_rect(CHARACTER_X_RATIO)
+	_character_rect.name = "character"
+	add_child(_character_rect)
+
+	# Boss sprite — anchored at bottom-right
+	_boss_rect = _make_sprite_rect(BOSS_X_RATIO)
 	_boss_rect.name = "boss"
-	boss_col.add_child(_boss_rect)
+	_boss_rect.flip_h = true  # boss faces left toward character
+	add_child(_boss_rect)
 
-	# Floating splash for damage/wrong feedback
-	_splash_label = Label.new()
-	_splash_label.add_theme_font_size_override("font_size", 36)
-	_splash_label.modulate = Color(1, 1, 1, 0)
-	_splash_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_splash_label.set_anchors_preset(Control.PRESET_CENTER)
-	add_child(_splash_label)
+	_projectile_layer = Control.new()
+	_projectile_layer.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_projectile_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_projectile_layer)
+
+	_splash_layer = Control.new()
+	_splash_layer.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_splash_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_splash_layer)
+
+	# Auto-attack idle loop (visual only — real damage routes through feedback)
+	_attack_timer = Timer.new()
+	_attack_timer.wait_time = 1.5
+	_attack_timer.autostart = true
+	_attack_timer.timeout.connect(_ambient_attack)
+	add_child(_attack_timer)
 
 
-func _make_sprite_rect() -> TextureRect:
+func _make_sprite_rect(x_ratio: float) -> TextureRect:
 	var rect := TextureRect.new()
-	rect.custom_minimum_size = Vector2(180, 220)
+	# KEEP_ASPECT_CENTERED fits the sprite inside the Control rect, preserving
+	# aspect. expand_mode IGNORE_SIZE makes the rect honour its anchored size
+	# instead of growing to the native 512×512 source.
 	rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	rect.expand_mode = TextureRect.EXPAND_FIT_HEIGHT_PROPORTIONAL
+	rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	rect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	rect.size_flags_horizontal = SIZE_SHRINK_CENTER
+	# Width ±10%, height extends from 33% above ground to slightly below it
+	# so the character's transparent-padded feet visually rest on the grass.
+	rect.anchor_left = x_ratio - 0.10
+	rect.anchor_right = x_ratio + 0.10
+	rect.anchor_top = GROUND_Y_RATIO - 0.55
+	rect.anchor_bottom = GROUND_Y_RATIO + 0.08
+	rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return rect
 
 
@@ -105,7 +149,7 @@ func _refresh_sprites() -> void:
 	var stage_name := Leveling.effect_stage_name(_current_stage)
 	_character_rect.texture = ThemeStore.texture_for_stage(stage_name)
 	_boss_rect.texture = ThemeStore.texture_for_stage_boss(stage_name)
-	var boss_id: String = ThemeStore.BOSS_FOR_STAGE.get(stage_name, "ant")
+	var boss_id: String = ThemeStore.BOSS_FOR_STAGE.get(stage_name, "bug_goblin")
 	_boss_name_label.text = ThemeStore.boss_display_name(boss_id)
 
 
@@ -114,6 +158,7 @@ func _on_progress_changed() -> void:
 	if new_stage != _current_stage:
 		_apply_stage_for_level(ProgressStore.get_level())
 		_refresh_sprites()
+		_spawn_splash("⬆ STAGE UP", Color(1, 0.85, 0.3, 1), 0.55)
 
 
 func _apply_stage_for_level(level: int) -> void:
@@ -123,44 +168,128 @@ func _apply_stage_for_level(level: int) -> void:
 	_hp_bar.value = _current_hp
 
 
+func _process(delta: float) -> void:
+	_idle_t += delta
+	# Gentle bob (vertical sine) so neither sprite looks frozen.
+	if _character_rect:
+		_character_rect.position.y = sin(_idle_t * 1.8) * 3.0
+	if _boss_rect:
+		_boss_rect.position.y = sin(_idle_t * 1.5 + 1.0) * 3.5
+
+
+# Cosmetic-only periodic attack — visualizes the "always fighting" loop.
+# Does NOT change HP. Real damage flows through _on_feedback.
+func _ambient_attack() -> void:
+	_spawn_projectile(Color("#a8e6ff"), 0.6, 0.4)
+	_lunge(_character_rect, +12.0, 0.18)
+
+
 func _on_feedback(correct: bool, _explanation: String) -> void:
 	if correct:
-		_pulse_correct()
+		_strike_correct()
 	else:
-		_pulse_wrong()
+		_strike_wrong()
 
 
-func _pulse_correct() -> void:
+func _strike_correct() -> void:
 	var multiplier := Weapon.weapon_damage_multiplier(ProgressStore.get_weapon_level())
 	var damage: int = max(1, int(round(1 * multiplier)))
 	_current_hp = max(0, _current_hp - damage)
 	_hp_bar.value = _current_hp
 
-	_splash_label.text = "-%d" % damage
-	_splash_label.modulate = Color(0.4, 1.0, 0.5, 1.0)
-	_animate_splash()
+	_lunge(_character_rect, +20.0, 0.15)
+	_spawn_projectile(Color("#fde047"), 1.0, 0.32, func():
+		_recoil(_boss_rect, +18.0, 0.18)
+		_flash(_boss_rect, Color(1, 0.4, 0.4))
+		_spawn_damage_number(damage)
+	)
 
 	if _current_hp <= 0:
 		PackStore.register_boss_defeat()
-		await get_tree().create_timer(0.5).timeout
+		_spawn_splash("DEFEATED", Color(1, 0.95, 0.3, 1), 0.7)
+		await get_tree().create_timer(0.6).timeout
 		_current_hp = BOSS_MAX_HP_PER_STAGE.get(_current_stage, 5)
 		_hp_bar.value = _current_hp
+		_flash(_boss_rect, Color(0.8, 1.0, 0.8))
 
 
-func _pulse_wrong() -> void:
-	_splash_label.text = "!"
-	_splash_label.modulate = Color(1.0, 0.4, 0.4, 1.0)
-	_animate_splash()
-	# Character shake
+func _strike_wrong() -> void:
+	_recoil(_character_rect, -16.0, 0.18)
+	_flash(_character_rect, Color(1, 0.4, 0.4))
+	_spawn_splash("!", Color(1, 0.45, 0.45, 1), 0.5)
+
+
+# Visual helpers --------------------------------------------------------------
+
+func _lunge(rect: TextureRect, dx: float, dur: float) -> void:
+	if rect == null: return
 	var tw := create_tween()
-	var origin := _character_rect.position
-	tw.tween_property(_character_rect, "position:x", origin.x - 10, 0.06)
-	tw.tween_property(_character_rect, "position:x", origin.x + 10, 0.06)
-	tw.tween_property(_character_rect, "position:x", origin.x, 0.06)
+	tw.tween_property(rect, "position:x", dx, dur).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tw.tween_property(rect, "position:x", 0.0, dur * 1.4).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 
 
-func _animate_splash() -> void:
-	_splash_label.position.y = 0
+func _recoil(rect: TextureRect, dx: float, dur: float) -> void:
+	if rect == null: return
+	var tw := create_tween()
+	tw.tween_property(rect, "position:x", dx, dur).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tw.tween_property(rect, "position:x", 0.0, dur * 2.0).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+
+
+func _flash(rect: TextureRect, color: Color) -> void:
+	if rect == null: return
+	var tw := create_tween()
+	rect.modulate = color
+	tw.tween_property(rect, "modulate", Color.WHITE, 0.25).set_trans(Tween.TRANS_QUAD)
+
+
+func _spawn_projectile(color: Color, radius: float, duration: float, on_hit: Callable = func(): pass) -> void:
+	if size.x <= 0:
+		return
+	var proj := ColorRect.new()
+	var r := int(8 * radius)
+	proj.color = color
+	proj.custom_minimum_size = Vector2(r * 2, r * 2)
+	proj.size = proj.custom_minimum_size
+	proj.position = Vector2(size.x * CHARACTER_X_RATIO + 20, size.y * (GROUND_Y_RATIO - 0.30))
+	proj.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_projectile_layer.add_child(proj)
+	# Round the corners so the ColorRect reads as a glowing orb
+	proj.set("theme_override_styles/panel", null)
+	var target_x := size.x * BOSS_X_RATIO - r
+	var target_y := size.y * (GROUND_Y_RATIO - 0.28)
 	var tw := create_tween().set_parallel(true)
-	tw.tween_property(_splash_label, "position:y", -50.0, 0.7)
-	tw.tween_property(_splash_label, "modulate:a", 0.0, 0.7)
+	tw.tween_property(proj, "position", Vector2(target_x, target_y), duration).set_trans(Tween.TRANS_QUAD)
+	tw.tween_property(proj, "modulate:a", 0.6, duration)
+	tw.chain().tween_callback(func():
+		proj.queue_free()
+		on_hit.call()
+	)
+
+
+func _spawn_damage_number(damage: int) -> void:
+	var label := Label.new()
+	label.text = "-%d" % damage
+	label.add_theme_font_size_override("font_size", 24)
+	label.modulate = Color(1, 0.95, 0.4, 1)
+	label.position = Vector2(size.x * BOSS_X_RATIO - 20, size.y * (GROUND_Y_RATIO - 0.45))
+	_splash_layer.add_child(label)
+	var tw := create_tween().set_parallel(true)
+	tw.tween_property(label, "position:y", label.position.y - 60.0, 0.7).set_trans(Tween.TRANS_QUAD)
+	tw.tween_property(label, "modulate:a", 0.0, 0.7)
+	tw.chain().tween_callback(func(): label.queue_free())
+
+
+func _spawn_splash(text: String, color: Color, dur: float) -> void:
+	var label := Label.new()
+	label.text = text
+	label.add_theme_font_size_override("font_size", 32)
+	label.modulate = color
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.anchor_left = 0.4
+	label.anchor_right = 0.6
+	label.anchor_top = 0.30
+	label.anchor_bottom = 0.36
+	_splash_layer.add_child(label)
+	var tw := create_tween().set_parallel(true)
+	tw.tween_property(label, "modulate:a", 0.0, dur)
+	tw.chain().tween_callback(func(): label.queue_free())

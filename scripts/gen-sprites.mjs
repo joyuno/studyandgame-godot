@@ -13,7 +13,8 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const OUT_DIR = join(__dirname, '..', 'assets', 'characters_ai');
+const OUT_CHARACTERS = join(__dirname, '..', 'assets', 'characters', 'characters');
+const OUT_BOSSES = join(__dirname, '..', 'assets', 'characters', 'bosses');
 
 // Shared prefix keeps style consistent across all 10 sprites.
 const STYLE = '16-bit pixel art game sprite, single character centered, '
@@ -38,11 +39,11 @@ const BOSSES = [
 
 const POLLINATIONS = 'https://image.pollinations.ai/prompt';
 
-async function fetchSprite({ id, seed, desc }) {
+async function fetchSprite({ id, seed, desc }, outDir) {
   const prompt = `${desc}, ${STYLE}`;
   const url = `${POLLINATIONS}/${encodeURIComponent(prompt)}`
     + `?model=flux&width=512&height=512&nologo=true&seed=${seed}&private=true`;
-  const out = join(OUT_DIR, `${id}.png`);
+  const out = join(outDir, `${id}.png`);
   console.log(`→ ${id} (seed=${seed})`);
   const res = await fetch(url);
   if (!res.ok) throw new Error(`${id}: HTTP ${res.status}`);
@@ -52,9 +53,12 @@ async function fetchSprite({ id, seed, desc }) {
 }
 
 async function main() {
-  await mkdir(OUT_DIR, { recursive: true });
+  await mkdir(OUT_CHARACTERS, { recursive: true });
+  await mkdir(OUT_BOSSES, { recursive: true });
   const filter = process.argv[2];
-  const all = [...CHARACTERS, ...BOSSES];
+  const charSet = CHARACTERS.map((s) => ({ ...s, outDir: OUT_CHARACTERS }));
+  const bossSet = BOSSES.map((s) => ({ ...s, outDir: OUT_BOSSES }));
+  const all = [...charSet, ...bossSet];
   const targets = filter ? all.filter((s) => s.id === filter) : all;
   if (targets.length === 0) {
     console.error(`No sprite matches "${filter}". Available:`);
@@ -63,14 +67,14 @@ async function main() {
   }
   for (const sprite of targets) {
     try {
-      await fetchSprite(sprite);
+      await fetchSprite(sprite, sprite.outDir);
     } catch (e) {
       console.error(`  ✗ ${sprite.id}: ${e.message}`);
     }
     // Be polite to the free service.
     await new Promise((r) => setTimeout(r, 1000));
   }
-  console.log(`\nDone. Saved to ${OUT_DIR}`);
+  console.log(`\nDone. Saved to ${OUT_CHARACTERS} and ${OUT_BOSSES}`);
 }
 
 main().catch((e) => { console.error(e); process.exit(1); });

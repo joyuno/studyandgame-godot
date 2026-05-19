@@ -1,18 +1,18 @@
-# Home screen — fluid layout that fills the whole window.
-# Hero: large alien character + boss preview side-by-side
-# Below: theme picker, sample buttons, navigation.
+# Home screen — embeds the same CombatStage that Quiz uses, so the menu
+# feels alive (auto-attack loop) instead of frozen.
+# Below: theme picker, sample buttons, navigation, drop hint.
 
 extends Control
 
 const QUIZ_SCENE := "res://scenes/Quiz.tscn"
 const ENHANCE_SCENE := "res://scenes/Enhance.tscn"
+const CHARACTER_DISPLAY := preload("res://scenes/CharacterDisplay.tscn")
 
 var _theme_dropdown: OptionButton
 var _weapon_badge: Label
 var _xp_label: Label
 var _status_label: Label
-var _hero_character: TextureRect
-var _hero_boss: TextureRect
+var _character_slot: Control
 
 
 func _ready() -> void:
@@ -69,31 +69,21 @@ func _build_layout() -> void:
 	_weapon_badge.modulate = Color(1, 0.85, 0.2)
 	title_bar.add_child(_weapon_badge)
 
-	# ── Hero row — natural size only (no EXPAND) so it leaves room for the
-	# picker / action / status rows below in a DPI-scaled window.
-	var hero := PanelContainer.new()
-	hero.size_flags_horizontal = SIZE_EXPAND_FILL
-	hero.size_flags_vertical = SIZE_FILL
-	hero.custom_minimum_size = Vector2(0, 260)
-	root.add_child(hero)
+	# ── Hero stage — same side-scrolling combat scene Quiz uses, so the
+	# Home screen also "feels alive" (idle bob + auto-attack projectile loop).
+	# Real damage stays gated behind quiz answers (PackStore.feedback).
+	var stage_wrap := Control.new()
+	stage_wrap.size_flags_horizontal = SIZE_EXPAND_FILL
+	stage_wrap.size_flags_vertical = SIZE_FILL
+	stage_wrap.custom_minimum_size = Vector2(0, 300)
+	stage_wrap.clip_contents = true
+	root.add_child(stage_wrap)
 
-	var hero_box := HBoxContainer.new()
-	hero_box.alignment = BoxContainer.ALIGNMENT_CENTER
-	hero_box.add_theme_constant_override("separation", 80)
-	hero.add_child(hero_box)
-
-	_hero_character = _make_sprite_slot("character")
-	hero_box.add_child(_hero_character)
-
-	var vs := Label.new()
-	vs.text = "VS"
-	vs.add_theme_font_size_override("font_size", 28)
-	vs.modulate = Color(0.6, 0.65, 0.8)
-	vs.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	hero_box.add_child(vs)
-
-	_hero_boss = _make_sprite_slot("boss")
-	hero_box.add_child(_hero_boss)
+	if _character_slot:
+		_character_slot.queue_free()
+	_character_slot = CHARACTER_DISPLAY.instantiate()
+	_character_slot.set_anchors_preset(Control.PRESET_FULL_RECT)
+	stage_wrap.add_child(_character_slot)
 
 	# ── Theme picker row
 	var picker_row := HBoxContainer.new()
@@ -145,18 +135,6 @@ func _build_layout() -> void:
 	root.add_child(_status_label)
 
 
-func _make_sprite_slot(role: String) -> TextureRect:
-	var rect := TextureRect.new()
-	rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	rect.custom_minimum_size = Vector2(180, 220)
-	rect.expand_mode = TextureRect.EXPAND_FIT_HEIGHT_PROPORTIONAL
-	rect.size_flags_vertical = SIZE_EXPAND_FILL
-	# Nearest-neighbor upscale so pixel art stays crisp.
-	rect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	rect.name = role
-	return rect
-
-
 func _make_button(label: String, size: Vector2) -> Button:
 	var btn := Button.new()
 	btn.text = label
@@ -171,12 +149,7 @@ func _refresh() -> void:
 		ProgressStore.get_weapon_level(),
 		ProgressStore.get_materials(),
 	]
-	# Refresh hero textures whenever theme or progress changes.
-	if _hero_character:
-		_hero_character.texture = ThemeStore.texture_for_stage("novice")
-	if _hero_boss:
-		var stage_name := Leveling.effect_stage_name(Leveling.effect_stage_from_level(ProgressStore.get_level()))
-		_hero_boss.texture = ThemeStore.texture_for_stage_boss(stage_name)
+	# Embedded CharacterDisplay (CombatStage) refreshes itself via signals.
 
 
 func _select_active_theme_in_dropdown() -> void:
