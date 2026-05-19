@@ -146,9 +146,73 @@ func _test_pack_parser() -> void:
 	var bad3 := PackParser.parse_string(unknown)
 	_eq(bad3.get("code"), "ERR_UNKNOWN_TYPE", "typing type rejected")
 
-	# Real sample
+	# Real sample (JSON)
 	var sample := PackParser.parse_file("res://data/quizzes/clickhouse-basics.json")
 	_truthy(sample.get("ok") == true, "real clickhouse-basics.json parses")
+
+	_test_yaml_parser()
+
+
+# -----------------------------------------------------------------------------
+# YAML parser (subset)
+# -----------------------------------------------------------------------------
+func _test_yaml_parser() -> void:
+	_section("YAMLPackParser")
+	var simple := """
+meta:
+  title: Tiny
+  version: 0.1.0
+  default_time: 25
+  tags: [a, b]
+
+questions:
+  - type: mcq
+    q: 'What is 1+1?'
+    choices:
+      - '1'
+      - '2'
+      - '3'
+    answer: 1
+    explanation: |
+      basic arithmetic
+      newline preserved
+    tags: [math]
+  - type: ox
+    q: 'Earth is round.'
+    answer: true
+"""
+	var result := PackParser.parse_yaml_string(simple)
+	_truthy(result.get("ok") == true,
+		"inline yaml parses: %s" % str(result))
+	if result.get("ok"):
+		var pack: Dictionary = result["pack"]
+		_eq(pack["meta"]["title"], "Tiny", "yaml meta.title")
+		_eq(pack["meta"]["tags"], ["a", "b"], "yaml inline list")
+		_eq(pack["questions"].size(), 2, "yaml two questions")
+		_eq(pack["questions"][0]["type"], "mcq", "yaml first type=mcq")
+		_eq(pack["questions"][0]["answer"], 1, "yaml first answer=1")
+		_eq(pack["questions"][0]["choices"], ["1", "2", "3"], "yaml choices preserved as strings")
+		_truthy(pack["questions"][0]["explanation"].contains("newline preserved"),
+			"yaml literal block keeps body")
+		_eq(pack["questions"][1]["answer"], true, "yaml ox boolean")
+
+	# Real-world workbook output: clickhouse mergetree basics
+	var real := PackParser.parse_file("res://data/quizzes/clickhouse-mergetree-basics.yml")
+	_truthy(real.get("ok") == true,
+		"clickhouse-mergetree-basics.yml parses: %s" % str(real))
+	if real.get("ok"):
+		var p: Dictionary = real["pack"]
+		_truthy((p["questions"] as Array).size() > 5, "real yaml has many questions")
+		_truthy(p["questions"][0].has("explanation"), "real yaml preserves explanation")
+
+	var otel := PackParser.parse_file("res://data/quizzes/otel-collector-architecture.yml")
+	_truthy(otel.get("ok") == true,
+		"otel-collector-architecture.yml parses: %s" % str(otel))
+
+	# YAML schema errors
+	var bad_yaml := PackParser.parse_yaml_string("meta:\n  title: x\nquestions:\n  - type: typing\n    q: 'nope'\n")
+	_eq(bad_yaml.get("code"), "ERR_UNKNOWN_TYPE",
+		"yaml validates schema after parse")
 
 
 # -----------------------------------------------------------------------------

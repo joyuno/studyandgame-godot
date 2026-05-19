@@ -1,25 +1,19 @@
-# Quiz pack JSON parser & validator.
-# Ported from src/main/services/packParser.ts. Same error codes so save/error
-# UX stays consistent with the Electron version.
-#
-# Godot port uses JSON natively (no YAML parser bundled). Convert .yml packs
-# from the workbook plugin with: `node -e "..."` or `python -c "import yaml,json;..."`
-# See README §Pack format for the one-liner.
+# Quiz pack parser & validator. Accepts both .json (Godot-native) and .yml/.yaml
+# (workbook plugin output — via the in-tree YAMLPackParser subset).
+# Same ERR_* codes as the Electron version so the save/error UX matches.
 
 class_name PackParser
 extends RefCounted
 
 const MAX_FILE_BYTES: int = 5_000_000  # 5 MB
 
+
 # Returns { "ok": true, "pack": Dictionary } on success
 # or       { "ok": false, "code": String, "message": String, "line": int (optional) } on failure.
 static func parse_file(path: String) -> Dictionary:
-	if not (path.ends_with(".json") or path.ends_with(".yml") or path.ends_with(".yaml")):
-		return _err("ERR_UNSUPPORTED_EXT", "지원 확장자: .json (.yml/.yaml은 사전 변환 필요)")
-
-	if path.ends_with(".yml") or path.ends_with(".yaml"):
-		return _err("ERR_YAML_NOT_SUPPORTED",
-			"Godot 포트는 .json만 받습니다. workbook 플러그인의 YAML을 JSON으로 변환하세요.")
+	var lower := path.to_lower()
+	if not (lower.ends_with(".json") or lower.ends_with(".yml") or lower.ends_with(".yaml")):
+		return _err("ERR_UNSUPPORTED_EXT", "지원 확장자: .json / .yml / .yaml")
 
 	if not FileAccess.file_exists(path):
 		return _err("ERR_FILE_NOT_FOUND", "파일이 없음: %s" % path)
@@ -32,6 +26,8 @@ static func parse_file(path: String) -> Dictionary:
 	if src.is_empty():
 		return _err("ERR_EMPTY_FILE", "빈 파일")
 
+	if lower.ends_with(".yml") or lower.ends_with(".yaml"):
+		return parse_yaml_string(src)
 	return parse_string(src)
 
 
@@ -48,6 +44,17 @@ static func parse_string(src: String) -> Dictionary:
 	if not validation.is_empty():
 		return validation
 
+	return { "ok": true, "pack": pack }
+
+
+static func parse_yaml_string(src: String) -> Dictionary:
+	var raw := YAMLPackParser.parse(src)
+	if not raw.get("ok", false):
+		return raw  # already in ERR_YAML_* shape
+	var pack: Dictionary = raw["pack"]
+	var validation := _validate_pack(pack)
+	if not validation.is_empty():
+		return validation
 	return { "ok": true, "pack": pack }
 
 

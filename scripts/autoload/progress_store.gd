@@ -225,6 +225,21 @@ func _load_from_disk() -> void:
 	var merged := _default_progress()
 	for k in (parsed as Dictionary).keys():
 		merged[k] = parsed[k]
+	# Migration: legacy theme IDs that no longer exist → default.
+	# The original 7-theme registry (programmer/wizard/ninja/chef/animal/robot/explorer)
+	# was replaced with 5 alien colors after the asset audit.
+	var legacy_theme_map := {
+		"programmer": "beige",
+		"wizard": "blue",
+		"ninja": "green",
+		"chef": "pink",
+		"explorer": "yellow",
+		"robot": "beige",
+		"animal": "green",
+	}
+	var saved_theme: String = merged.get("selectedThemeId", "")
+	if legacy_theme_map.has(saved_theme):
+		merged["selectedThemeId"] = legacy_theme_map[saved_theme]
 	progress = merged
 
 
@@ -238,7 +253,7 @@ func _default_progress() -> Dictionary:
 		"totalBossDefeats": 0,
 		"totalCorrect": 0,
 		"bestCombo": 0,
-		"selectedThemeId": "programmer",
+		"selectedThemeId": "beige",
 		"quietMode": false,
 		"weapon": { "level": 0, "attempts": 0, "failures": 0, "highestEver": 0 },
 		"materials": 0,

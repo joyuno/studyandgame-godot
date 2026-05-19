@@ -1,10 +1,6 @@
-# Character + boss sprite + simple pulse FX on correct/wrong answers.
-# Replaces src/renderer/effects/CharacterSlot.tsx + StageManager.ts.
-#
-# We use TextureRect (not Sprite2D) so the character lives inside the
-# Control hierarchy and auto-scales with the parent slot. The slot is
-# wide and short (boss right, character left), matching the redesign
-# from study_game §UI redesign.
+# Character + boss display + pulse FX. Re-tuned for the Kenney aliens which
+# are crisp single-PNG sprites (~70x100). Uses STRETCH_KEEP_ASPECT_CENTERED
+# so they scale up cleanly to fill the slot without distortion.
 
 extends Control
 
@@ -12,22 +8,13 @@ var _character_rect: TextureRect
 var _boss_rect: TextureRect
 var _hp_bar: ProgressBar
 var _splash_label: Label
-
-# Tween-based pulse for correct/wrong feedback (replaces PIXI particles).
-var _last_correct_unix: float = 0.0
+var _boss_name_label: Label
 
 const BOSS_MAX_HP_PER_STAGE := {
 	Leveling.EffectStage.NOVICE: 5,
 	Leveling.EffectStage.JUNIOR: 10,
 	Leveling.EffectStage.SENIOR: 18,
 	Leveling.EffectStage.LEGEND: 30,
-}
-
-const BOSS_SLOT_PER_STAGE := {
-	Leveling.EffectStage.NOVICE: "goblin",
-	Leveling.EffectStage.JUNIOR: "dragon",
-	Leveling.EffectStage.SENIOR: "hydra",
-	Leveling.EffectStage.LEGEND: "behemoth",
 }
 
 var _current_stage: int = Leveling.EffectStage.NOVICE
@@ -44,57 +31,82 @@ func _ready() -> void:
 
 
 func _build_layout() -> void:
-	# Background panel — soft tinted bar so the slot reads as a stage.
+	# Tinted backdrop so the slot reads as a stage.
 	var bg := ColorRect.new()
-	bg.set_offsets_preset(Control.PRESET_FULL_RECT)
-	bg.anchors_preset = Control.PRESET_FULL_RECT
-	bg.color = Color(0.094, 0.106, 0.133)
+	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+	bg.color = Color("#13182380")  # darker than the page bg, semi-transparent
 	add_child(bg)
 
-	# Character — left 20%
-	_character_rect = TextureRect.new()
-	_character_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	_character_rect.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
-	_character_rect.set_anchors_preset(Control.PRESET_LEFT_WIDE)
-	_character_rect.set_offsets_preset(Control.PRESET_LEFT_WIDE, Control.PRESET_MODE_MINSIZE, 16)
-	_character_rect.size_flags_horizontal = 0
-	_character_rect.custom_minimum_size = Vector2(220, 0)
-	add_child(_character_rect)
+	# Center the character vs boss face-off
+	var center := CenterContainer.new()
+	center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	add_child(center)
 
-	# Boss — right 30%
-	_boss_rect = TextureRect.new()
-	_boss_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	_boss_rect.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
-	_boss_rect.set_anchors_preset(Control.PRESET_RIGHT_WIDE)
-	_boss_rect.set_offsets_preset(Control.PRESET_RIGHT_WIDE, Control.PRESET_MODE_MINSIZE, 16)
-	_boss_rect.custom_minimum_size = Vector2(260, 0)
-	add_child(_boss_rect)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 120)
+	row.size_flags_vertical = SIZE_EXPAND_FILL
+	center.add_child(row)
 
-	# Boss HP bar — above boss
+	# Character on the left
+	_character_rect = _make_sprite_rect()
+	_character_rect.name = "character"
+	row.add_child(_character_rect)
+
+	# VS in the middle
+	var vs := Label.new()
+	vs.text = "VS"
+	vs.add_theme_font_size_override("font_size", 26)
+	vs.modulate = Color(0.5, 0.55, 0.7)
+	vs.size_flags_vertical = SIZE_SHRINK_CENTER
+	row.add_child(vs)
+
+	# Boss on the right (vertical stack: name + HP + sprite)
+	var boss_col := VBoxContainer.new()
+	boss_col.alignment = BoxContainer.ALIGNMENT_CENTER
+	boss_col.add_theme_constant_override("separation", 6)
+	row.add_child(boss_col)
+
+	_boss_name_label = Label.new()
+	_boss_name_label.add_theme_font_size_override("font_size", 14)
+	_boss_name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_boss_name_label.modulate = Color(1, 0.7, 0.7)
+	boss_col.add_child(_boss_name_label)
+
 	_hp_bar = ProgressBar.new()
-	_hp_bar.set_anchors_preset(Control.PRESET_TOP_RIGHT)
-	_hp_bar.offset_left = -280
-	_hp_bar.offset_right = -20
-	_hp_bar.offset_top = 8
-	_hp_bar.offset_bottom = 18
 	_hp_bar.show_percentage = false
+	_hp_bar.custom_minimum_size = Vector2(200, 12)
 	_hp_bar.value = 100
-	add_child(_hp_bar)
+	boss_col.add_child(_hp_bar)
 
-	# Splash for pulse text
+	_boss_rect = _make_sprite_rect()
+	_boss_rect.name = "boss"
+	boss_col.add_child(_boss_rect)
+
+	# Floating splash for damage/wrong feedback
 	_splash_label = Label.new()
-	_splash_label.add_theme_font_size_override("font_size", 26)
+	_splash_label.add_theme_font_size_override("font_size", 36)
 	_splash_label.modulate = Color(1, 1, 1, 0)
 	_splash_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_splash_label.set_anchors_preset(Control.PRESET_CENTER)
 	add_child(_splash_label)
 
 
+func _make_sprite_rect() -> TextureRect:
+	var rect := TextureRect.new()
+	rect.custom_minimum_size = Vector2(180, 220)
+	rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	rect.expand_mode = TextureRect.EXPAND_FIT_HEIGHT_PROPORTIONAL
+	rect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	rect.size_flags_horizontal = SIZE_SHRINK_CENTER
+	return rect
+
+
 func _refresh_sprites() -> void:
 	var stage_name := Leveling.effect_stage_name(_current_stage)
 	_character_rect.texture = ThemeStore.texture_for_stage(stage_name)
-	var boss_slot: String = BOSS_SLOT_PER_STAGE.get(_current_stage, "goblin")
-	_boss_rect.texture = ThemeStore.texture_for_boss(boss_slot)
+	_boss_rect.texture = ThemeStore.texture_for_stage_boss(stage_name)
+	var boss_id: String = ThemeStore.BOSS_FOR_STAGE.get(stage_name, "ant")
+	_boss_name_label.text = ThemeStore.boss_display_name(boss_id)
 
 
 func _on_progress_changed() -> void:
@@ -139,17 +151,16 @@ func _pulse_wrong() -> void:
 	_splash_label.text = "!"
 	_splash_label.modulate = Color(1.0, 0.4, 0.4, 1.0)
 	_animate_splash()
-
 	# Character shake
 	var tw := create_tween()
 	var origin := _character_rect.position
-	tw.tween_property(_character_rect, "position:x", origin.x - 8, 0.06)
-	tw.tween_property(_character_rect, "position:x", origin.x + 8, 0.06)
+	tw.tween_property(_character_rect, "position:x", origin.x - 10, 0.06)
+	tw.tween_property(_character_rect, "position:x", origin.x + 10, 0.06)
 	tw.tween_property(_character_rect, "position:x", origin.x, 0.06)
 
 
 func _animate_splash() -> void:
 	_splash_label.position.y = 0
 	var tw := create_tween().set_parallel(true)
-	tw.tween_property(_splash_label, "position:y", -40.0, 0.6)
-	tw.tween_property(_splash_label, "modulate:a", 0.0, 0.6)
+	tw.tween_property(_splash_label, "position:y", -50.0, 0.7)
+	tw.tween_property(_splash_label, "modulate:a", 0.0, 0.7)
