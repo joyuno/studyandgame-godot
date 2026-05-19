@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bxjppdh5ssscl"
-path="res://.godot/imported/ant.png-d46e5038360efbfb8c658bbcdecf89a7.ctex"
+uid="uid://bumqsyy1b2q6c"
+path="res://.godot/imported/wizard.png-8911e0ff6e3a7c7c3f4b81d4bef94cd4.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/characters/bosses/ant.png"
-dest_files=["res://.godot/imported/ant.png-d46e5038360efbfb8c658bbcdecf89a7.ctex"]
+source_file="res://assets/characters/characters/wizard.png"
+dest_files=["res://.godot/imported/wizard.png-8911e0ff6e3a7c7c3f4b81d4bef94cd4.ctex"]
 
 [params]
 

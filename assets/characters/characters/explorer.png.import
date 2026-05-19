@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b07fp011r1e51"
-path="res://.godot/imported/eater.png-725390669d26184a3db6ba355ad87fa4.ctex"
+uid="uid://di0qgq2hpv464"
+path="res://.godot/imported/explorer.png-0f0f19a73c8d58c196bce6ebeb342841.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/characters/bosses/eater.png"
-dest_files=["res://.godot/imported/eater.png-725390669d26184a3db6ba355ad87fa4.ctex"]
+source_file="res://assets/characters/characters/explorer.png"
+dest_files=["res://.godot/imported/explorer.png-0f0f19a73c8d58c196bce6ebeb342841.ctex"]
 
 [params]
 

@@ -2,6 +2,10 @@
 .godot/
 .import/
 
+# Node tooling for asset generation (gen-sprites.mjs + strip-bg.mjs)
+node_modules/
+scripts/package-lock.json
+
 # Imported translations (automatically generated from CSV files)
 *.translation
 

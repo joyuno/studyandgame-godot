@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b4xbk2ef3cnij"
-path="res://.godot/imported/beige.png-bd3d254e02f3fcd82530b6c86c454d69.ctex"
+uid="uid://2q82oc5u8bdl"
+path="res://.godot/imported/chef.png-8a85cdf454bd67c9e6fd45edf606c7d6.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/characters/aliens/beige.png"
-dest_files=["res://.godot/imported/beige.png-bd3d254e02f3fcd82530b6c86c454d69.ctex"]
+source_file="res://assets/characters/characters/chef.png"
+dest_files=["res://.godot/imported/chef.png-8a85cdf454bd67c9e6fd45edf606c7d6.ctex"]
 
 [params]
 

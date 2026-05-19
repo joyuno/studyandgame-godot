@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b7wly1i55sk00"
-path="res://.godot/imported/blue.png-8bf316ddaa41735655e6804b5321b32e.ctex"
+uid="uid://bu81jiruo2hg0"
+path="res://.godot/imported/ninja.png-cc5d7658e87d1666c7e47647ab335f0d.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/characters/aliens/blue.png"
-dest_files=["res://.godot/imported/blue.png-8bf316ddaa41735655e6804b5321b32e.ctex"]
+source_file="res://assets/characters/characters/ninja.png"
+dest_files=["res://.godot/imported/ninja.png-cc5d7658e87d1666c7e47647ab335f0d.ctex"]
 
 [params]
 

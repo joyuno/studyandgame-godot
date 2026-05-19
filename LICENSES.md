@@ -1,47 +1,45 @@
 # Third-Party Asset Licenses
 
-StudyGame 본체 코드는 사용자 작성이다. 본 문서는 게임에 임베드된 외부 자산의 출처와 라이선스를 명시한다.
-
 ## 폰트
 
 ### Pretendard — by Kil Hyung-jin et al.
 - **출처**: https://github.com/orioncactus/pretendard
-- **라이선스**: SIL Open Font License 1.1 (https://scripts.sil.org/OFL)
-- **사용처**: `assets/fonts/Pretendard-Regular.otf`, `assets/fonts/Pretendard-Bold.otf`
-- 임베드 + 재배포 OFL이 허용. 폰트명 변경 시 새 이름 사용 의무 (현재 그대로 유지).
+- **라이선스**: SIL Open Font License 1.1
+- **사용처**: `assets/fonts/Pretendard-{Regular,Bold}.otf`
 
-## 캐릭터·보스 스프라이트 — Kenney Platformer Pack (CC0)
+## 캐릭터·보스 스프라이트 — AI 생성 (Pollinations.ai · Flux)
 
-전체 캐릭터·보스 그래픽은 **Kenney의 Platformer Pack** 에서 가져왔다.
+전체 캐릭터·보스 아트는 **Pollinations.ai의 Flux 모델**로 생성됨.
 
-- **출처**: https://kenney.nl (저자 본인 사이트)
-- **다운로드 mirror**: https://github.com/pigdevstudio/godot-sandbox (Godot용 재패키징)
-- **라이선스**: CC0 1.0 Universal (https://creativecommons.org/publicdomain/zero/1.0/)
-- 인용: *"All assets I make I release as Creative Commons (CC0) which means you can use them without restrictions, even commercially."* — Kenney
+- **서비스**: https://pollinations.ai (무료, API 키 없음)
+- **모델**: Flux (Stable Diffusion 계열 오픈 모델)
+- **저작권**: Pollinations 약관상 생성물에 별도 권리 주장 없음. 상업·비상업 사용 자유.
+- **재현 방법**: `scripts/gen-sprites.mjs` 안에 각 sprite의 prompt + seed가 명시되어 있어 똑같이 재생성 가능 (시드 결정성). 사후 처리는 `scripts/strip-bg.mjs` (sharp + flood fill).
 
-### 사용한 파일
+### 캐릭터 (`assets/characters/characters/`)
 
-**캐릭터 (`assets/characters/aliens/`):**
-- `beige.png` — alienBeige_stand
-- `blue.png` — alienBlue_stand
-- `green.png` — alienGreen_stand
-- `pink.png` — alienPink_stand
-- `yellow.png` — alienYellow_stand
+| 파일 | Seed | Concept |
+|------|------|---------|
+| `programmer.png` | 142 | 안경 + 노트북 든 캐주얼 개발자 |
+| `wizard.png`     | 271 | 보라 로브 + 마법 지팡이 (gandalf 풍) |
+| `ninja.png`      | 308 | 검은 옷 + 카타나, 다이나믹 포즈 |
+| `chef.png`       | 415 | 흰 토크 + 앞치마 + 냄비 |
+| `explorer.png`   | 533 | 사파리 모자 + 베스트 + 지도 |
 
-**보스 (`assets/characters/bosses/`):**
-- `ant.png` — ant_01 (Novice 단계 보스)
-- `bee.png` — bee_01 (Junior 단계 보스)
-- `bat.png` — bat_01 (Senior 단계 보스)
-- `blockie.png` — blockie_01 (Legend 단계 보스)
-- `eater.png` — eater_01 (예비 — 향후 사용)
+### 보스 (`assets/characters/bosses/`)
 
-## 폐기된 자산 노트
+| 파일 | Seed | Concept |
+|------|------|---------|
+| `bug_goblin.png`      | 612 | 안테나 단 녹색 컴퓨터 버그 도깨비 — Novice 단계 |
+| `null_dragon.png`     | 749 | 불 뿜는 빨간 드래곤 — Junior 단계 |
+| `race_hydra.png`      | 856 | 3머리 청록 코브라 (Race Condition) — Senior 단계 |
+| `tech_debt_giant.png` | 967 | 부서지는 보라 돌 거인 (Tech Debt) — Legend 단계 |
+| `stack_ghost.png`     | 178 | 파란 유령 — 예비 |
 
-이전 버전에는 OpenGameArt에서 가져온 7테마(programmer/wizard/ninja/chef/animal/robot/explorer) 23 PNG가 포함돼 있었으나, 다음 이유로 전부 교체:
+## 폐기된 자산 트랙
 
-- programmer/lv05·lv10: RPGMaker "naked base" 시트 — 옷·머리 레이어 합성을 전제로 한 베이스라 단독 표시 시 살색 인형으로 보임
-- animal/lv01: 실제로는 "Tiny RPG" 광고 스크린샷 (캐릭터 아님)
-- robot/lv01: 캐릭터 빌더 템플릿 (마젠타 배경, 다층 합성 필요)
-- 보스 dragon/goblin: 거대 픽셀팩 안 좌표 추측 슬라이스로 fragile
+- v0.1 (Electron 포팅 직후): OpenGameArt CC0 시트 23장 — 대부분 "naked base" 합성 키트라 단독 표시 불가
+- v0.2 (Kenney pack): 5색 alien + 5 enemies — 단일 PNG로 정상이긴 했으나 학습 도메인 정체성을 잃음 (alien 색만 다름)
+- v0.3 (현재): AI 생성 5직업 + 4보스 — study_game 원본의 직업·보스 컨셉 복원
 
-새 Kenney 자산은 모두 **단일 캐릭터 완성형 PNG** — 슬라이싱 불필요, 어떤 조합이든 의도대로 보임. 옛 자산 출처는 Riff 7 코밋 히스토리에 보존됨 (joyuno/studyandgame, Electron 버전).
+이전 자산 출처·라이선스는 git 히스토리에 보존됨 (`joyuno/studyandgame-godot` 커밋 트리).

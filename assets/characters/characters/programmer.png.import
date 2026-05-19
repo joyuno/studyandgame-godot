@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://5ynrxqh8coqv"
-path="res://.godot/imported/bat.png-d929b31b5b175676b2e5327bfe189f74.ctex"
+uid="uid://du6hk7motxukk"
+path="res://.godot/imported/programmer.png-48e75205f20611cce70b146c84b70694.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/characters/bosses/bat.png"
-dest_files=["res://.godot/imported/bat.png-d929b31b5b175676b2e5327bfe189f74.ctex"]
+source_file="res://assets/characters/characters/programmer.png"
+dest_files=["res://.godot/imported/programmer.png-48e75205f20611cce70b146c84b70694.ctex"]
 
 [params]
 

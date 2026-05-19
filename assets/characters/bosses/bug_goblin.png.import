@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bfba5dh87kedm"
-path="res://.godot/imported/blockie.png-113edb0de9e33289aef8490961bb7905.ctex"
+uid="uid://dfh8nakbk6j6t"
+path="res://.godot/imported/bug_goblin.png-fcb34bcad55c057688957c3ec11f249c.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/characters/bosses/blockie.png"
-dest_files=["res://.godot/imported/blockie.png-113edb0de9e33289aef8490961bb7905.ctex"]
+source_file="res://assets/characters/bosses/bug_goblin.png"
+dest_files=["res://.godot/imported/bug_goblin.png-fcb34bcad55c057688957c3ec11f249c.ctex"]
 
 [params]
 

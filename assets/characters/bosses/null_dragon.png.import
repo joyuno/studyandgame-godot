@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dcftw1qaaarsb"
-path="res://.godot/imported/green.png-25b18f868dfeeec0a303e5fc7c529f17.ctex"
+uid="uid://dlbp28h28a2tt"
+path="res://.godot/imported/null_dragon.png-df1b691780cb09d8cf8b3104263e2446.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/characters/aliens/green.png"
-dest_files=["res://.godot/imported/green.png-25b18f868dfeeec0a303e5fc7c529f17.ctex"]
+source_file="res://assets/characters/bosses/null_dragon.png"
+dest_files=["res://.godot/imported/null_dragon.png-df1b691780cb09d8cf8b3104263e2446.ctex"]
 
 [params]
 

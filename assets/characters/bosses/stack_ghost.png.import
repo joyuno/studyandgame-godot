@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dtfqglmdmsh1t"
-path="res://.godot/imported/pink.png-c28a9217b3f9d9709804db98e771cd4f.ctex"
+uid="uid://chai6sru0xjyf"
+path="res://.godot/imported/stack_ghost.png-e8e257d6456813947bc9ec907f45e82f.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/characters/aliens/pink.png"
-dest_files=["res://.godot/imported/pink.png-c28a9217b3f9d9709804db98e771cd4f.ctex"]
+source_file="res://assets/characters/bosses/stack_ghost.png"
+dest_files=["res://.godot/imported/stack_ghost.png-e8e257d6456813947bc9ec907f45e82f.ctex"]
 
 [params]
 
