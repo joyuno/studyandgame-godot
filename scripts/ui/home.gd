@@ -1,30 +1,37 @@
-# Home screen — embeds the same CombatStage that Quiz uses, so the menu
-# feels alive (auto-attack loop) instead of frozen.
-# Below: theme picker, sample buttons, navigation, drop hint.
+# 검강화하기 home — quiz pack picker + sword preview + nav to Forge/Market.
+# The idle-RPG CombatStage embed is retired; the sword is the focal point now.
+# Title-bar counters (강화권 / 골드 / 주문서 / 검 등급) stay live via signals.
 
 extends Control
 
 const QUIZ_SCENE := "res://scenes/Quiz.tscn"
-const ENHANCE_SCENE := "res://scenes/Enhance.tscn"
-const CHARACTER_DISPLAY := preload("res://scenes/CharacterDisplay.tscn")
+const FORGE_SCENE := "res://scenes/Forge.tscn"
+const MARKET_SCENE := "res://scenes/Market.tscn"
+const WRONG_NOTE_SCENE := "res://scenes/WrongNote.tscn"
+const SETTINGS_SCENE := "res://scenes/Settings.tscn"
+const SWORD_DISPLAY := preload("res://scenes/SwordDisplay.tscn")
 
-var _theme_dropdown: OptionButton
-var _weapon_badge: Label
+var _tickets_label: Label
+var _gold_label: Label
+var _scrolls_label: Label
+var _weapon_label: Label
 var _xp_label: Label
 var _status_label: Label
-var _character_slot: Control
+var _sword_slot: Control
 
 
 func _ready() -> void:
 	_build_layout()
 	_refresh()
 	ProgressStore.progress_changed.connect(_refresh)
-	ProgressStore.theme_changed.connect(func(_id): _refresh())
+	ProgressStore.tickets_changed.connect(func(_n): _refresh())
+	ProgressStore.gold_changed.connect(func(_n): _refresh())
+	ProgressStore.scrolls_changed.connect(func(_n): _refresh())
+	ProgressStore.weapon_changed.connect(func(_lv): _refresh())
 	get_window().files_dropped.connect(_on_files_dropped)
 
 
 func _build_layout() -> void:
-	# Outer margin (16:9 letterbox-ish padding)
 	var outer := MarginContainer.new()
 	outer.set_anchors_preset(Control.PRESET_FULL_RECT)
 	outer.add_theme_constant_override("margin_left", 48)
@@ -36,7 +43,7 @@ func _build_layout() -> void:
 	var root := VBoxContainer.new()
 	root.size_flags_horizontal = SIZE_EXPAND_FILL
 	root.size_flags_vertical = SIZE_EXPAND_FILL
-	root.add_theme_constant_override("separation", 20)
+	root.add_theme_constant_override("separation", 18)
 	outer.add_child(root)
 
 	# ── Title bar
@@ -45,32 +52,30 @@ func _build_layout() -> void:
 	root.add_child(title_bar)
 
 	var title := Label.new()
-	title.text = "StudyGame"
-	title.add_theme_font_size_override("font_size", 32)
+	title.text = "문제풀고 강화하자"
+	title.add_theme_font_size_override("font_size", 30)
 	title_bar.add_child(title)
-
-	var sub := Label.new()
-	sub.text = "— Godot 포트"
-	sub.add_theme_font_size_override("font_size", 18)
-	sub.modulate = Color(0.65, 0.7, 0.85)
-	sub.size_flags_vertical = SIZE_SHRINK_END
-	title_bar.add_child(sub)
 
 	var spacer1 := Control.new()
 	spacer1.size_flags_horizontal = SIZE_EXPAND_FILL
 	title_bar.add_child(spacer1)
 
-	_xp_label = Label.new()
-	_xp_label.add_theme_font_size_override("font_size", 16)
+	_xp_label = _make_counter("Lv 1 · 0 XP", Color(0.85, 0.9, 1.0))
 	title_bar.add_child(_xp_label)
 
-	_weapon_badge = Label.new()
-	_weapon_badge.add_theme_font_size_override("font_size", 16)
-	_weapon_badge.modulate = Color(1, 0.85, 0.2)
-	title_bar.add_child(_weapon_badge)
+	_tickets_label = _make_counter("강화권 0", Color(0.7, 1.0, 0.85))
+	title_bar.add_child(_tickets_label)
 
-	# 차분 모드 — 게임 UI(캐릭터·전투 이펙트)를 완전히 끄고 순수 퀴즈만.
-	# Electron 원본의 quietMode 토글 그대로.
+	_gold_label = _make_counter("골드 0", Color(1.0, 0.85, 0.3))
+	title_bar.add_child(_gold_label)
+
+	_scrolls_label = _make_counter("주문서 0", Color(0.9, 0.75, 1.0))
+	title_bar.add_child(_scrolls_label)
+
+	_weapon_label = _make_counter("검 +0", Color(1, 0.95, 0.7))
+	title_bar.add_child(_weapon_label)
+
+	# 차분 모드는 설정 화면에서도 토글 가능 — 여기선 빠른 액세스용
 	var quiet_check := CheckBox.new()
 	quiet_check.text = "차분 모드"
 	quiet_check.add_theme_font_size_override("font_size", 14)
@@ -79,11 +84,13 @@ func _build_layout() -> void:
 		ProgressStore.set_quiet_mode(on)
 		_apply_quiet_mode()
 	)
+	ProgressStore.quiet_mode_changed.connect(func(on: bool):
+		quiet_check.button_pressed = on
+		_apply_quiet_mode()
+	)
 	title_bar.add_child(quiet_check)
 
-	# ── Hero stage — same side-scrolling combat scene Quiz uses, so the
-	# Home screen also "feels alive" (idle bob + auto-attack projectile loop).
-	# Real damage stays gated behind quiz answers (PackStore.feedback).
+	# ── Sword preview stage
 	var stage_wrap := Control.new()
 	stage_wrap.size_flags_horizontal = SIZE_EXPAND_FILL
 	stage_wrap.size_flags_vertical = SIZE_FILL
@@ -91,67 +98,70 @@ func _build_layout() -> void:
 	stage_wrap.clip_contents = true
 	root.add_child(stage_wrap)
 
-	if _character_slot:
-		_character_slot.queue_free()
-	_character_slot = CHARACTER_DISPLAY.instantiate()
-	_character_slot.set_anchors_preset(Control.PRESET_FULL_RECT)
-	stage_wrap.add_child(_character_slot)
-	# Honour the saved quiet mode setting on load.
+	_sword_slot = SWORD_DISPLAY.instantiate()
+	_sword_slot.set_anchors_preset(Control.PRESET_FULL_RECT)
+	stage_wrap.add_child(_sword_slot)
 	_apply_quiet_mode()
 
-	# ── Theme picker row
-	var picker_row := HBoxContainer.new()
-	picker_row.alignment = BoxContainer.ALIGNMENT_CENTER
-	picker_row.add_theme_constant_override("separation", 12)
-	root.add_child(picker_row)
-
-	var picker_label := Label.new()
-	picker_label.text = "캐릭터:"
-	picker_row.add_child(picker_label)
-
-	_theme_dropdown = OptionButton.new()
-	_theme_dropdown.custom_minimum_size = Vector2(220, 36)
-	for theme_id in ThemeStore.list_theme_ids():
-		var t := ThemeStore.get_theme(theme_id)
-		_theme_dropdown.add_item(t.get("display_name", theme_id))
-		_theme_dropdown.set_item_metadata(_theme_dropdown.item_count - 1, theme_id)
-	_select_active_theme_in_dropdown()
-	_theme_dropdown.item_selected.connect(_on_theme_selected)
-	picker_row.add_child(_theme_dropdown)
-
-	# ── Sample/Open + Nav (one row, big buttons)
-	var action_row := HBoxContainer.new()
-	action_row.alignment = BoxContainer.ALIGNMENT_CENTER
-	action_row.add_theme_constant_override("separation", 16)
-	root.add_child(action_row)
+	# ── Action row 1 — quiz pack pickers
+	var pack_row := HBoxContainer.new()
+	pack_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	pack_row.add_theme_constant_override("separation", 16)
+	root.add_child(pack_row)
 
 	var btn_clickhouse := _make_button("ClickHouse 기초", Vector2(200, 56))
 	btn_clickhouse.pressed.connect(_on_load_sample.bind("res://data/quizzes/clickhouse-basics.json"))
-	action_row.add_child(btn_clickhouse)
+	pack_row.add_child(btn_clickhouse)
 
 	var btn_otel := _make_button("OpenTelemetry 기초", Vector2(220, 56))
 	btn_otel.pressed.connect(_on_load_sample.bind("res://data/quizzes/otel-basics.json"))
-	action_row.add_child(btn_otel)
+	pack_row.add_child(btn_otel)
 
 	var btn_open := _make_button("파일 열기…", Vector2(160, 56))
 	btn_open.pressed.connect(_on_open_file)
-	action_row.add_child(btn_open)
+	pack_row.add_child(btn_open)
 
-	var btn_enhance := _make_button("강화소 →", Vector2(140, 56))
-	btn_enhance.pressed.connect(_open_scene.bind(ENHANCE_SCENE))
-	action_row.add_child(btn_enhance)
+	# ── Action row 2 — game nav
+	var nav_row := HBoxContainer.new()
+	nav_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	nav_row.add_theme_constant_override("separation", 16)
+	root.add_child(nav_row)
 
-	# ── Status hint (errors + drop hint)
+	var btn_forge := _make_button("🗡  강화소", Vector2(140, 50))
+	btn_forge.pressed.connect(_open_scene.bind(FORGE_SCENE))
+	nav_row.add_child(btn_forge)
+
+	var btn_market := _make_button("🏪  시장", Vector2(120, 50))
+	btn_market.pressed.connect(_open_scene.bind(MARKET_SCENE))
+	nav_row.add_child(btn_market)
+
+	var btn_wrong := _make_button("📓  오답노트", Vector2(150, 50))
+	btn_wrong.pressed.connect(_open_scene.bind(WRONG_NOTE_SCENE))
+	nav_row.add_child(btn_wrong)
+
+	var btn_settings := _make_button("⚙  설정", Vector2(120, 50))
+	btn_settings.pressed.connect(_open_scene.bind(SETTINGS_SCENE))
+	nav_row.add_child(btn_settings)
+
+	# ── Status hint
 	_status_label = Label.new()
 	_status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_status_label.text = "샘플을 누르거나 .json / .yml 파일을 창에 드롭"
+	_status_label.text = "퀴즈를 풀면 정답마다 강화권 1개를 얻습니다 — .json / .yml 드롭도 가능"
 	_status_label.modulate = Color(0.55, 0.6, 0.72)
 	root.add_child(_status_label)
 
 
 func _apply_quiet_mode() -> void:
-	if _character_slot:
-		_character_slot.visible = not ProgressStore.is_quiet_mode()
+	if _sword_slot:
+		_sword_slot.visible = not ProgressStore.is_quiet_mode()
+
+
+func _make_counter(initial: String, color: Color) -> Label:
+	var l := Label.new()
+	l.text = initial
+	l.add_theme_font_size_override("font_size", 15)
+	l.modulate = color
+	return l
 
 
 func _make_button(label: String, size: Vector2) -> Button:
@@ -163,25 +173,11 @@ func _make_button(label: String, size: Vector2) -> Button:
 
 
 func _refresh() -> void:
-	_xp_label.text = "Lv %d  ·  %d XP" % [ProgressStore.get_level(), ProgressStore.get_xp()]
-	_weapon_badge.text = "무기 +%d  ·  강화석 %d" % [
-		ProgressStore.get_weapon_level(),
-		ProgressStore.get_materials(),
-	]
-	# Embedded CharacterDisplay (CombatStage) refreshes itself via signals.
-
-
-func _select_active_theme_in_dropdown() -> void:
-	var active := ProgressStore.get_selected_theme_id()
-	for i in _theme_dropdown.item_count:
-		if _theme_dropdown.get_item_metadata(i) == active:
-			_theme_dropdown.select(i)
-			return
-
-
-func _on_theme_selected(idx: int) -> void:
-	var theme_id: String = _theme_dropdown.get_item_metadata(idx)
-	ProgressStore.set_theme(theme_id)
+	_xp_label.text = "Lv %d · %d XP" % [ProgressStore.get_level(), ProgressStore.get_xp()]
+	_tickets_label.text = "강화권 %d" % ProgressStore.get_enhance_tickets()
+	_gold_label.text = "골드 %d" % ProgressStore.get_gold()
+	_scrolls_label.text = "주문서 %d" % ProgressStore.get_protection_scrolls()
+	_weapon_label.text = "검 +%d" % ProgressStore.get_weapon_level()
 
 
 func _on_load_sample(path: String) -> void:

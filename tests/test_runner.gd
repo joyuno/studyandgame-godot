@@ -17,8 +17,37 @@ func _initialize() -> void:
 	_test_srs()
 	_test_leveling()
 	_test_pack_parser()
+	_test_sword_store()
 	print("--- %d passed, %d failed ---" % [_passes, _failures])
 	quit(0 if _failures == 0 else 1)
+
+
+# -----------------------------------------------------------------------------
+# SwordStore — pure mappings (sell price + tier ranges).
+# `--script` runs before autoloads, so we instantiate the script manually
+# rather than relying on the SwordStore global name.
+# -----------------------------------------------------------------------------
+func _test_sword_store() -> void:
+	_section("SwordStore")
+	var Store: Node = (load("res://scripts/autoload/sword_store.gd") as GDScript).new()
+	_eq(Store.sell_price(0), 50, "+0 sells for 50")
+	_eq(Store.sell_price(5), 2550, "+5 sells for 2,550 (50 + 25*100)")
+	_eq(Store.sell_price(10), 10050, "+10 sells for 10,050")
+	_eq(Store.sell_price(15), 22550, "+15 sells for 22,550")
+
+	_eq(Store.tier_for_level(0)["name"], "철검", "+0 → 철검")
+	_eq(Store.tier_for_level(2)["name"], "철검", "+2 → 철검")
+	_eq(Store.tier_for_level(3)["name"], "강철검", "+3 → 강철검")
+	_eq(Store.tier_for_level(6)["name"], "미스릴검", "+6 → 미스릴검")
+	_eq(Store.tier_for_level(9)["name"], "황금검", "+9 → 황금검")
+	_eq(Store.tier_for_level(15)["name"], "전설검", "+15 → 전설검")
+
+	_eq(Store.sprite_path_for_level(0), "res://assets/swords/sword_00.png", "+0 sprite path")
+	_eq(Store.sprite_path_for_level(15), "res://assets/swords/sword_15.png", "+15 sprite path")
+	# Clamp out-of-range to the spec sprites (no crashes on bad inputs).
+	_eq(Store.sprite_path_for_level(99), "res://assets/swords/sword_15.png", "clamp 99 → +15")
+	_eq(Store.sprite_path_for_level(-5), "res://assets/swords/sword_00.png", "clamp -5 → +0")
+	Store.free()
 
 
 # -----------------------------------------------------------------------------
@@ -27,23 +56,56 @@ func _initialize() -> void:
 func _test_weapon() -> void:
 	_section("Weapon")
 	_eq(Weapon.ENHANCE_MAX_LEVEL, 15, "max level = 15")
-	_eq(Weapon.success_rate_at(0), 1.0, "+0 → 100%")
-	_eq(Weapon.success_rate_at(5), 0.4, "+5 → 40%")
+
+	# Success/destroy rate lookup at representative tiers.
+	_eq(Weapon.success_rate_at(0), 1.0, "+0 → 100% success")
+	_eq(Weapon.success_rate_at(5), 0.4, "+5 → 40% success")
 	_eq(Weapon.success_rate_at(15), 0.0, "+15 → cap (0)")
 	_eq(Weapon.success_rate_at(99), 0.0, "way over cap → 0")
+	_eq(Weapon.destroy_rate_at(0), 0.0, "+0 → 0% destroy (safe zone)")
+	_eq(Weapon.destroy_rate_at(2), 0.0, "+2 → 0% destroy (safe zone)")
+	_eq(Weapon.destroy_rate_at(3), 0.02, "+3 → destroy starts at 2%")
+	_eq(Weapon.destroy_rate_at(10), 0.35, "+10 → 35% destroy")
+	_eq(Weapon.destroy_rate_at(15), 0.0, "+15 → cap, no further attempts")
 
-	_eq(Weapon.next_level_after_attempt(0, true), 1, "success at +0 → +1")
-	_eq(Weapon.next_level_after_attempt(7, true), 8, "success at +7 → +8")
-	_eq(Weapon.next_level_after_attempt(15, true), 15, "success at cap stays at cap")
+	# Deterministic roll → exact outcome. Table at +10 is success 0.08,
+	# destroy 0.35 → cumulative success cutoff 0.08, destroy cutoff 0.43.
+	var hit = Weapon.try_attempt(10, false, 0.05)
+	_eq(hit.get("result"), "success", "roll 0.05 at +10 → success")
+	_eq(int(hit.get("level")), 11, "success at +10 → +11")
 
-	for lv in range(0, 6):
-		_eq(Weapon.next_level_after_attempt(lv, false), lv,
-			"failure protected at +%d" % lv)
+	var bust = Weapon.try_attempt(10, false, 0.20)
+	_eq(bust.get("result"), "destroy", "roll 0.20 at +10 (within destroy band) → destroy")
+	_eq(int(bust.get("level")), 0, "destroy → +0 reset")
+	_eq(int(bust.get("shards")), 200, "destroy at +10 → 200 shards (10² × 2)")
 
-	_eq(Weapon.next_level_after_attempt(6, false), 4, "failure at +6 → -2")
-	_eq(Weapon.next_level_after_attempt(10, false), 8, "failure at +10 → -2")
-	_eq(Weapon.next_level_after_attempt(15, false), 13, "failure at +15 → -2")
-	_eq(Weapon.next_level_after_attempt(1, false), 1, "failure floor cannot go below current in protected zone")
+	var miss = Weapon.try_attempt(10, false, 0.70)
+	_eq(miss.get("result"), "stay", "roll 0.70 at +10 (above destroy band) → stay")
+	_eq(int(miss.get("level")), 10, "stay → level unchanged")
+
+	# Safe zone (+0..+2) — destroy roll band has zero width, so any miss is stay.
+	var safe = Weapon.try_attempt(2, false, 0.99)
+	_eq(safe.get("result"), "stay", "+2 with high roll → stay (no destroy in safe zone)")
+
+	# Scroll converts a destroy into stay_protected, level unchanged, no shards.
+	var saved = Weapon.try_attempt(10, true, 0.20)
+	_eq(saved.get("result"), "stay_protected", "scroll absorbs destroy")
+	_eq(int(saved.get("level")), 10, "scroll → level unchanged")
+	_eq(int(saved.get("shards")), 0, "scroll → no shard payout")
+
+	# Scroll has NO effect on a regular stay roll.
+	var miss2 = Weapon.try_attempt(10, true, 0.70)
+	_eq(miss2.get("result"), "stay", "scroll does nothing on a non-destroy miss")
+
+	# +15 is terminal regardless of roll.
+	var capped = Weapon.try_attempt(15, false, 0.0)
+	_eq(capped.get("result"), "max", "+15 → max, no roll consumed")
+
+	# shard_reward_for_destroy is level² × 2, clamped at 0 for negatives.
+	_eq(Weapon.shard_reward_for_destroy(5), 50, "+5 destroy → 50 shards")
+	_eq(Weapon.shard_reward_for_destroy(10), 200, "+10 destroy → 200 shards")
+	_eq(Weapon.shard_reward_for_destroy(14), 392, "+14 destroy → 392 shards")
+	_eq(Weapon.shard_reward_for_destroy(-3), 0, "negative level → 0 shards")
 
 	_eq(Weapon.weapon_damage_multiplier(0), 1.0, "+0 → ×1.0")
 	_eq(Weapon.weapon_damage_multiplier(5), 1.75, "+5 → ×1.75")
@@ -55,6 +117,17 @@ func _test_weapon() -> void:
 	_eq(Weapon.format_percent(0.5), "50%", "50%")
 	_eq(Weapon.format_percent(0.005), "1%", "rounds 0.5% up to 1%")
 	_eq(Weapon.format_percent(0.0), "0%", "0%")
+
+	# Difficulty multipliers — easy is identity, hard pinches both rates.
+	_eq(Weapon.success_rate_at(5, "easy"), 0.4, "easy +5 success identity")
+	_eq(snapped(Weapon.success_rate_at(5, "hard"), 0.001), 0.34,
+		"hard +5 success = 0.4 × 0.85 = 0.34")
+	_eq(absf(Weapon.destroy_rate_at(10, "hard") - 0.4025) < 0.0001, true,
+		"hard +10 destroy ≈ 0.35 × 1.15 = 0.4025")
+	# Hard at +14: success 0.0255, destroy clamped so success+destroy ≤ 1.
+	var s_hard_14: float = Weapon.success_rate_at(14, "hard")
+	var d_hard_14: float = Weapon.destroy_rate_at(14, "hard")
+	_eq(s_hard_14 + d_hard_14 <= 1.0001, true, "hard +14 success+destroy ≤ 1")
 
 
 # -----------------------------------------------------------------------------
@@ -213,6 +286,32 @@ questions:
 	var bad_yaml := PackParser.parse_yaml_string("meta:\n  title: x\nquestions:\n  - type: typing\n    q: 'nope'\n")
 	_eq(bad_yaml.get("code"), "ERR_UNKNOWN_TYPE",
 		"yaml validates schema after parse")
+
+	# Multi-line plain scalar — workbook sometimes splits a long q across lines
+	# with a deeper-indented continuation. Fold it into one value.
+	var folded_yaml := """
+meta:
+  title: Fold
+  version: 0.1.0
+
+questions:
+  - type: mcq
+    q: First line
+
+      `code on the second paragraph`
+    choices:
+      - a
+      - b
+    answer: 0
+    explanation: ok
+"""
+	var folded_result := PackParser.parse_yaml_string(folded_yaml)
+	_truthy(folded_result.get("ok") == true,
+		"folded plain scalar parses: %s" % str(folded_result))
+	if folded_result.get("ok"):
+		var q_text: String = folded_result["pack"]["questions"][0]["q"]
+		_truthy(q_text.contains("First line"), "fold keeps head text")
+		_truthy(q_text.contains("`code on the second paragraph`"), "fold absorbs deeper continuation")
 
 
 # -----------------------------------------------------------------------------

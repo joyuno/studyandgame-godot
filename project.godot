@@ -8,8 +8,8 @@ config_version=5
 
 [application]
 
-config/name="StudyGame (Godot port)"
-config/description="방치형 + 강화 + 가차 학습 퀴즈 게임 — Electron 원본의 Godot 4 포팅."
+config/name="문제풀고 강화하자"
+config/description="학습 퀴즈 + 검 강화. Godot 4 (GDScript)."
 run/main_scene="res://scenes/Home.tscn"
 config/features=PackedStringArray("4.6", "GL Compatibility")
 config/icon="res://icon.svg"
@@ -19,7 +19,7 @@ boot_splash/show_image=false
 
 ProgressStore="*res://scripts/autoload/progress_store.gd"
 PackStore="*res://scripts/autoload/pack_store.gd"
-ThemeStore="*res://scripts/autoload/theme_store.gd"
+SwordStore="*res://scripts/autoload/sword_store.gd"
 ThemeSetup="*res://scripts/autoload/theme_setup.gd"
 
 [display]

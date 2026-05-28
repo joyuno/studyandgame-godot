@@ -128,10 +128,54 @@ static func _parse_mapping(lines: PackedStringArray, start: int, expected_indent
 			i += 1
 			continue
 
-		# Inline value
-		out[key] = _parse_scalar(inline_value)
-		i += 1
+		# Inline value — may be a folded plain scalar that continues on
+		# deeper-indented lines (workbook output sometimes splits a long q
+		# across lines). Absorb any line whose indent > the key's indent
+		# into the value, joining with a single space; preserve blank lines
+		# as paragraph breaks. Quoted/flow values were already handled by the
+		# _parse_scalar branches above, so this fold only fires for plain ones.
+		var folded := _absorb_plain_continuation(lines, i + 1, expected_indent, inline_value)
+		out[key] = _parse_scalar(folded["value"])
+		i = folded["next_line"]
 	return { "value": out, "next_line": i }
+
+
+# Read forward from `start`, folding lines whose indent is strictly greater
+# than `key_indent` into `head` (joined by a single space; runs of blank
+# lines collapse to a single newline so a code-fenced continuation reads
+# correctly). Stops at the first line whose indent ≤ key_indent.
+static func _absorb_plain_continuation(lines: PackedStringArray, start: int, key_indent: int, head: String) -> Dictionary:
+	# Don't fold if head looks like a structured value (quoted / flow list /
+	# block scalar marker). _parse_scalar would interpret these specially and
+	# folding would corrupt them.
+	var stripped_head := head.strip_edges()
+	if stripped_head.begins_with("'") or stripped_head.begins_with("\"") \
+			or stripped_head.begins_with("[") or stripped_head.begins_with("{") \
+			or stripped_head == "|" or stripped_head == ">":
+		return { "value": head, "next_line": start }
+
+	var collected := head
+	var trailing_blank_run := 0
+	var j := start
+	while j < lines.size():
+		var raw: String = lines[j]
+		if raw.strip_edges().is_empty():
+			trailing_blank_run += 1
+			j += 1
+			continue
+		var indent := _leading_spaces(raw)
+		if indent <= key_indent:
+			break
+		if trailing_blank_run > 0:
+			collected += "\n"
+			trailing_blank_run = 0
+		else:
+			collected += " "
+		collected += raw.substr(indent)
+		j += 1
+	# If the loop exited on a low-indent line, j is at that line — don't include
+	# trailing blanks that came right before it (they belong to the inter-key gap).
+	return { "value": collected, "next_line": j }
 
 
 # -----------------------------------------------------------------------------
@@ -427,8 +471,13 @@ static func _next_meaningful_line(lines: PackedStringArray, start: int) -> int:
 
 
 static func _strip_bom(text: String) -> String:
-	# UTF-8 BOM (EF BB BF) shows up in Notepad-saved files.
-	if text.begins_with("﻿"):
+	# UTF-8 BOM (EF BB BF) shows up in Notepad-saved files. Compare via
+	# codepoint instead of a literal char — Godot's compressed-binary token
+	# format (script_export_mode=2 in export) strips zero-width literals
+	# from string constants at bake time, so `"﻿"` would compile to ""
+	# and `begins_with("")` is true for every input — silently eating the
+	# first character of every YAML file when run from a .pck.
+	if text.length() > 0 and text.unicode_at(0) == 0xFEFF:
 		return text.substr(1)
 	return text
 

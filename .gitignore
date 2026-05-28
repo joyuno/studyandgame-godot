@@ -5,25 +5,20 @@
 # Node tooling for asset generation (gen-sprites.mjs + strip-bg.mjs)
 node_modules/
 scripts/package-lock.json
-
 # Imported translations (automatically generated from CSV files)
 *.translation
-
 # Mono-specific ignores (we use GDScript but keep these in case)
 .mono/
 data_*/
 mono_crash.*.json
-
 # System
 .DS_Store
 Thumbs.db
 *.log
-
 # Editor / OS
 .vscode/
 .idea/
 *.swp
-
 # Exported builds (large binaries — ship via GitHub Releases, not git)
 exports/
 release/
@@ -32,3 +27,14 @@ release/
 *.apk
 *.pck
 *.zip
+.env
+
+# Asset regeneration backups (kept locally as safety net before model swaps)
+assets/swords/_backup_*/
+
+# Memory and dev workspace — local-only state, not part of the repo
+MEMORY.md
+_workspace/
+tests/debug_*.gd
+tests/debug_*.gd.uid
+
