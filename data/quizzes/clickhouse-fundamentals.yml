@@ -1,0 +1,535 @@
+meta:
+  title: ClickHouse 기초 — 용어 그래프
+  version: 0.2.0
+  default_time: 35
+  set_time: 900
+  tags: [clickhouse, fundamentals, vocabulary, pkg]
+
+# Prerequisite Knowledge Graph pack.
+# Goal: build the vocabulary scaffold required to read clickhouse-mergetree-basics.yml.
+# Concept IDs (kebab-case) form a DAG; every `prereq` ID is taught by an
+# earlier question in this pack. Bloom progression: recall → understand →
+# apply, with small backsteps when a new concept is introduced.
+
+questions:
+
+  # ──────────────────────────────────────────────────────────────────
+  # ROOT LAYER — what kind of thing is ClickHouse?
+  # ──────────────────────────────────────────────────────────────────
+  - type: mcq
+    q: 'ClickHouse는 어떤 종류의 소프트웨어인가?'
+    choices:
+      - '웹 브라우저'
+      - '데이터베이스 관리 시스템 (DBMS)'
+      - '운영체제'
+      - '메시지 큐'
+    answer: 1
+    explanation: |
+      ClickHouse = 대량의 데이터를 빠르게 집계·분석하기 위한 오픈소스 DBMS.
+      러시아 Yandex가 2009년 사내용으로 시작 → 2016년 오픈소스화 (Apache 2.0).
+      "data warehouse / analytics DB" 카테고리.
+    concept: clickhouse-is-dbms
+    prereq: []
+    bloom: recall
+    tags: [intro]
+
+  - type: mcq
+    q: '데이터베이스 분야에서 OLAP과 OLTP의 차이를 가장 잘 설명한 것은?'
+    choices:
+      - 'OLAP은 모바일용, OLTP은 서버용이다'
+      - 'OLAP은 분석·집계 (큰 SELECT), OLTP은 거래·트랜잭션 (작은 INSERT/UPDATE)'
+      - 'OLAP은 NoSQL, OLTP은 SQL'
+      - '둘은 같은 말의 다른 표기'
+    answer: 1
+    explanation: |
+      OLTP (Online Transaction Processing) = 은행 송금처럼 작은 단위 거래를
+      빠르게. 예: PostgreSQL, MySQL의 주 용도.
+      OLAP (Online Analytical Processing) = 수억 row 스캔해 집계·통계.
+      예: ClickHouse, Druid, BigQuery, Snowflake.
+    concept: olap-vs-oltp
+    prereq: [clickhouse-is-dbms]
+    bloom: understand
+    tags: [intro, workload]
+
+  - type: ox
+    q: 'ClickHouse는 OLTP보다 OLAP 워크로드에 최적화되어 있다.'
+    answer: true
+    explanation: |
+      대량 SELECT + 집계가 ClickHouse의 강점. 행 단위 잦은 UPDATE/DELETE는
+      약한 편이고, UPDATE/DELETE는 mutation이라는 무거운 백그라운드 작업으로
+      처리된다 (즉시 반영이 아님).
+    concept: clickhouse-is-olap
+    prereq: [clickhouse-is-dbms, olap-vs-oltp]
+    bloom: apply
+    time: 20
+    tags: [intro, workload]
+
+  # ──────────────────────────────────────────────────────────────────
+  # STORAGE LAYER — row vs column orientation, compression
+  # ──────────────────────────────────────────────────────────────────
+  - type: mcq
+    q: 'Row-oriented(행 지향) 저장과 Column-oriented(컬럼 지향) 저장의 차이는?'
+    choices:
+      - '행 지향은 SQL 지원, 컬럼 지향은 NoSQL이다'
+      - '행 지향은 한 행의 모든 컬럼을 붙여 저장, 컬럼 지향은 같은 컬럼 값을 모아 저장'
+      - '행 지향은 메모리, 컬럼 지향은 디스크에만 저장된다'
+      - '두 방식은 압축률이 같다'
+    answer: 1
+    explanation: |
+      행 지향: [id=1,name="a",age=20][id=2,name="b",age=30]...
+      컬럼 지향: [1,2,...][a,b,...][20,30,...]
+      한 컬럼만 읽는 SELECT가 행 지향에선 모든 행 전체 IO 필요, 컬럼 지향
+      에선 해당 컬럼 파일만 읽으면 됨 → 분석 쿼리에서 IO 격차 큼.
+    concept: row-vs-columnar-storage
+    prereq: [clickhouse-is-dbms]
+    bloom: understand
+    tags: [storage]
+
+  - type: ox
+    q: 'ClickHouse는 컬럼 지향(column-oriented) DBMS다.'
+    answer: true
+    explanation: |
+      ClickHouse 빠른 집계 성능의 근본 원인. 같은 타입 값이 연속이라 압축률
+      높고, 필요한 컬럼만 디스크에서 읽으면 됨.
+    concept: clickhouse-is-columnar
+    prereq: [clickhouse-is-dbms, row-vs-columnar-storage]
+    bloom: recall
+    time: 15
+    tags: [storage]
+
+  - type: mcq
+    q: '컬럼 지향 저장이 압축률을 높이는 핵심 이유는?'
+    choices:
+      - '컬럼 지향은 항상 zip을 사용하기 때문'
+      - '같은 컬럼의 값들은 데이터 타입과 분포가 유사해 압축 알고리즘이 패턴을 잘 찾기 때문'
+      - 'CPU가 컬럼 단위로만 압축할 수 있기 때문'
+      - 'OS가 컬럼 파일을 자동 압축하기 때문'
+    answer: 1
+    explanation: |
+      같은 컬럼 = 같은 타입 = 비슷한 분포 (예: timestamp 컬럼은 단조 증가,
+      enum-like 문자열 컬럼은 값 종류가 적음). LZ4·ZSTD 같은 압축기가 이런
+      반복 패턴을 매우 효율적으로 처리 → 컬럼당 5~10× 압축 흔함.
+    concept: compression-from-columnar
+    prereq: [clickhouse-is-columnar]
+    bloom: understand
+    tags: [storage, compression]
+
+  # ──────────────────────────────────────────────────────────────────
+  # SQL VOCABULARY — generic meanings before ClickHouse-specific twists
+  # ──────────────────────────────────────────────────────────────────
+  - type: mcq
+    q: 'SQL의 `ORDER BY` 절은 일반적으로 무엇을 의미하나?'
+    choices:
+      - 'SELECT 결과를 어떤 컬럼 기준으로 정렬할지 지정'
+      - '테이블에 데이터를 삽입할 순서 지정'
+      - '쿼리 실행 우선순위 지정'
+      - '인덱스 종류 지정'
+    answer: 0
+    explanation: |
+      표준 SQL의 `SELECT ... ORDER BY col`은 결과 정렬용. ClickHouse의
+      DDL `CREATE TABLE ... ORDER BY (col1, col2)`는 의미가 다르다 — 그건
+      테이블 자체의 디스크 정렬 기준 (다음 문제).
+    concept: sql-order-by-general
+    prereq: []
+    bloom: recall
+    tags: [sql]
+
+  - type: mcq
+    q: '관계형 DB에서 일반적으로 `primary key`(기본 키)의 핵심 제약은?'
+    choices:
+      - '같은 값을 가진 row가 여럿 있을 수 없음 (UNIQUE + NOT NULL)'
+      - '값이 항상 정수여야 함'
+      - '자동 증가해야 함'
+      - '외부 시스템에서 참조 가능해야 함'
+    answer: 0
+    explanation: |
+      표준 RDBMS(PostgreSQL, MySQL, Oracle)의 primary key 제약 = NOT NULL +
+      UNIQUE. 한 row를 고유하게 식별. ClickHouse는 이름만 같고 의미가 다름.
+    concept: rdb-primary-key
+    prereq: []
+    bloom: recall
+    tags: [sql, rdb]
+
+  - type: ox
+    q: 'ClickHouse의 primary key는 PostgreSQL의 primary key처럼 row 유일성을 보장한다.'
+    answer: false
+    explanation: |
+      이름은 같지만 의미가 다른 대표적 함정. ClickHouse primary key는
+      디스크에 데이터를 정렬하는 기준 + sparse index의 기반일 뿐, 중복 가능.
+      "ClickHouse does not require a unique primary key" — 공식 docs.
+    concept: clickhouse-primary-key-not-unique
+    prereq: [rdb-primary-key, clickhouse-is-dbms]
+    bloom: apply
+    time: 20
+    tags: [primary-key, gotcha]
+
+  # ──────────────────────────────────────────────────────────────────
+  # TABLE ENGINE LAYER — what defines a ClickHouse table's behavior
+  # ──────────────────────────────────────────────────────────────────
+  - type: mcq
+    q: 'ClickHouse에서 "테이블 엔진(table engine)"이란?'
+    choices:
+      - '테이블의 비주얼 테마'
+      - '데이터를 어떻게 저장·읽기·복제·머지할지 정하는 동작 방식'
+      - '데이터베이스 서버 프로세스의 이름'
+      - 'SQL 파서의 종류'
+    answer: 1
+    explanation: |
+      `CREATE TABLE ... ENGINE = MergeTree()` 처럼 모든 테이블이 엔진을
+      명시. 엔진이 디스크 저장 방식·인덱싱·복제·머지 동작을 모두 결정.
+    concept: table-engine
+    prereq: [clickhouse-is-dbms]
+    bloom: recall
+    tags: [table-engine]
+
+  - type: mcq
+    q: '다음 중 ClickHouse의 MergeTree 계열에 속하지 않는 것은?'
+    choices:
+      - 'ReplacingMergeTree (같은 키 row 중복 제거)'
+      - 'SummingMergeTree (같은 키 row를 합산)'
+      - 'InnoDB (자동 트랜잭션)'
+      - 'AggregatingMergeTree (사전 집계)'
+    answer: 2
+    explanation: |
+      InnoDB는 MySQL의 엔진. ClickHouse와 무관.
+      MergeTree 계열은 백그라운드 머지를 공유하면서 머지 시점의 추가 동작
+      (중복 제거/합산/사전 집계)으로 차별화된다.
+    concept: mergetree-family
+    prereq: [table-engine]
+    bloom: understand
+    tags: [table-engine]
+
+  - type: ox
+    q: 'ClickHouse 테이블은 모두 어떤 엔진을 명시적으로 지정해야 한다.'
+    answer: true
+    explanation: |
+      `CREATE TABLE ... ENGINE = X()` 구문에서 ENGINE 절은 필수. 가장 일반
+      적인 선택이 MergeTree, 임시·캐시 용도엔 Memory, append-only 로그엔
+      Log, 분산 라우팅엔 Distributed.
+    concept: table-engine-required
+    prereq: [table-engine]
+    bloom: recall
+    time: 15
+    tags: [table-engine]
+
+  # ──────────────────────────────────────────────────────────────────
+  # DATA PART LAYER — physical units inside a MergeTree table
+  # ──────────────────────────────────────────────────────────────────
+  - type: mcq
+    q: 'ClickHouse의 "data part"란 무엇인가?'
+    choices:
+      - '하나의 row'
+      - '한 테이블의 컬럼 정의'
+      - '디스크 위 정렬된 데이터 묶음 한 덩어리 (INSERT마다 새로 만들어짐)'
+      - '백업 파일 단위'
+    answer: 2
+    explanation: |
+      INSERT 한 번 → 새 part 하나 생성. part 안은 primary key 기준 정렬된
+      상태로 저장. "테이블"은 결국 part들의 집합. ClickHouse가 디스크에서
+      다루는 최소 단위는 row가 아니라 part다.
+    concept: data-part
+    prereq: [mergetree-family, clickhouse-is-columnar]
+    bloom: recall
+    tags: [part]
+
+  - type: mcq
+    q: 'ClickHouse의 partition은 part와 어떻게 다른가?'
+    choices:
+      - '같은 말의 다른 표기'
+      - 'partition은 논리적 그룹, part는 그 그룹 안의 물리적 데이터 묶음'
+      - 'partition은 column 단위, part는 row 단위'
+      - 'partition은 SELECT용, part는 INSERT용'
+    answer: 1
+    explanation: |
+      partition = "이 데이터들을 같은 그룹으로 묶어 관리" 라는 논리적 구분.
+      `PARTITION BY toYYYYMM(date)`로 정의. part = 그 partition 안의 실제
+      정렬된 데이터 덩어리. 한 partition 안에 여러 part 가능. 머지는 같은
+      partition 안에서만 일어남.
+    concept: partition-vs-part
+    prereq: [data-part]
+    bloom: understand
+    tags: [partition, part]
+
+  - type: ox
+    q: '서로 다른 partition에 속한 part들도 백그라운드에서 자동으로 머지된다.'
+    answer: false
+    explanation: |
+      partition 경계는 머지의 절대 경계. `OPTIMIZE TABLE ... FINAL`로도 다른
+      partition을 머지할 수 없음. partition을 잘게 자르면 머지가 안 일어나
+      파일 수만 증가하므로 partition 수는 신중히.
+    concept: partition-merge-boundary
+    prereq: [partition-vs-part]
+    bloom: apply
+    time: 20
+    tags: [partition, merge]
+
+  - type: ox
+    q: 'ClickHouse 테이블은 INSERT마다 새 part를 만들고, 이 part들을 백그라운드에서 더 큰 part로 합친다.'
+    answer: true
+    explanation: |
+      INSERT → 작은 part 생성. 시간이 지나며 background merge 프로세스가
+      작은 part들을 큰 part로 합쳐 파일 수를 줄이고 SELECT 효율을 높임.
+      너무 잦은 작은 INSERT는 part 폭증 → "too many parts" 에러.
+    concept: background-merge
+    prereq: [data-part]
+    bloom: recall
+    time: 20
+    tags: [merge]
+
+  - type: mcq
+    q: 'ClickHouse에서 너무 잦은 작은 INSERT가 성능 문제를 일으키는 이유는?'
+    choices:
+      - 'CPU 사용률이 100% 까지 오르기 때문'
+      - 'INSERT마다 새 part가 생기고, part 수가 많아지면 머지가 못 따라잡아 파일/디스크/오버헤드 폭증'
+      - 'ClickHouse는 INSERT를 거부한다'
+      - '네트워크 대역폭 제한 때문'
+    answer: 1
+    explanation: |
+      INSERT 1회 = part 1개. 매 row마다 INSERT 보내면 수십만 개의 작은 part
+      → 머지가 못 따라잡음 → SELECT 성능 저하 + "too many parts" 에러.
+      해결: 클라이언트 측 배치 INSERT (수천~수만 row 단위로 묶어서 1회).
+    concept: insert-batch-pattern
+    prereq: [data-part, background-merge]
+    bloom: apply
+    tags: [insert, performance]
+
+  # ──────────────────────────────────────────────────────────────────
+  # INDEXING LAYER — sparse, granule, mark
+  # ──────────────────────────────────────────────────────────────────
+  - type: mcq
+    q: '"Sparse index"란?'
+    choices:
+      - '모든 row를 가리키는 빽빽한 인덱스'
+      - '인덱스가 row 일부에만 마크를 두고 나머지는 스캔으로 처리하는 구조'
+      - 'SSD 전용 인덱스'
+      - 'JSON 데이터용 인덱스'
+    answer: 1
+    explanation: |
+      sparse(드문드문) = 인덱스가 모든 row를 가리키지 않고, N row마다 한 번
+      씩 마크를 둠. 인덱스 자체가 작아 RAM에 통째로 올라감 → 검색 빠름.
+      대신 정확한 row 위치는 모름 → 근처를 추가 스캔.
+    concept: sparse-index
+    prereq: [clickhouse-is-columnar]
+    bloom: understand
+    tags: [index]
+
+  - type: mcq
+    q: 'ClickHouse의 granule이란?'
+    choices:
+      - '한 row'
+      - 'primary index가 sparse하게 가리키는 row 묶음 (기본 8192 row)'
+      - '디스크의 물리적 블록'
+      - '메모리 페이지'
+    answer: 1
+    explanation: |
+      8192 row 묶음 = 1 granule. 각 granule의 첫 row 위치만 mark 파일에
+      저장. 검색은 mark로 granule 위치 찾고 그 granule 안 8192 row를 스캔.
+    concept: granule
+    prereq: [sparse-index]
+    bloom: recall
+    tags: [index, granule]
+
+  - type: mcq
+    q: '`index_granularity` 설정이 결정하는 것은?'
+    choices:
+      - '인덱스의 압축률'
+      - 'granule 안에 들어가는 최대 row 수 (기본 8192)'
+      - '백그라운드 머지 주기'
+      - 'SELECT 결과의 페이지 크기'
+    answer: 1
+    explanation: |
+      `index_granularity`(기본 8192) = granule당 row 수의 상한. 큰 값 →
+      mark 적음, RAM 적게 씀, 작은 SELECT는 불필요한 row 더 읽음. 작은 값
+      → mark 많아지고 정밀하지만 인덱스 자체가 커짐.
+    concept: index-granularity-setting
+    prereq: [granule]
+    bloom: apply
+    tags: [index, granule, settings]
+
+  - type: ox
+    q: 'sparse index 덕분에 ClickHouse는 인덱스를 보통 RAM에 통째로 올려둘 수 있다.'
+    answer: true
+    explanation: |
+      8192 row당 mark 1개 → 10억 row 테이블의 인덱스도 ~12만 개 mark.
+      RAM에 충분히 올라간다. 빽빽한 B+Tree 인덱스라면 row 수에 비례해
+      커져서 디스크 IO가 필요했을 것.
+    concept: sparse-index-in-ram
+    prereq: [sparse-index, granule]
+    bloom: understand
+    time: 20
+    tags: [index, sparse-index]
+
+  # ──────────────────────────────────────────────────────────────────
+  # SORT KEY vs PRIMARY KEY — disambiguation
+  # ──────────────────────────────────────────────────────────────────
+  - type: mcq
+    q: 'ClickHouse에서 `ORDER BY (a, b, c)` DDL은 어떤 효과를 갖는가?'
+    choices:
+      - 'SELECT 결과를 a,b,c 순으로 정렬'
+      - '테이블 데이터를 디스크에 a,b,c 순으로 정렬해 저장하고 sparse index의 기준으로 사용'
+      - '데이터를 a,b,c 컬럼만 저장하도록 제한'
+      - 'a,b,c 컬럼에 자동 인덱스 생성'
+    answer: 1
+    explanation: |
+      DDL의 `ORDER BY`는 sort key. part 내부 데이터가 이 순서로 정렬되어
+      디스크에 저장됨. primary key를 따로 명시하지 않으면 이 sort key의
+      prefix가 자동 primary key. SELECT 시 a 조건은 강력한 prune 가능,
+      b는 a 같을 때만, c는 a·b 같을 때만.
+    concept: ddl-order-by
+    prereq: [sql-order-by-general, clickhouse-primary-key-not-unique, sparse-index]
+    bloom: apply
+    tags: [sort-key, order-by]
+
+  - type: ox
+    q: 'ClickHouse는 primary key를 sort key의 prefix로 따로 명시할 수 있다.'
+    answer: true
+    explanation: |
+      `ORDER BY (a, b, c) PRIMARY KEY (a, b)`처럼 분리 가능. 이 경우 디스크
+      정렬은 a,b,c지만 sparse index는 a,b로만 키. SummingMergeTree에서 dim
+      을 더 잘게 추가하면서 인덱스는 가볍게 유지하는 패턴.
+    concept: primary-key-prefix-of-sort-key
+    prereq: [ddl-order-by, sparse-index]
+    bloom: analyze
+    time: 25
+    tags: [primary-key, sort-key, advanced]
+
+  - type: mcq
+    q: '`ORDER BY tuple()`을 사용한 MergeTree 테이블의 동작은?'
+    choices:
+      - '테이블 생성이 실패한다'
+      - '모든 컬럼이 자동으로 sort key가 된다'
+      - '정렬 없이 INSERT 순서대로 저장된다'
+      - '임의의 컬럼 하나가 자동으로 선택된다'
+    answer: 2
+    explanation: |
+      `ORDER BY tuple()` = 빈 sort key. 데이터를 정렬하지 않고 INSERT 순으로
+      그대로 저장. primary index의 prune 효과가 없으므로 SELECT는 항상 전체
+      스캔에 가까움. 로그성 데이터 등 적재 순서 자체가 의미일 때 유용.
+    concept: empty-sort-key
+    prereq: [ddl-order-by]
+    bloom: understand
+    tags: [sort-key, special-case]
+
+  # ──────────────────────────────────────────────────────────────────
+  # DATA TYPE LAYER — small but high-value primitives
+  # ──────────────────────────────────────────────────────────────────
+  - type: mcq
+    q: 'ClickHouse의 `LowCardinality(String)` 타입은 무엇을 위한 최적화인가?'
+    choices:
+      - '문자열을 압축하지 않고 그대로 저장'
+      - '값 종류가 적은 컬럼을 dictionary encoding으로 저장해 메모리/속도 이득'
+      - '문자열 길이를 32바이트로 고정'
+      - '문자열을 자동으로 hash로 변환'
+    answer: 1
+    explanation: |
+      enum-like 컬럼(값 종류 < 10,000 정도)에 권장. 값 → 작은 정수 ID로
+      매핑하는 dictionary를 part마다 유지하고 실제 컬럼은 ID만 저장.
+      String보다 1.5~3× 빠르고 작음. 단, 값 종류가 너무 많으면 오히려 손해.
+    concept: low-cardinality-type
+    prereq: [compression-from-columnar]
+    bloom: apply
+    tags: [data-type]
+
+  - type: mcq
+    q: '`Nullable(Int32)`이 일반 `Int32`보다 갖는 비용은?'
+    choices:
+      - '쓰지 않으면 비용이 없다'
+      - 'NULL 여부를 표시하는 별도 mask 파일을 추가로 읽고 쓴다'
+      - 'CPU 사용량만 두 배가 된다'
+      - '디스크에는 차이가 없다'
+    answer: 1
+    explanation: |
+      Nullable은 값 컬럼과 별개로 `column.null` mask 파일을 둠. SELECT마다
+      mask + 값 파일 둘 다 IO. 대안: NULL 대신 sentinel 값(0, -1) + 명시적
+      필터. 대량 분석 워크로드에선 Nullable 회피가 흔한 패턴.
+    concept: nullable-type-cost
+    prereq: [data-part, compression-from-columnar]
+    bloom: apply
+    tags: [data-type, performance]
+
+  # ──────────────────────────────────────────────────────────────────
+  # QUERY PATTERN LAYER — what makes a SELECT actually fast
+  # ──────────────────────────────────────────────────────────────────
+  - type: mcq
+    q: '`SELECT * FROM big_table LIMIT 10`이 컬럼 지향 DBMS에서 비효율적일 수 있는 이유는?'
+    choices:
+      - 'LIMIT가 무시되기 때문'
+      - 'SELECT *가 모든 컬럼 파일을 IO로 읽기 때문 — 컬럼 지향의 장점이 사라짐'
+      - 'LIMIT는 항상 풀스캔을 유발하기 때문'
+      - '컬럼 지향은 LIMIT를 지원하지 않기 때문'
+    answer: 1
+    explanation: |
+      컬럼 지향의 장점은 "필요한 컬럼만 IO". `*`은 그 장점을 무효화. 분석
+      쿼리는 항상 필요한 컬럼만 나열하는 게 정석.
+      예: `SELECT user_id, sum(amount) FROM ... GROUP BY user_id`.
+    concept: select-projection-optimization
+    prereq: [clickhouse-is-columnar, compression-from-columnar]
+    bloom: apply
+    tags: [query, performance]
+
+  - type: ox
+    q: 'WHERE 절의 컬럼이 sort key의 prefix면, ClickHouse는 sparse index로 무관한 granule을 건너뛸 수 있다.'
+    answer: true
+    explanation: |
+      sort key prefix `(date, user_id)`라면 `WHERE date = '2026-01-01'`은
+      그 날짜를 포함하는 granule들만 보면 됨 — granule pruning. 반대로
+      WHERE 조건이 sort key와 무관한 컬럼이면 prune 없이 전체 part 스캔.
+    concept: granule-pruning
+    prereq: [ddl-order-by, granule, sparse-index]
+    bloom: analyze
+    time: 25
+    tags: [query, index, performance]
+
+  # ──────────────────────────────────────────────────────────────────
+  # CLOSURE — bridge questions that mergetree-basics will reuse
+  # ──────────────────────────────────────────────────────────────────
+  - type: ox
+    q: 'ClickHouse의 part 이름 형식 `202601_5_12_3_8`의 첫 부분 `202601`은 partition 식별자다.'
+    answer: true
+    explanation: |
+      `<partition>_<minBlock>_<maxBlock>_<level>_<mutation>` 형식.
+      `202601_5_12_3_8` = 2026년 1월 partition, block 5~12, merge level 3,
+      mutation 8. level이 클수록 더 머지된 part. 이 형식을 알아야
+      `OPTIMIZE TABLE ... PARTITION ...` 같은 운영 명령이 무엇을 가리키는지
+      이해할 수 있음.
+    concept: part-naming-format
+    prereq: [partition-vs-part, background-merge]
+    bloom: understand
+    time: 25
+    tags: [part, ops]
+
+  - type: mcq
+    q: 'MergeTree에서 ALTER로 sort key에 새 컬럼을 추가하는 작업은 무겁다고 알려져 있나, 가볍다고 알려져 있나?'
+    choices:
+      - '무거움 — 기존 데이터를 모두 다시 정렬해야 함'
+      - '가벼움 — 기존 sort key의 prefix를 유지하는 한 기존 part를 다시 쓰지 않음'
+      - '불가능 — sort key는 변경할 수 없음'
+      - '엔진을 새로 만들고 데이터를 옮겨야 함'
+    answer: 1
+    explanation: |
+      "ALTER of the sorting key is a lightweight operation because... existing
+      data parts do not need to be changed". 단 새 sort key는 기존의 prefix
+      여야 함. 예: `(a, b)` → `(a, b, c)` OK, `(a, b)` → `(c, a, b)` 불가.
+    concept: alter-sort-key-lightweight
+    prereq: [ddl-order-by, data-part]
+    bloom: analyze
+    time: 30
+    tags: [alter, ops]
+
+  - type: ox
+    q: 'ClickHouse가 빠른 이유는 컬럼 지향 저장 + sparse index + 백그라운드 머지 + 효율적 압축의 조합 때문이다.'
+    answer: true
+    explanation: |
+      네 축의 시너지. 컬럼 지향 → 필요한 컬럼만 IO. sparse index → 인덱스가
+      RAM에 올라가 granule 스킵. background merge → 작은 part 폭증 없이
+      대용량 유지. 압축 → 디스크 IO 자체를 줄임. 한 축만 빠지면 OLAP DB로
+      서의 강점이 빠르게 사라진다.
+    concept: clickhouse-perf-pillars
+    prereq:
+      - clickhouse-is-columnar
+      - sparse-index
+      - background-merge
+      - compression-from-columnar
+    bloom: analyze
+    time: 25
+    tags: [summary]

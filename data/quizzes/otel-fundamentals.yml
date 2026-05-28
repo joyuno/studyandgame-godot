@@ -1,0 +1,550 @@
+meta:
+  title: OpenTelemetry 기초 — 용어 그래프
+  version: 0.1.0
+  default_time: 35
+  set_time: 900
+  tags: [opentelemetry, observability, fundamentals, pkg]
+
+# Prerequisite Knowledge Graph pack.
+# Goal: build the vocabulary scaffold required to read
+# otel-collector-architecture.yml. Concept IDs form a DAG.
+
+questions:
+
+  # ──────────────────────────────────────────────────────────────────
+  # ROOT — observability and what OpenTelemetry is
+  # ──────────────────────────────────────────────────────────────────
+  - type: mcq
+    q: '"Observability(관측 가능성)"가 단순 "Monitoring(모니터링)"과 다른 핵심 차이는?'
+    choices:
+      - 'Observability는 무료, Monitoring은 유료'
+      - 'Monitoring은 알려진 지표를 추적, Observability는 알려지지 않은 문제를 사후에 질문할 수 있는 데이터 수집·구조를 갖춤'
+      - '둘은 같은 말의 다른 표기'
+      - 'Observability는 클라우드 전용, Monitoring은 온프레미스 전용'
+    answer: 1
+    explanation: |
+      Monitoring = "CPU 80% 넘으면 알림" 같이 미리 정한 지표를 추적.
+      Observability = 사고가 났을 때 "왜 이 사용자만 느렸지?"를 사후에
+      질문할 수 있도록 traces / metrics / logs를 풍부하게 수집·연결.
+      OpenTelemetry는 후자를 위한 데이터 표준.
+    concept: observability-vs-monitoring
+    prereq: []
+    bloom: understand
+    tags: [intro]
+
+  - type: mcq
+    q: 'OpenTelemetry(OTel)는 무엇인가?'
+    choices:
+      - '단일 회사가 운영하는 SaaS'
+      - 'traces·metrics·logs를 표준화한 사양 + SDK + Collector를 합친 오픈소스 프로젝트'
+      - '특정 클라우드 전용 모니터링 도구'
+      - '로그 검색 엔진'
+    answer: 1
+    explanation: |
+      OpenTelemetry = CNCF 산하 오픈소스 프로젝트. 텔레메트리 데이터의
+      형식 사양 + 여러 언어 SDK + 텔레메트리 라우팅 에이전트(Collector)를
+      한 우산 아래 묶음. OpenTracing + OpenCensus의 후신.
+    concept: opentelemetry-is-spec-and-sdk
+    prereq: [observability-vs-monitoring]
+    bloom: recall
+    tags: [intro]
+
+  - type: ox
+    q: 'OpenTelemetry는 특정 벤더(예: Datadog, New Relic)에 종속되지 않는 표준을 지향한다.'
+    answer: true
+    explanation: |
+      OTel의 핵심 가치 = vendor-neutral. 한 번 SDK로 instrument하면
+      backend를 Jaeger / Tempo / Datadog / Honeycomb 등으로 자유롭게 교체
+      가능. backend 갈아끼울 때 애플리케이션 코드 수정 없음.
+    concept: vendor-neutral
+    prereq: [opentelemetry-is-spec-and-sdk]
+    bloom: understand
+    time: 20
+    tags: [intro, value]
+
+  # ──────────────────────────────────────────────────────────────────
+  # SIGNAL LAYER — three pillars of telemetry
+  # ──────────────────────────────────────────────────────────────────
+  - type: mcq
+    q: 'OpenTelemetry가 표준화하는 텔레메트리 신호(signal) 3종은?'
+    choices:
+      - 'traces, logs, events'
+      - 'metrics, traces, logs'
+      - 'profiles, traces, errors'
+      - 'alerts, dashboards, traces'
+    answer: 1
+    explanation: |
+      세 pillar: metrics(시계열 수치), traces(요청 흐름), logs(이벤트 텍스트).
+      profiles는 1.36(2024) 이후 추가 신호로 발전 중이지만 "기본 3종"은
+      여전히 traces/metrics/logs.
+    concept: telemetry-signal-three
+    prereq: [opentelemetry-is-spec-and-sdk]
+    bloom: recall
+    tags: [signals]
+
+  - type: mcq
+    q: 'OTel에서 "trace(트레이스)"란?'
+    choices:
+      - '단일 로그 메시지'
+      - '한 요청이 시스템을 통과하며 거치는 작업들의 전체 흐름 (span들의 트리)'
+      - 'CPU 사용률 그래프'
+      - '데이터베이스 쿼리 로그 한 줄'
+    answer: 1
+    explanation: |
+      trace = "사용자가 검색 버튼을 누름 → API gateway → search service →
+      DB → 응답"의 전체 흐름. 흐름의 각 단계가 span이고, trace는 그 span
+      들이 부모-자식 관계로 연결된 트리. 같은 trace의 span들은 같은
+      trace_id를 공유.
+    concept: traces-defined
+    prereq: [telemetry-signal-three]
+    bloom: understand
+    tags: [traces]
+
+  - type: mcq
+    q: 'OTel에서 "span"이란?'
+    choices:
+      - '하나의 trace 전체'
+      - '한 trace 안의 단일 작업 단위 (예: DB 쿼리 1회, 함수 호출 1회) — 시작·끝 시각·attribute 포함'
+      - 'metric의 한 시점 값'
+      - 'log 메시지의 한 줄'
+    answer: 1
+    explanation: |
+      span = trace를 구성하는 단위. 각 span은 trace_id + span_id + 부모
+      span_id(선택) + start/end 시각 + name + attributes를 가짐. 한 요청을
+      span N개가 분담해서 표현 → 부모-자식 관계 = 트리 구조.
+    concept: span-defined
+    prereq: [traces-defined]
+    bloom: understand
+    tags: [traces, span]
+
+  - type: mcq
+    q: 'OTel에서 "metric"이란?'
+    choices:
+      - '단발성 텍스트 이벤트'
+      - '시간에 따라 측정되는 수치 (예: 초당 요청 수, 메모리 사용량)'
+      - '한 사용자의 ID'
+      - '에러 stack trace'
+    answer: 1
+    explanation: |
+      metric = 시계열 수치. counter(누적), gauge(현재값), histogram(분포)
+      같은 종류가 있음. Prometheus의 metric 모델과 호환.
+    concept: metrics-defined
+    prereq: [telemetry-signal-three]
+    bloom: recall
+    tags: [metrics]
+
+  - type: mcq
+    q: 'OTel에서 "log"란?'
+    choices:
+      - '코드 주석'
+      - '특정 시점에 발생한 이벤트의 텍스트(또는 구조화) 기록 — 보통 trace/span_id와 연결됨'
+      - '데이터베이스 트랜잭션'
+      - 'CPU 코어의 작동 시간'
+    answer: 1
+    explanation: |
+      log = "이 시점에 이런 일이 일어났다"는 이벤트. OTel은 logs도 표준
+      포맷으로 흡수해서 같은 trace_id로 traces와 연결 가능 → "이 span에서
+      실제로 어떤 log가 찍혔지?" 가 한 번에 됨.
+    concept: logs-defined
+    prereq: [telemetry-signal-three]
+    bloom: recall
+    tags: [logs]
+
+  - type: ox
+    q: 'OTel에서 같은 trace에 속한 모든 span은 같은 trace_id를 공유한다.'
+    answer: true
+    explanation: |
+      trace_id = "이 요청 하나"를 식별하는 128-bit ID. span마다는 다른
+      span_id를 갖지만 trace_id는 동일. log 메시지나 metric exemplar에
+      trace_id를 함께 기록해두면 사후 상관관계 분석이 쉬워짐.
+    concept: trace-id-shared
+    prereq: [traces-defined, span-defined]
+    bloom: apply
+    time: 20
+    tags: [traces, correlation]
+
+  # ──────────────────────────────────────────────────────────────────
+  # ATTRIBUTE / RESOURCE LAYER — how telemetry carries metadata
+  # ──────────────────────────────────────────────────────────────────
+  - type: mcq
+    q: 'OTel의 "attribute"란?'
+    choices:
+      - '클래스의 필드'
+      - 'span / metric / log에 붙는 key-value 메타데이터 (예: http.status=200, db.system=postgres)'
+      - '파일 권한 비트'
+      - 'CSS 스타일 속성'
+    answer: 1
+    explanation: |
+      attribute = telemetry에 붙는 key-value tag. 표준화된 key 모음을
+      "semantic conventions"라 부름 (예: `http.method`, `db.system`,
+      `service.name`). 표준 key를 쓰면 backend가 자동으로 의미를 알고
+      대시보드를 그릴 수 있음.
+    concept: attribute-defined
+    prereq: [span-defined, metrics-defined, logs-defined]
+    bloom: understand
+    tags: [attribute]
+
+  - type: mcq
+    q: 'OTel의 "resource"란?'
+    choices:
+      - '한 사용자가 차지하는 메모리'
+      - '텔레메트리를 생성하는 entity(서비스 인스턴스, 호스트, 컨테이너)의 정체 정보 (service.name, host.name 등)'
+      - 'API rate limit 단위'
+      - '파일 시스템의 inode'
+    answer: 1
+    explanation: |
+      resource = "이 데이터를 누가 보냈는지". 보통 SDK 초기화 시 한 번
+      설정. 같은 프로세스에서 나오는 모든 span/metric/log에 자동 부착됨.
+      `service.name=checkout`, `k8s.pod.name=...` 같은 식으로 backend
+      그룹화에 사용됨.
+    concept: resource-defined
+    prereq: [attribute-defined]
+    bloom: understand
+    tags: [resource]
+
+  - type: ox
+    q: 'OTel의 "semantic conventions"는 attribute key의 표준 이름 모음이다.'
+    answer: true
+    explanation: |
+      예: HTTP 요청 처리 span의 status code는 `http.status_code`라는 키로
+      통일. 자유롭게 `httpStatus`, `statusCode` 등으로 쓰면 backend별로
+      해석이 달라짐. 표준 키를 쓰는 게 vendor-neutral의 실제 효력.
+    concept: semantic-conventions
+    prereq: [attribute-defined]
+    bloom: recall
+    time: 20
+    tags: [attribute, standards]
+
+  # ──────────────────────────────────────────────────────────────────
+  # INSTRUMENTATION LAYER — how telemetry gets into the wire
+  # ──────────────────────────────────────────────────────────────────
+  - type: mcq
+    q: 'OTel에서 "instrumentation"이란?'
+    choices:
+      - '음악 작곡'
+      - '애플리케이션 코드에 텔레메트리(span/metric/log)를 생성하는 코드를 삽입하는 행위'
+      - '하드웨어 측정 장비'
+      - '코드 컴파일러'
+    answer: 1
+    explanation: |
+      instrumentation = "이 함수가 시작될 때 span 열기, 끝날 때 span 닫기"
+      같은 측정 코드를 애플리케이션에 넣는 것. 두 방식:
+      - manual: 개발자가 SDK API로 직접 호출
+      - automatic: 라이브러리(예: HTTP 클라이언트, DB 드라이버)에 monkey
+        patch / agent로 자동 부착
+    concept: instrumentation-defined
+    prereq: [span-defined, metrics-defined]
+    bloom: understand
+    tags: [sdk]
+
+  - type: mcq
+    q: 'OTel "SDK"의 역할은?'
+    choices:
+      - 'Collector 바이너리 다운로드'
+      - '애플리케이션 안에서 텔레메트리를 만들고 exporter를 통해 송출하는 언어별 라이브러리'
+      - '대시보드 렌더링'
+      - '데이터베이스 쿼리 실행'
+    answer: 1
+    explanation: |
+      SDK = 언어별(Java, Python, Go, Node, …) 라이브러리. trace
+      provider 초기화, span 생성 API, processor·exporter 설정 등을 제공.
+      애플리케이션 프로세스 내부에서 동작.
+    concept: sdk-defined
+    prereq: [opentelemetry-is-spec-and-sdk, instrumentation-defined]
+    bloom: recall
+    tags: [sdk]
+
+  - type: ox
+    q: 'OTel에서 "auto-instrumentation"은 보통 SDK 사용자가 별도 코드를 작성하지 않아도 인기 라이브러리(HTTP, gRPC, DB)에 자동으로 span을 만들어준다.'
+    answer: true
+    explanation: |
+      Java agent (`-javaagent:opentelemetry-javaagent.jar`)나 Python의
+      `opentelemetry-instrument` 같은 도구가 대표적. 시작 부담을 크게
+      줄여줘 "처음 OTel 도입" 시 표준 경로.
+    concept: auto-instrumentation
+    prereq: [instrumentation-defined, sdk-defined]
+    bloom: understand
+    time: 25
+    tags: [sdk]
+
+  # ──────────────────────────────────────────────────────────────────
+  # COLLECTOR LAYER — the data plane agent
+  # ──────────────────────────────────────────────────────────────────
+  - type: mcq
+    q: 'OpenTelemetry Collector란?'
+    choices:
+      - '대시보드 UI'
+      - '텔레메트리 데이터를 받아서 가공·전달하는 독립 실행 가능 에이전트 프로세스'
+      - '클라우드 SaaS만'
+      - '데이터베이스'
+    answer: 1
+    explanation: |
+      Collector = SDK가 보낸 텔레메트리를 받아 가공·필터·라우팅·전송하는
+      별도 프로세스. Go 기반 단일 바이너리. vendor-neutral 라우터.
+      애플리케이션은 OTLP로 Collector에만 보내고, Collector가 백엔드별
+      포맷 변환을 담당 → 백엔드 갈아끼울 때 앱은 무변경.
+    concept: collector-defined
+    prereq: [vendor-neutral, opentelemetry-is-spec-and-sdk]
+    bloom: understand
+    tags: [collector]
+
+  - type: mcq
+    q: 'Collector의 4가지 핵심 컴포넌트 클래스가 아닌 것은?'
+    choices:
+      - 'Receivers'
+      - 'Processors'
+      - 'Exporters'
+      - 'Compilers'
+    answer: 3
+    explanation: |
+      4 클래스: receivers / processors / exporters / connectors.
+      receiver = 데이터 받음 (OTLP, Jaeger, Prometheus scrape 등)
+      processor = 가공 (sampling, batching, attribute 수정 등)
+      exporter = 외부 송출 (OTLP out, Datadog, file 등)
+      connector = pipeline 간 다리 (예: spans → metrics 변환)
+    concept: collector-component-classes
+    prereq: [collector-defined]
+    bloom: recall
+    tags: [collector, components]
+
+  - type: mcq
+    q: 'Collector의 "pipeline"이란?'
+    choices:
+      - '데이터베이스 인덱스'
+      - 'receivers → processors → exporters를 한 줄로 묶은 데이터 흐름 단위 (signal 타입별로 정의)'
+      - 'CI/CD 빌드 시스템'
+      - '메시지 큐의 topic'
+    answer: 1
+    explanation: |
+      pipeline = "이 receiver로 받은 데이터를 이 processor 체인으로 가공해
+      이 exporter들로 보낸다"의 한 경로. signal 타입(traces/metrics/logs)
+      마다 별도 pipeline. 같은 receiver를 여러 pipeline에 등록 가능.
+    concept: pipeline-defined
+    prereq: [collector-component-classes, telemetry-signal-three]
+    bloom: understand
+    tags: [collector, pipeline]
+
+  - type: ox
+    q: '한 receiver가 여러 pipeline의 입력으로 동시에 쓰일 수 있다.'
+    answer: true
+    explanation: |
+      여러 pipeline의 `receivers` 키에 같은 이름을 넣으면, 같은 receiver가
+      받은 데이터가 두 pipeline 모두로 분배됨. 예: 같은 trace 데이터를
+      `traces/sampled`(샘플링 후 cheap backend) + `traces/full`(전량 보관)
+      두 pipeline으로 동시에.
+    concept: receiver-fan-in
+    prereq: [pipeline-defined]
+    bloom: apply
+    time: 20
+    tags: [pipeline]
+
+  - type: mcq
+    q: 'pipeline의 마지막 processor가 여러 exporter에 데이터를 보낼 때 어떤 메커니즘을 쓰는가?'
+    choices:
+      - 'round-robin으로 한 exporter씩 번갈아'
+      - 'fanoutconsumer를 통해 각 exporter에 데이터 element의 복사본 전달'
+      - '첫 exporter만 동기, 나머지는 비동기'
+      - 'exporter 우선순위로 단일 전달'
+    answer: 1
+    explanation: |
+      "Each exporter gets a copy of each data element. The last processor
+      uses a fanoutconsumer to send the data to multiple exporters" — 공식
+      architecture doc. 즉 1 receiver → N pipeline → M exporter 모두 복사
+      기반 fan-out.
+    concept: fanout-to-exporters
+    prereq: [pipeline-defined, receiver-fan-in]
+    bloom: analyze
+    time: 25
+    tags: [pipeline, fanout]
+
+  - type: mcq
+    q: '같은 타입의 pipeline을 여러 개 정의할 때 이름은 어떻게 구분하는가?'
+    choices:
+      - '정수 인덱스'
+      - '`<type>/<name>` 형식 (예: `traces/dev`, `traces/prod`)'
+      - '별도 config 파일 분리만 가능'
+      - '구분 불가 — 한 종류당 한 개만'
+    answer: 1
+    explanation: |
+      `traces`, `traces/dev`, `traces/prod`, `logs/syslog` 같은 식으로
+      slash 뒤 이름을 붙임. 환경별·샘플링 전략별 분리에 사용. 이름 없이
+      `traces` 만으로도 가능 (그땐 한 개).
+    concept: pipeline-naming
+    prereq: [pipeline-defined]
+    bloom: apply
+    tags: [pipeline, config]
+
+  # ──────────────────────────────────────────────────────────────────
+  # OTLP — the wire protocol
+  # ──────────────────────────────────────────────────────────────────
+  - type: mcq
+    q: 'OTLP(OpenTelemetry Protocol)는?'
+    choices:
+      - 'UI 표준'
+      - 'OTel SDK와 Collector(또는 Collector와 백엔드) 사이에서 텔레메트리를 송수신할 때 쓰는 표준 와이어 프로토콜 (gRPC / HTTP 두 가지 트랜스포트)'
+      - '데이터베이스 쿼리 언어'
+      - '클라우드 비용 청구 API'
+    answer: 1
+    explanation: |
+      OTLP = OTel 데이터의 표준 송수신 포맷. Protocol Buffers 기반 메시지를
+      gRPC(기본) 또는 HTTP/JSON-Protobuf으로 전송. OTel 컴포넌트가 서로
+      말이 통하는 공통어.
+    concept: otlp-protocol
+    prereq: [opentelemetry-is-spec-and-sdk, collector-defined]
+    bloom: understand
+    tags: [otlp, wire]
+
+  - type: ox
+    q: 'OTel SDK는 항상 Collector를 거치지 않고 backend에 직접 OTLP로 보낼 수도 있다.'
+    answer: true
+    explanation: |
+      Collector는 강력하지만 필수가 아님. SDK의 OTLP exporter를 backend의
+      OTLP endpoint로 직접 가리킬 수 있음 (대부분 backend가 OTLP 수신
+      지원). 단 Collector를 두면 batching/sampling/multi-backend fan-out
+      을 한 곳에서 관리할 수 있어 운영 이점이 큼.
+    concept: collector-optional
+    prereq: [otlp-protocol, collector-defined]
+    bloom: apply
+    time: 20
+    tags: [collector, deployment]
+
+  # ──────────────────────────────────────────────────────────────────
+  # DEPLOYMENT LAYER — agent vs gateway, sampling
+  # ──────────────────────────────────────────────────────────────────
+  - type: mcq
+    q: 'Collector의 "agent" 배포 패턴이란?'
+    choices:
+      - '중앙 1대가 모든 트래픽을 받음'
+      - '애플리케이션과 같은 host(sidecar / DaemonSet / localhost 프로세스)에서 가까이 실행되는 Collector'
+      - 'SDK가 직접 backend로 보냄'
+      - 'Collector를 라이브러리로 embed'
+    answer: 1
+    explanation: |
+      agent 패턴 = 앱 가까이 (sidecar, k8s DaemonSet, same-host process)
+      에서 Collector를 실행. 앱은 localhost로 보내 네트워크 hop을 줄임.
+      반대로 gateway 패턴은 중앙 여러 대가 트래픽을 받아 sampling·라우팅.
+      흔한 구성: 앱 → agent (host당) → gateway (central) → backend.
+    concept: agent-deployment
+    prereq: [collector-defined]
+    bloom: understand
+    tags: [deploy]
+
+  - type: mcq
+    q: 'Collector "gateway" 패턴에서 trace 단위 sampling을 정확히 하기 위해 필요한 exporter는?'
+    choices:
+      - 'otlp exporter'
+      - 'load-balancing exporter (trace_id 기반 라우팅)'
+      - 'file exporter'
+      - 'prometheus exporter'
+    answer: 1
+    explanation: |
+      tail sampling은 "한 trace의 모든 span을 본 다음 보존/폐기 결정".
+      따라서 같은 trace_id의 span들이 같은 2-tier collector 인스턴스로
+      가야 함. load-balancing exporter가 trace_id 해시로 라우팅하여 이걸
+      보장. 평범한 random LB라면 같은 trace의 span이 흩어져 정확한 tail
+      sampling이 불가능.
+    concept: load-balancing-by-trace-id
+    prereq: [agent-deployment, traces-defined, trace-id-shared]
+    bloom: analyze
+    time: 30
+    tags: [deploy, sampling]
+
+  # ──────────────────────────────────────────────────────────────────
+  # SCALING / OPS — practical signals to watch
+  # ──────────────────────────────────────────────────────────────────
+  - type: mcq
+    q: 'Collector에서 메모리 폭주 방지용 processor의 이름은?'
+    choices:
+      - 'memory_limiter'
+      - 'gc_processor'
+      - 'oom_killer'
+      - 'cache_resizer'
+    answer: 0
+    explanation: |
+      `memory_limiter` processor가 메모리 사용량이 임계치를 넘으면 새 데이터
+      수신을 거부(refuse)해 OOM을 방지. 거부된 데이터는 `otelcol_processor_
+      refused_*` 카운터로 모니터링 가능.
+    concept: memory-limiter
+    prereq: [collector-component-classes]
+    bloom: recall
+    tags: [ops, scaling]
+
+  - type: ox
+    q: 'Collector exporter queue 사용량이 capacity의 60~70%에 도달하면 scale-up을 고려한다.'
+    answer: true
+    explanation: |
+      공식 scaling 가이드: "monitor queue size and consider scaling up when
+      it reaches 60-70% of capacity". 100% 도달하면 drop 발생하므로 그
+      전에 replica 추가 또는 큐 사이즈 상향.
+    concept: exporter-queue-threshold
+    prereq: [collector-component-classes, agent-deployment]
+    bloom: apply
+    time: 20
+    tags: [ops, scaling]
+
+  - type: ox
+    q: 'Collector를 운영할 때 resilience를 위해 권장되는 최소 replica 수는 3개다.'
+    answer: true
+    explanation: |
+      공식 권장: "maintaining a minimum number of replicas, for example three,
+      for resilience". 1개면 그게 죽으면 텔레메트리 전체가 끊기고, 2개면
+      rolling restart 중 윈도우가 길어진다.
+    concept: collector-min-replicas
+    prereq: [agent-deployment]
+    bloom: recall
+    time: 15
+    tags: [ops, scaling]
+
+  # ──────────────────────────────────────────────────────────────────
+  # CLOSURE — bridge questions to architecture pack
+  # ──────────────────────────────────────────────────────────────────
+  - type: mcq
+    q: 'OTel 생태계에서 "vendor-neutral"의 실제 효력은?'
+    choices:
+      - '백엔드를 무료로 만들어준다'
+      - 'instrument 한 번으로 backend(Jaeger/Tempo/Datadog/Honeycomb 등)를 코드 수정 없이 교체 가능 — Collector의 exporter만 바꾸면 됨'
+      - '클라우드 비용이 줄어든다'
+      - '오픈소스 라이선스가 자동 부착된다'
+    answer: 1
+    explanation: |
+      vendor lock-in 회피의 실제 메커니즘. 앱은 OTel SDK + OTLP만 사용 →
+      backend가 바뀌면 Collector의 exporter 설정 한 줄 변경. 앱 재배포
+      불필요. 이게 OTel의 시장 채택 폭증의 핵심 이유.
+    concept: vendor-neutral-mechanism
+    prereq: [vendor-neutral, otlp-protocol, collector-defined]
+    bloom: analyze
+    time: 25
+    tags: [intro, value]
+
+  - type: ox
+    q: 'OTel의 traces·metrics·logs는 attribute 또는 trace_id 같은 공통 ID로 서로 상관관계(correlation) 분석이 가능하도록 설계되어 있다.'
+    answer: true
+    explanation: |
+      한 알람의 metric spike → 그 시각의 trace로 점프 → 그 trace의 span에
+      attached된 log 확인. 같은 service.name + trace_id로 세 신호가 묶이는
+      게 OTel 데이터 모델의 핵심. 단일 신호 분석으로는 보이지 않는 인과
+      관계가 드러남.
+    concept: signal-correlation
+    prereq: [traces-defined, metrics-defined, logs-defined, attribute-defined, resource-defined]
+    bloom: analyze
+    time: 30
+    tags: [signals, correlation]
+
+  - type: mcq
+    q: 'OTel을 도입하는 순서로 일반적으로 권장되는 것은?'
+    choices:
+      - 'logs → metrics → traces 순서로 한꺼번에'
+      - '한 서비스에 auto-instrumentation 적용해 traces 먼저 → 안정화되면 metrics → logs 통합 → 점진 확대'
+      - 'profiles 부터 도입'
+      - '모든 서비스에 동시 적용해야 의미 있음'
+    answer: 1
+    explanation: |
+      auto-instrumentation으로 traces가 가장 빠르게 가치를 보여줌 (분산
+      요청 흐름 시각화). 그 위에 metrics + logs를 trace_id와 묶어 점진
+      확대. 전체 fleet 동시 도입은 사고가 났을 때 통제 불가 — 한 서비스
+      pilot이 정석.
+    concept: adoption-path
+    prereq: [auto-instrumentation, signal-correlation, agent-deployment]
+    bloom: analyze
+    time: 30
+    tags: [adoption, ops]
