@@ -204,6 +204,44 @@ func _make_card(entry: Dictionary) -> Control:
 			line.add_theme_font_size_override("font_size", 14)
 			box.add_child(line)
 
+	# ─── PKG: concept + prereq chips ──────────────────────────────────
+	# Show what this question teaches and what the learner had to know first.
+	# Each prereq becomes a clickable chip — pressing it jumps into a single-
+	# question focus session on that concept (PackStore.load_concept_focus).
+	var concept_id: String = String(q_snapshot.get("concept", ""))
+	var prereqs_raw = q_snapshot.get("prereq", [])
+	var prereqs: Array = prereqs_raw if typeof(prereqs_raw) == TYPE_ARRAY else []
+	if not concept_id.is_empty() or not prereqs.is_empty():
+		var pkg_box := VBoxContainer.new()
+		pkg_box.add_theme_constant_override("separation", 4)
+		box.add_child(pkg_box)
+		if not concept_id.is_empty():
+			var concept_label := Label.new()
+			concept_label.text = "🎯 핵심 개념: %s" % concept_id
+			concept_label.add_theme_font_size_override("font_size", 12)
+			concept_label.modulate = Color(0.85, 0.75, 1.0)
+			pkg_box.add_child(concept_label)
+		if not prereqs.is_empty():
+			var prereq_header := Label.new()
+			prereq_header.text = "📚 미리 알아야 할 개념 — 클릭하면 그 개념 학습으로 이동:"
+			prereq_header.add_theme_font_size_override("font_size", 12)
+			prereq_header.modulate = Color(0.7, 0.85, 0.95)
+			pkg_box.add_child(prereq_header)
+			var chip_row := HBoxContainer.new()
+			chip_row.add_theme_constant_override("separation", 6)
+			# Allow wrapping when there are many prereqs — HBoxContainer doesn't
+			# wrap natively, so use a flow-y FlowContainer if available, else
+			# accept horizontal overflow inside the scroll list.
+			pkg_box.add_child(chip_row)
+			for pid in prereqs:
+				var pid_str := String(pid)
+				var chip := Button.new()
+				chip.text = "→ %s" % pid_str
+				chip.custom_minimum_size = Vector2(0, 28)
+				chip.add_theme_font_size_override("font_size", 12)
+				chip.pressed.connect(func(): _open_concept_focus(pid_str))
+				chip_row.add_child(chip)
+
 	# Explanation
 	var expl: String = String(q_snapshot.get("explanation", ""))
 	if not expl.is_empty():
@@ -270,6 +308,17 @@ func _start_review(due_only: bool) -> void:
 		return
 	if PackStore.load_review_session(entries):
 		get_tree().change_scene_to_file("res://scenes/Quiz.tscn")
+
+
+# Jump into a single-question focus session that teaches a specific prereq
+# concept. If the concept is unknown (no question in any pack teaches it),
+# stay on the wrong-note screen and surface the failure as a status message.
+func _open_concept_focus(concept_id: String) -> void:
+	if PackStore.load_concept_focus(concept_id):
+		get_tree().change_scene_to_file("res://scenes/Quiz.tscn")
+	else:
+		_summary_label.text = "선수 개념 '%s'을 가르치는 문항을 찾지 못했습니다." % concept_id
+		_summary_label.modulate = Color(1.0, 0.7, 0.6)
 
 
 func _go_home() -> void:

@@ -36,6 +36,13 @@ var session_started_at_unix: float = 0.0
 var question_started_at_unix: float = 0.0
 var phase: String = "IDLE"
 
+# PKG concept index — lazy-built on first lookup. Maps concept_id → { pack_path,
+# q_index, bloom, question_snapshot }. Built by scanning `res://data/quizzes/`
+# once, then cached for the rest of the session.
+const CONCEPT_INDEX_QUIZ_DIR := "res://data/quizzes"
+var _concept_index: Dictionary = {}
+var _concept_index_built: bool = false
+
 # Review mode — when true, `pack.questions` came from ProgressStore.wrong_note
 # snapshots, and submit_answer additionally pipes the result through SRS to
 # update / remove the wrong-note entry. Sword durability + wrong-note re-
@@ -272,3 +279,97 @@ func _complete_session() -> void:
 func _hash_question(q: Dictionary) -> String:
 	var key := "%s::%s" % [q.get("type", ""), q.get("q", "")]
 	return str(key.hash())
+
+
+# ─── PKG concept index ────────────────────────────────────────────────
+# Walk every .yml/.json under res://data/quizzes/ exactly once and build a
+# map concept_id → first question that teaches it at the lowest bloom level.
+# "Lowest bloom first" means a learner who looks up an unknown concept lands
+# on a recall-level intro question rather than a downstream analyze.
+func _build_concept_index() -> void:
+	if _concept_index_built:
+		return
+	_concept_index_built = true
+	_concept_index.clear()
+	var dir := DirAccess.open(CONCEPT_INDEX_QUIZ_DIR)
+	if dir == null:
+		push_warning("concept index: cannot open %s" % CONCEPT_INDEX_QUIZ_DIR)
+		return
+	dir.list_dir_begin()
+	var bloom_rank := { "recall": 0, "understand": 1, "apply": 2, "analyze": 3 }
+	while true:
+		var entry := dir.get_next()
+		if entry.is_empty():
+			break
+		if dir.current_is_dir():
+			continue
+		if not (entry.ends_with(".yml") or entry.ends_with(".yaml") or entry.ends_with(".json")):
+			continue
+		var path := "%s/%s" % [CONCEPT_INDEX_QUIZ_DIR, entry]
+		var parsed := PackParser.parse_file(path)
+		if not parsed.get("ok", false):
+			continue
+		var parsed_pack: Dictionary = parsed.get("pack", {})
+		var qs_raw = parsed_pack.get("questions", [])
+		if typeof(qs_raw) != TYPE_ARRAY:
+			continue
+		var qs: Array = qs_raw
+		for i in qs.size():
+			var q: Dictionary = qs[i]
+			var concept_id := String(q.get("concept", ""))
+			if concept_id.is_empty():
+				continue
+			var bloom := String(q.get("bloom", "recall"))
+			var rank: int = bloom_rank.get(bloom, 1)
+			var prev = _concept_index.get(concept_id, null)
+			if prev == null or rank < int(prev.get("rank", 99)):
+				_concept_index[concept_id] = {
+					"pack_path": path,
+					"q_index": i,
+					"bloom": bloom,
+					"rank": rank,
+					"question": q,
+				}
+	dir.list_dir_end()
+
+
+# Returns { ok, pack_path, q_index, bloom, question } for the canonical teacher
+# of a concept, or { ok: false } if unknown.
+func find_concept_teacher(concept_id: String) -> Dictionary:
+	_build_concept_index()
+	if not _concept_index.has(concept_id):
+		return { "ok": false }
+	var hit: Dictionary = _concept_index[concept_id]
+	return {
+		"ok": true,
+		"pack_path": hit["pack_path"],
+		"q_index": hit["q_index"],
+		"bloom": hit["bloom"],
+		"question": hit["question"],
+	}
+
+
+# Builds a single-question review session targeting the concept's teacher.
+# Used by the wrong-note UI when the learner clicks a prereq chip.
+func load_concept_focus(concept_id: String) -> bool:
+	var hit := find_concept_teacher(concept_id)
+	if not hit.get("ok", false):
+		return false
+	var q: Dictionary = hit["question"]
+	is_review_mode = true
+	review_hashes = [_hash_question(q)]
+	review_levels = [0]
+	pack = {
+		"meta": {
+			"title": "🎯 선수 개념 학습: %s" % concept_id,
+			"version": "concept-focus",
+			"default_time": int(q.get("time", 30)),
+		},
+		"questions": [q],
+	}
+	_reset_session()
+	pack_loaded.emit(pack["meta"], 1)
+	phase = "IN_QUESTION"
+	question_started_at_unix = Time.get_unix_time_from_system()
+	question_changed.emit(0, current_question())
+	return true
