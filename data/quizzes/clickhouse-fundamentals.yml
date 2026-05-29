@@ -155,8 +155,9 @@ questions:
     answer: false
     explanation: |
       이름은 같지만 의미가 다른 대표적 함정. ClickHouse primary key는
-      디스크에 데이터를 정렬하는 기준 + sparse index의 기반일 뿐, 중복 가능.
+      디스크에 데이터를 정렬하는 기준일 뿐, 중복 row를 허용한다.
       "ClickHouse does not require a unique primary key" — 공식 docs.
+      (그 정렬된 데이터 위에 어떤 인덱스가 얹히는지는 뒤에서 별도 학습.)
     concept: clickhouse-primary-key-not-unique
     prereq: [rdb-primary-key, clickhouse-is-dbms]
     bloom: apply

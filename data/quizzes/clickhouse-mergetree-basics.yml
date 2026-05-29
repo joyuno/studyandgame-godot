@@ -68,7 +68,7 @@ questions:
       docs(custom-partitioning-key.md) — "A merge only works for data parts that have the same value for the partitioning expression".
       partition 경계는 머지의 절대 경계로, OPTIMIZE FINAL로도 넘을 수 없다.
     concept: partition-merge-boundary
-    prereq: [partition-vs-part, background-merge]
+    prereq: [partition-vs-part, background-merge, data-part]
     bloom: apply
     tags: [mergetree, partition, merge]
 
@@ -141,7 +141,7 @@ questions:
       docs(mergetree.md) — "ClickHouse does not require a unique primary key. You can insert multiple rows with the same primary key".
       primary key는 sparse index의 기준일 뿐 unique 제약이 아니다.
     concept: clickhouse-primary-key-not-unique
-    prereq: [rdb-primary-key, mergetree-primary-index-sparse]
+    prereq: [rdb-primary-key, mergetree-primary-index-sparse, sparse-index]
     bloom: recall
     time: 15
     tags: [mergetree, primary-key]

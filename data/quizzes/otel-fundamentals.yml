@@ -175,10 +175,10 @@ questions:
       - 'CSS 스타일 속성'
     answer: 1
     explanation: |
-      attribute = telemetry에 붙는 key-value tag. 표준화된 key 모음을
-      "semantic conventions"라 부름 (예: `http.method`, `db.system`,
-      `service.name`). 표준 key를 쓰면 backend가 자동으로 의미를 알고
-      대시보드를 그릴 수 있음.
+      attribute = telemetry에 붙는 key-value tag. 예: `http.method=GET`,
+      `db.system=postgres`, `service.name=checkout`. backend가 attribute로
+      그룹화·필터링·집계를 함. (attribute key 이름을 표준화하는 별도
+      규약은 뒤에서 다룸.)
     concept: attribute-defined
     prereq: [span-defined, metrics-defined, logs-defined]
     bloom: understand
