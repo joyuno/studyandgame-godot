@@ -24,6 +24,7 @@ var _feedback_box: PanelContainer
 var _feedback_label: Label
 var _feedback_icon: Label
 var _progress_label: Label
+var _copy_button: Button
 var _tickets_label: Label
 var _session_time_label: Label
 var _combo_label: Label
@@ -51,6 +52,7 @@ func _ready() -> void:
 		_render_idle_button()
 		_question_timer.visible = false
 		_durability_row.visible = false
+		_copy_button.disabled = true
 		set_process(false)
 		return
 	_render_question(PackStore.question_index, PackStore.current_question())
@@ -125,6 +127,13 @@ func _build_layout() -> void:
 	_progress_label = Label.new()
 	_progress_label.add_theme_font_size_override("font_size", _font_sizes["hud"])
 	top.add_child(_progress_label)
+
+	_copy_button = Button.new()
+	_copy_button.text = "📋 복사"
+	_copy_button.tooltip_text = "현재 문항을 클립보드로 복사 (답한 뒤에는 정답·해설 포함)"
+	_copy_button.custom_minimum_size = Vector2(82, 36)
+	_copy_button.pressed.connect(_on_copy_question)
+	top.add_child(_copy_button)
 
 	# ── Question timer bar (per-question countdown)
 	_question_timer = ProgressBar.new()
@@ -498,6 +507,40 @@ func _flash_sword_broken() -> void:
 	_apply_durability_view()
 
 
+func _on_copy_question() -> void:
+	# Copy the live question. Once the learner has answered (feedback panel is
+	# up) include the correct answer + explanation so the clipboard is a full
+	# study note; otherwise copy just the prompt + choices.
+	var q := PackStore.current_question()
+	if q.is_empty():
+		return
+	var answered := _feedback_box.visible
+	DisplayServer.clipboard_set(_format_question_for_copy(q, answered))
+	_show_toast("📋 클립보드에 복사됨", Color(0.7, 0.95, 1.0))
+
+
+func _format_question_for_copy(q: Dictionary, include_answer: bool) -> String:
+	var lines: Array[String] = []
+	lines.append(String(q.get("q", "")))
+	match q.get("type", ""):
+		"mcq":
+			var choices: Array = q.get("choices", [])
+			var ans_idx := int(q.get("answer", -1))
+			for i in choices.size():
+				var mark := "  ✓" if (include_answer and i == ans_idx) else ""
+				lines.append("%d) %s%s" % [i + 1, str(choices[i]), mark])
+		"ox":
+			lines.append("(O / X)")
+			if include_answer:
+				lines.append("정답: %s" % ("O" if bool(q.get("answer", false)) else "X"))
+	if include_answer:
+		var expl := String(q.get("explanation", ""))
+		if not expl.is_empty():
+			lines.append("")
+			lines.append("해설: %s" % expl)
+	return "\n".join(lines)
+
+
 func _on_advance() -> void:
 	PackStore.advance()
 
@@ -511,6 +554,7 @@ func _render_completion(record: Dictionary) -> void:
 		child.queue_free()
 	_feedback_box.visible = false
 	_question_timer.visible = false
+	_copy_button.visible = false
 	_advance_button.text = "📓 오답노트로" if PackStore.is_review_mode else "홈으로"
 	_advance_button.visible = true
 	_advance_button.pressed.disconnect(_on_advance)

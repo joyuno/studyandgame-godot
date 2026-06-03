@@ -275,6 +275,13 @@ func _make_card(entry: Dictionary) -> Control:
 	btn_forget.pressed.connect(func(): _grade(hash_key, review_level, false))
 	actions.add_child(btn_forget)
 
+	var btn_copy := Button.new()
+	btn_copy.text = "📋 복사"
+	btn_copy.tooltip_text = "문항·보기·정답·해설을 클립보드로 복사"
+	btn_copy.custom_minimum_size = Vector2(90, 36)
+	btn_copy.pressed.connect(_on_copy_entry.bind(entry, btn_copy))
+	actions.add_child(btn_copy)
+
 	var btn_delete := Button.new()
 	btn_delete.text = "🗑 제거"
 	btn_delete.custom_minimum_size = Vector2(90, 36)
@@ -282,6 +289,45 @@ func _make_card(entry: Dictionary) -> Control:
 	actions.add_child(btn_delete)
 
 	return panel
+
+
+func _on_copy_entry(entry: Dictionary, btn: Button) -> void:
+	DisplayServer.clipboard_set(_format_entry_for_copy(entry))
+	# Brief confirmation on the button itself, then restore.
+	btn.text = "✓ 복사됨"
+	var t := create_tween()
+	t.tween_interval(1.2)
+	t.tween_callback(func():
+		if is_instance_valid(btn):
+			btn.text = "📋 복사")
+
+
+func _format_entry_for_copy(entry: Dictionary) -> String:
+	var q: Dictionary = entry.get("questionSnapshot", {})
+	var lines: Array[String] = []
+	lines.append("[%s]" % entry.get("packTitle", ""))
+	lines.append(String(q.get("q", "")))
+	match q.get("type", ""):
+		"mcq":
+			var choices: Array = q.get("choices", [])
+			var ans_idx := int(q.get("answer", -1))
+			var user_ans := int(entry.get("userAnswer", -1))
+			for i in choices.size():
+				var mark := ""
+				if i == ans_idx:
+					mark = "  ✓ 정답"
+				elif i == user_ans:
+					mark = "  ✗ 내 답"
+				lines.append("%d) %s%s" % [i + 1, str(choices[i]), mark])
+		"ox":
+			var truth := "O" if bool(q.get("answer", false)) else "X"
+			var mine := "O" if bool(entry.get("userAnswer", false)) else "X"
+			lines.append("정답: %s   ·   내 답: %s" % [truth, mine])
+	var expl := String(q.get("explanation", ""))
+	if not expl.is_empty():
+		lines.append("")
+		lines.append("해설: %s" % expl)
+	return "\n".join(lines)
 
 
 func _grade(hash_key: String, review_level: int, correct: bool) -> void:
