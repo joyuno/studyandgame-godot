@@ -19,6 +19,7 @@ const FONT_SCALE_FACTOR := [0.85, 1.0, 1.2]  # 0=small, 1=medium, 2=large
 var _sword_slot: Control
 var _question_label: Label
 var _question_panel: PanelContainer
+var _glossary_box: VBoxContainer
 var _answer_area: VBoxContainer
 var _feedback_box: PanelContainer
 var _feedback_label: Label
@@ -192,6 +193,15 @@ func _build_layout() -> void:
 	_question_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	q_margin.add_child(_question_label)
 
+	# ── Vocab gloss cards (N3+ words in the stem — reading + Korean meaning)
+	# Populated per question from the optional `glossary` field. Helps the
+	# learner read the prompt without revealing the tested word/answer.
+	_glossary_box = VBoxContainer.new()
+	_glossary_box.size_flags_horizontal = SIZE_EXPAND_FILL
+	_glossary_box.add_theme_constant_override("separation", 6)
+	_glossary_box.visible = false
+	root.add_child(_glossary_box)
+
 	# ── Answer area
 	_answer_area = VBoxContainer.new()
 	_answer_area.size_flags_horizontal = SIZE_EXPAND_FILL
@@ -359,6 +369,7 @@ func _render_idle_button() -> void:
 
 func _render_question(index: int, q: Dictionary) -> void:
 	_question_label.text = q.get("q", "(빈 문항)")
+	_render_glossary(q.get("glossary", []))
 	_progress_label.text = "%d / %d" % [index + 1, PackStore.questions_count()]
 	_feedback_box.visible = false
 	_advance_button.visible = false
@@ -406,6 +417,97 @@ func _render_question(index: int, q: Dictionary) -> void:
 			btn_x.pressed.connect(_on_submit_ox.bind(false))
 			row.add_child(btn_x)
 			_answer_area.add_child(row)
+
+
+func _render_glossary(entries) -> void:
+	for child in _glossary_box.get_children():
+		child.queue_free()
+	var list: Array = entries if typeof(entries) == TYPE_ARRAY else []
+	if list.is_empty():
+		_glossary_box.visible = false
+		return
+	_glossary_box.visible = true
+	var header := Label.new()
+	header.text = "📖 단어 — 지문 속 N3+ 어휘 (정답 단어 제외)"
+	header.add_theme_font_size_override("font_size", maxi(11, _font_sizes["hud"] - 3))
+	header.modulate = Color(0.62, 0.76, 0.95)
+	_glossary_box.add_child(header)
+	var flow := HFlowContainer.new()
+	flow.add_theme_constant_override("h_separation", 8)
+	flow.add_theme_constant_override("v_separation", 6)
+	_glossary_box.add_child(flow)
+	for e in list:
+		var card := _make_gloss_card(e)
+		if card:
+			flow.add_child(card)
+
+
+# Build one vocab card from a 'word｜reading｜meaning' scalar (the in-tree YAML
+# parser can't nest maps, so glossary entries are delimited strings) or, if a
+# richer parser is ever used, a {word, reading, meaning} dictionary.
+func _make_gloss_card(entry) -> Control:
+	var word := ""
+	var reading := ""
+	var meaning := ""
+	if typeof(entry) == TYPE_DICTIONARY:
+		word = String(entry.get("word", ""))
+		reading = String(entry.get("reading", ""))
+		meaning = String(entry.get("meaning", ""))
+	else:
+		var parts := String(entry).replace("|", "｜").split("｜")
+		if parts.size() >= 1: word = parts[0].strip_edges()
+		if parts.size() >= 2: reading = parts[1].strip_edges()
+		if parts.size() >= 3: meaning = parts[2].strip_edges()
+	if word.is_empty():
+		return null
+
+	var panel := PanelContainer.new()
+	panel.add_theme_stylebox_override("panel", _gloss_stylebox())
+	var m := MarginContainer.new()
+	m.add_theme_constant_override("margin_left", 10)
+	m.add_theme_constant_override("margin_right", 10)
+	m.add_theme_constant_override("margin_top", 6)
+	m.add_theme_constant_override("margin_bottom", 6)
+	panel.add_child(m)
+
+	var vb := VBoxContainer.new()
+	vb.add_theme_constant_override("separation", 1)
+	m.add_child(vb)
+
+	var top := HBoxContainer.new()
+	top.add_theme_constant_override("separation", 8)
+	vb.add_child(top)
+
+	var word_label := Label.new()
+	word_label.text = word
+	word_label.add_theme_font_size_override("font_size", 18)
+	word_label.modulate = Color(0.95, 0.96, 1.0)
+	top.add_child(word_label)
+
+	if not reading.is_empty():
+		var reading_label := Label.new()
+		reading_label.text = reading
+		reading_label.add_theme_font_size_override("font_size", 13)
+		reading_label.modulate = Color(0.7, 0.85, 0.7)
+		reading_label.size_flags_vertical = SIZE_SHRINK_CENTER
+		top.add_child(reading_label)
+
+	var meaning_label := Label.new()
+	meaning_label.text = meaning if not meaning.is_empty() else "—"
+	meaning_label.add_theme_font_size_override("font_size", 13)
+	meaning_label.modulate = Color(0.82, 0.86, 0.95)
+	vb.add_child(meaning_label)
+
+	return panel
+
+
+func _gloss_stylebox() -> StyleBoxFlat:
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0.12, 0.15, 0.21)
+	sb.border_color = Color(0.30, 0.40, 0.55)
+	sb.set_border_width_all(1)
+	sb.set_corner_radius_all(7)
+	return sb
 
 
 func _on_submit_mcq(answer_index: int) -> void:
@@ -533,6 +635,12 @@ func _format_question_for_copy(q: Dictionary, include_answer: bool) -> String:
 			lines.append("(O / X)")
 			if include_answer:
 				lines.append("정답: %s" % ("O" if bool(q.get("answer", false)) else "X"))
+	var glossary = q.get("glossary", [])
+	if typeof(glossary) == TYPE_ARRAY and not (glossary as Array).is_empty():
+		lines.append("")
+		lines.append("[단어]")
+		for e in glossary:
+			lines.append("· %s" % String(e).replace("｜", " / ").replace("|", " / "))
 	if include_answer:
 		var expl := String(q.get("explanation", ""))
 		if not expl.is_empty():
@@ -555,6 +663,7 @@ func _render_completion(record: Dictionary) -> void:
 	_feedback_box.visible = false
 	_question_timer.visible = false
 	_copy_button.visible = false
+	_glossary_box.visible = false
 	_advance_button.text = "📓 오답노트로" if PackStore.is_review_mode else "홈으로"
 	_advance_button.visible = true
 	_advance_button.pressed.disconnect(_on_advance)

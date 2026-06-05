@@ -94,7 +94,7 @@ func _build_layout() -> void:
 	var stage_wrap := Control.new()
 	stage_wrap.size_flags_horizontal = SIZE_EXPAND_FILL
 	stage_wrap.size_flags_vertical = SIZE_FILL
-	stage_wrap.custom_minimum_size = Vector2(0, 300)
+	stage_wrap.custom_minimum_size = Vector2(0, 220)
 	stage_wrap.clip_contents = true
 	root.add_child(stage_wrap)
 
@@ -103,23 +103,45 @@ func _build_layout() -> void:
 	stage_wrap.add_child(_sword_slot)
 	_apply_quiet_mode()
 
-	# ── Action row 1 — quiz pack pickers
-	var pack_row := HBoxContainer.new()
-	pack_row.alignment = BoxContainer.ALIGNMENT_CENTER
-	pack_row.add_theme_constant_override("separation", 16)
-	root.add_child(pack_row)
+	# ── Quiz pack picker — auto-listed from res://data/quizzes/ so newly added
+	# packs appear without editing this scene. .yml wins over a same-name .json.
+	var pack_header := HBoxContainer.new()
+	pack_header.add_theme_constant_override("separation", 12)
+	root.add_child(pack_header)
 
-	var btn_clickhouse := _make_button("ClickHouse 기초", Vector2(200, 56))
-	btn_clickhouse.pressed.connect(_on_load_sample.bind("res://data/quizzes/clickhouse-basics.json"))
-	pack_row.add_child(btn_clickhouse)
+	var pack_title := Label.new()
+	pack_title.text = "📚 퀴즈 팩 선택"
+	pack_title.add_theme_font_size_override("font_size", 17)
+	pack_title.modulate = Color(0.85, 0.9, 1.0)
+	pack_header.add_child(pack_title)
 
-	var btn_otel := _make_button("OpenTelemetry 기초", Vector2(220, 56))
-	btn_otel.pressed.connect(_on_load_sample.bind("res://data/quizzes/otel-basics.json"))
-	pack_row.add_child(btn_otel)
+	var hsp := Control.new()
+	hsp.size_flags_horizontal = SIZE_EXPAND_FILL
+	pack_header.add_child(hsp)
 
-	var btn_open := _make_button("파일 열기…", Vector2(160, 56))
+	var btn_open := _make_button("파일 열기…", Vector2(140, 40))
 	btn_open.pressed.connect(_on_open_file)
-	pack_row.add_child(btn_open)
+	pack_header.add_child(btn_open)
+
+	var pack_scroll := ScrollContainer.new()
+	pack_scroll.size_flags_horizontal = SIZE_EXPAND_FILL
+	pack_scroll.size_flags_vertical = SIZE_EXPAND_FILL
+	pack_scroll.custom_minimum_size = Vector2(0, 130)
+	root.add_child(pack_scroll)
+
+	var pack_grid := GridContainer.new()
+	pack_grid.columns = 2
+	pack_grid.size_flags_horizontal = SIZE_EXPAND_FILL
+	pack_grid.add_theme_constant_override("h_separation", 12)
+	pack_grid.add_theme_constant_override("v_separation", 10)
+	pack_scroll.add_child(pack_grid)
+
+	for entry in _list_packs():
+		var btn := _make_button(entry["title"], Vector2(0, 46))
+		btn.size_flags_horizontal = SIZE_EXPAND_FILL
+		btn.tooltip_text = entry["file"]
+		btn.pressed.connect(_on_load_sample.bind(entry["path"]))
+		pack_grid.add_child(btn)
 
 	# ── Action row 2 — game nav
 	var nav_row := HBoxContainer.new()
@@ -170,6 +192,46 @@ func _make_button(label: String, size: Vector2) -> Button:
 	btn.custom_minimum_size = size
 	btn.add_theme_font_size_override("font_size", 16)
 	return btn
+
+
+# Scan res://data/quizzes/ and return [{title, path, file}] sorted by title.
+# When a basename has both .yml and .json, the .yml (workbook/enhanced) wins so
+# the same pack isn't listed twice.
+func _list_packs() -> Array:
+	var best: Dictionary = {}  # basename → { path, file, is_yaml }
+	var dir := DirAccess.open("res://data/quizzes")
+	if dir != null:
+		dir.list_dir_begin()
+		while true:
+			var e := dir.get_next()
+			if e.is_empty():
+				break
+			if dir.current_is_dir():
+				continue
+			var lower := e.to_lower()
+			var is_yaml := lower.ends_with(".yml") or lower.ends_with(".yaml")
+			if not (is_yaml or lower.ends_with(".json")):
+				continue
+			var base := e.get_basename()
+			if best.has(base) and best[base]["is_yaml"] and not is_yaml:
+				continue  # keep the .yml already recorded
+			best[base] = {
+				"path": "res://data/quizzes/%s" % e,
+				"file": e,
+				"is_yaml": is_yaml,
+			}
+		dir.list_dir_end()
+
+	var out: Array = []
+	for base in best.keys():
+		var path: String = best[base]["path"]
+		var title: String = String(base)
+		var r := PackParser.parse_file(path)
+		if r.get("ok", false):
+			title = String((r["pack"] as Dictionary).get("meta", {}).get("title", base))
+		out.append({ "title": title, "path": path, "file": best[base]["file"] })
+	out.sort_custom(func(a, b): return String(a["title"]) < String(b["title"]))
+	return out
 
 
 func _refresh() -> void:
