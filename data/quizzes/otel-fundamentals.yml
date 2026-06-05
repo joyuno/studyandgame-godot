@@ -17,11 +17,11 @@ questions:
   - type: mcq
     q: '"Observability(관측 가능성)"가 단순 "Monitoring(모니터링)"과 다른 핵심 차이는?'
     choices:
-      - 'Observability는 무료, Monitoring은 유료'
       - 'Monitoring은 알려진 지표를 추적, Observability는 알려지지 않은 문제를 사후에 질문할 수 있는 데이터 수집·구조를 갖춤'
+      - 'Observability는 무료, Monitoring은 유료'
       - '둘은 같은 말의 다른 표기'
       - 'Observability는 클라우드 전용, Monitoring은 온프레미스 전용'
-    answer: 1
+    answer: 0
     explanation: |
       Monitoring = "CPU 80% 넘으면 알림" 같이 미리 정한 지표를 추적.
       Observability = 사고가 났을 때 "왜 이 사용자만 느렸지?"를 사후에
@@ -36,10 +36,10 @@ questions:
     q: 'OpenTelemetry(OTel)는 무엇인가?'
     choices:
       - '단일 회사가 운영하는 SaaS'
-      - 'traces·metrics·logs를 표준화한 사양 + SDK + Collector를 합친 오픈소스 프로젝트'
       - '특정 클라우드 전용 모니터링 도구'
       - '로그 검색 엔진'
-    answer: 1
+      - 'traces·metrics·logs를 표준화한 사양 + SDK + Collector를 합친 오픈소스 프로젝트'
+    answer: 3
     explanation: |
       OpenTelemetry = CNCF 산하 오픈소스 프로젝트. 텔레메트리 데이터의
       형식 사양 + 여러 언어 SDK + 텔레메트리 라우팅 에이전트(Collector)를
@@ -69,10 +69,10 @@ questions:
     q: 'OpenTelemetry가 표준화하는 텔레메트리 신호(signal) 3종은?'
     choices:
       - 'traces, logs, events'
-      - 'metrics, traces, logs'
       - 'profiles, traces, errors'
+      - 'metrics, traces, logs'
       - 'alerts, dashboards, traces'
-    answer: 1
+    answer: 2
     explanation: |
       세 pillar: metrics(시계열 수치), traces(요청 흐름), logs(이벤트 텍스트).
       profiles는 1.36(2024) 이후 추가 신호로 발전 중이지만 "기본 3종"은
@@ -103,11 +103,11 @@ questions:
   - type: mcq
     q: 'OTel에서 "span"이란?'
     choices:
-      - '하나의 trace 전체'
       - '한 trace 안의 단일 작업 단위 (예: DB 쿼리 1회, 함수 호출 1회) — 시작·끝 시각·attribute 포함'
+      - '하나의 trace 전체'
       - 'metric의 한 시점 값'
       - 'log 메시지의 한 줄'
-    answer: 1
+    answer: 0
     explanation: |
       span = trace를 구성하는 단위. 각 span은 trace_id + span_id + 부모
       span_id(선택) + start/end 시각 + name + attributes를 가짐. 한 요청을
@@ -121,10 +121,10 @@ questions:
     q: 'OTel에서 "metric"이란?'
     choices:
       - '단발성 텍스트 이벤트'
-      - '시간에 따라 측정되는 수치 (예: 초당 요청 수, 메모리 사용량)'
       - '한 사용자의 ID'
       - '에러 stack trace'
-    answer: 1
+      - '시간에 따라 측정되는 수치 (예: 초당 요청 수, 메모리 사용량)'
+    answer: 3
     explanation: |
       metric = 시계열 수치. counter(누적), gauge(현재값), histogram(분포)
       같은 종류가 있음. Prometheus의 metric 모델과 호환.
@@ -137,10 +137,10 @@ questions:
     q: 'OTel에서 "log"란?'
     choices:
       - '코드 주석'
-      - '특정 시점에 발생한 이벤트의 텍스트(또는 구조화) 기록 — 보통 trace/span_id와 연결됨'
       - '데이터베이스 트랜잭션'
+      - '특정 시점에 발생한 이벤트의 텍스트(또는 구조화) 기록 — 보통 trace/span_id와 연결됨'
       - 'CPU 코어의 작동 시간'
-    answer: 1
+    answer: 2
     explanation: |
       log = "이 시점에 이런 일이 일어났다"는 이벤트. OTel은 logs도 표준
       포맷으로 흡수해서 같은 trace_id로 traces와 연결 가능 → "이 span에서
@@ -187,11 +187,11 @@ questions:
   - type: mcq
     q: 'OTel의 "resource"란?'
     choices:
-      - '한 사용자가 차지하는 메모리'
       - '텔레메트리를 생성하는 entity(서비스 인스턴스, 호스트, 컨테이너)의 정체 정보 (service.name, host.name 등)'
+      - '한 사용자가 차지하는 메모리'
       - 'API rate limit 단위'
       - '파일 시스템의 inode'
-    answer: 1
+    answer: 0
     explanation: |
       resource = "이 데이터를 누가 보냈는지". 보통 SDK 초기화 시 한 번
       설정. 같은 프로세스에서 나오는 모든 span/metric/log에 자동 부착됨.
@@ -222,10 +222,10 @@ questions:
     q: 'OTel에서 "instrumentation"이란?'
     choices:
       - '음악 작곡'
-      - '애플리케이션 코드에 텔레메트리(span/metric/log)를 생성하는 코드를 삽입하는 행위'
       - '하드웨어 측정 장비'
       - '코드 컴파일러'
-    answer: 1
+      - '애플리케이션 코드에 텔레메트리(span/metric/log)를 생성하는 코드를 삽입하는 행위'
+    answer: 3
     explanation: |
       instrumentation = "이 함수가 시작될 때 span 열기, 끝날 때 span 닫기"
       같은 측정 코드를 애플리케이션에 넣는 것. 두 방식:
@@ -241,10 +241,10 @@ questions:
     q: 'OTel "SDK"의 역할은?'
     choices:
       - 'Collector 바이너리 다운로드'
-      - '애플리케이션 안에서 텔레메트리를 만들고 exporter를 통해 송출하는 언어별 라이브러리'
       - '대시보드 렌더링'
+      - '애플리케이션 안에서 텔레메트리를 만들고 exporter를 통해 송출하는 언어별 라이브러리'
       - '데이터베이스 쿼리 실행'
-    answer: 1
+    answer: 2
     explanation: |
       SDK = 언어별(Java, Python, Go, Node, …) 라이브러리. trace
       provider 초기화, span 생성 API, processor·exporter 설정 등을 제공.
@@ -291,11 +291,11 @@ questions:
   - type: mcq
     q: 'Collector의 4가지 핵심 컴포넌트 클래스가 아닌 것은?'
     choices:
+      - 'Compilers'
       - 'Receivers'
       - 'Processors'
       - 'Exporters'
-      - 'Compilers'
-    answer: 3
+    answer: 0
     explanation: |
       4 클래스: receivers / processors / exporters / connectors.
       receiver = 데이터 받음 (OTLP, Jaeger, Prometheus scrape 등)
@@ -311,10 +311,10 @@ questions:
     q: 'Collector의 "pipeline"이란?'
     choices:
       - '데이터베이스 인덱스'
-      - 'receivers → processors → exporters를 한 줄로 묶은 데이터 흐름 단위 (signal 타입별로 정의)'
       - 'CI/CD 빌드 시스템'
       - '메시지 큐의 topic'
-    answer: 1
+      - 'receivers → processors → exporters를 한 줄로 묶은 데이터 흐름 단위 (signal 타입별로 정의)'
+    answer: 3
     explanation: |
       pipeline = "이 receiver로 받은 데이터를 이 processor 체인으로 가공해
       이 exporter들로 보낸다"의 한 경로. signal 타입(traces/metrics/logs)
@@ -342,10 +342,10 @@ questions:
     q: 'pipeline의 마지막 processor가 여러 exporter에 데이터를 보낼 때 어떤 메커니즘을 쓰는가?'
     choices:
       - 'round-robin으로 한 exporter씩 번갈아'
-      - 'fanoutconsumer를 통해 각 exporter에 데이터 element의 복사본 전달'
       - '첫 exporter만 동기, 나머지는 비동기'
+      - 'fanoutconsumer를 통해 각 exporter에 데이터 element의 복사본 전달'
       - 'exporter 우선순위로 단일 전달'
-    answer: 1
+    answer: 2
     explanation: |
       "Each exporter gets a copy of each data element. The last processor
       uses a fanoutconsumer to send the data to multiple exporters" — 공식
@@ -380,11 +380,11 @@ questions:
   - type: mcq
     q: 'OTLP(OpenTelemetry Protocol)는?'
     choices:
-      - 'UI 표준'
       - 'OTel SDK와 Collector(또는 Collector와 백엔드) 사이에서 텔레메트리를 송수신할 때 쓰는 표준 와이어 프로토콜 (gRPC / HTTP 두 가지 트랜스포트)'
+      - 'UI 표준'
       - '데이터베이스 쿼리 언어'
       - '클라우드 비용 청구 API'
-    answer: 1
+    answer: 0
     explanation: |
       OTLP = OTel 데이터의 표준 송수신 포맷. Protocol Buffers 기반 메시지를
       gRPC(기본) 또는 HTTP/JSON-Protobuf으로 전송. OTel 컴포넌트가 서로
@@ -415,10 +415,10 @@ questions:
     q: 'Collector의 "agent" 배포 패턴이란?'
     choices:
       - '중앙 1대가 모든 트래픽을 받음'
-      - '애플리케이션과 같은 host(sidecar / DaemonSet / localhost 프로세스)에서 가까이 실행되는 Collector'
       - 'SDK가 직접 backend로 보냄'
       - 'Collector를 라이브러리로 embed'
-    answer: 1
+      - '애플리케이션과 같은 host(sidecar / DaemonSet / localhost 프로세스)에서 가까이 실행되는 Collector'
+    answer: 3
     explanation: |
       agent 패턴 = 앱 가까이 (sidecar, k8s DaemonSet, same-host process)
       에서 Collector를 실행. 앱은 localhost로 보내 네트워크 hop을 줄임.
@@ -433,10 +433,10 @@ questions:
     q: 'Collector "gateway" 패턴에서 trace 단위 sampling을 정확히 하기 위해 필요한 exporter는?'
     choices:
       - 'otlp exporter'
-      - 'load-balancing exporter (trace_id 기반 라우팅)'
       - 'file exporter'
+      - 'load-balancing exporter (trace_id 기반 라우팅)'
       - 'prometheus exporter'
-    answer: 1
+    answer: 2
     explanation: |
       tail sampling은 "한 trace의 모든 span을 본 다음 보존/폐기 결정".
       따라서 같은 trace_id의 span들이 같은 2-tier collector 인스턴스로
@@ -455,11 +455,11 @@ questions:
   - type: mcq
     q: 'Collector에서 메모리 폭주 방지용 processor의 이름은?'
     choices:
-      - 'memory_limiter'
       - 'gc_processor'
+      - 'memory_limiter'
       - 'oom_killer'
       - 'cache_resizer'
-    answer: 0
+    answer: 1
     explanation: |
       `memory_limiter` processor가 메모리 사용량이 임계치를 넘으면 새 데이터
       수신을 거부(refuse)해 OOM을 방지. 거부된 데이터는 `otelcol_processor_
@@ -501,11 +501,11 @@ questions:
   - type: mcq
     q: 'OTel 생태계에서 "vendor-neutral"의 실제 효력은?'
     choices:
-      - '백엔드를 무료로 만들어준다'
       - 'instrument 한 번으로 backend(Jaeger/Tempo/Datadog/Honeycomb 등)를 코드 수정 없이 교체 가능 — Collector의 exporter만 바꾸면 됨'
+      - '백엔드를 무료로 만들어준다'
       - '클라우드 비용이 줄어든다'
       - '오픈소스 라이선스가 자동 부착된다'
-    answer: 1
+    answer: 0
     explanation: |
       vendor lock-in 회피의 실제 메커니즘. 앱은 OTel SDK + OTLP만 사용 →
       backend가 바뀌면 Collector의 exporter 설정 한 줄 변경. 앱 재배포
@@ -534,10 +534,10 @@ questions:
     q: 'OTel을 도입하는 순서로 일반적으로 권장되는 것은?'
     choices:
       - 'logs → metrics → traces 순서로 한꺼번에'
-      - '한 서비스에 auto-instrumentation 적용해 traces 먼저 → 안정화되면 metrics → logs 통합 → 점진 확대'
       - 'profiles 부터 도입'
       - '모든 서비스에 동시 적용해야 의미 있음'
-    answer: 1
+      - '한 서비스에 auto-instrumentation 적용해 traces 먼저 → 안정화되면 metrics → logs 통합 → 점진 확대'
+    answer: 3
     explanation: |
       auto-instrumentation으로 traces가 가장 빠르게 가치를 보여줌 (분산
       요청 흐름 시각화). 그 위에 metrics + logs를 trace_id와 묶어 점진

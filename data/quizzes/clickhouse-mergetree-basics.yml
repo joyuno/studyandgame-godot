@@ -14,9 +14,9 @@ questions:
     choices:
       - '해시 기반 분산 저장'
       - '삽입 순서 그대로'
-      - 'ORDER BY로 지정한 primary key'
       - '컬럼명 알파벳 순'
-    answer: 2
+      - 'ORDER BY로 지정한 primary key'
+    answer: 3
     explanation: |
       docs(mergetree.md) — "A table consists of data parts sorted by primary key... within each CounterID, it is ordered by Date".
       각 part는 primary key 기준으로 lexicographic하게 정렬되어 저장된다.
@@ -29,10 +29,10 @@ questions:
     q: 'ClickHouse가 사용하는 primary index의 핵심 특성으로 가장 정확한 것은?'
     choices:
       - '모든 row에 대해 B+Tree 노드를 둔다'
-      - 'granule(기본 8192 rows) 단위로 mark 하나씩 sparse 저장'
       - 'LSM tree 기반 write-ahead log'
+      - 'granule(기본 8192 rows) 단위로 mark 하나씩 sparse 저장'
       - 'Bloom filter로만 구성된 확률적 인덱스'
-    answer: 1
+    answer: 2
     explanation: |
       docs(mergetree.md) — "primary key... does not reference individual rows but blocks of 8192 rows called granules".
       각 granule의 첫 row만 mark로 저장하는 sparse index 구조다.
@@ -45,10 +45,10 @@ questions:
     q: 'ORDER BY tuple()을 지정한 MergeTree 테이블에서 데이터는 어떻게 저장되는가?'
     choices:
       - '테이블 생성이 실패한다'
-      - '모든 컬럼이 자동으로 sort key가 된다'
       - '정렬 없이 INSERT 순서대로 저장된다'
+      - '모든 컬럼이 자동으로 sort key가 된다'
       - '임의의 컬럼 하나가 자동으로 선택된다'
-    answer: 2
+    answer: 1
     explanation: |
       docs(mergetree.md) — "You can create a table without a primary key using the ORDER BY tuple() syntax. In this case, ClickHouse stores data in the order of inserting".
     concept: mergetree-empty-sort-key-behavior
@@ -59,11 +59,11 @@ questions:
   - type: mcq
     q: '두 개의 다른 partition에 속한 part들이 머지될 수 있는가?'
     choices:
+      - '절대 머지되지 않는다'
       - '시간이 지나면 자동으로 머지된다'
       - 'OPTIMIZE TABLE ... FINAL을 쓰면 머지된다'
       - 'partition이 같은 disk에 있으면 머지된다'
-      - '절대 머지되지 않는다'
-    answer: 3
+    answer: 0
     explanation: |
       docs(custom-partitioning-key.md) — "A merge only works for data parts that have the same value for the partitioning expression".
       partition 경계는 머지의 절대 경계로, OPTIMIZE FINAL로도 넘을 수 없다.
@@ -76,10 +76,10 @@ questions:
     q: 'part 이름 `202601_5_12_3_8`의 다섯 숫자가 의미하는 순서는?'
     choices:
       - 'partition / level / minBlock / maxBlock / mutation'
-      - 'partition / minBlock / maxBlock / level / mutation'
       - 'minBlock / maxBlock / partition / level / mutation'
       - 'timestamp / shard / replica / level / mutation'
-    answer: 1
+      - 'partition / minBlock / maxBlock / level / mutation'
+    answer: 3
     explanation: |
       docs(custom-partitioning-key.md) — "201901_1_9_2_11... 201901 partition, 1 min block, 9 max block, 2 chunk level (merge depth), 11 mutation version".
     concept: part-naming-format
@@ -106,10 +106,10 @@ questions:
     q: 'MergeTree에서 data part가 Wide 포맷 대신 Compact 포맷으로 저장되는 조건은?'
     choices:
       - '컬럼 수가 100개 이상일 때'
-      - 'replicated 테이블일 때'
       - 'bytes 또는 rows 수가 `min_bytes_for_wide_part` / `min_rows_for_wide_part` 미만일 때'
+      - 'replicated 테이블일 때'
       - 'LowCardinality 컬럼이 있을 때'
-    answer: 2
+    answer: 1
     explanation: |
       docs(mergetree.md) — "If the number of bytes or rows in a data part is less then the corresponding setting's value, the part is stored in Compact format. Otherwise it is stored in Wide format".
       Compact = 모든 컬럼 한 파일, Wide = 컬럼별 파일.
@@ -121,11 +121,11 @@ questions:
   - type: mcq
     q: 'Primary key와 sort key가 다를 수 있는 경우의 제약은?'
     choices:
-      - 'primary key가 sort key보다 길어야 한다'
       - 'primary key는 sort key 표현식 tuple의 prefix여야 한다'
+      - 'primary key가 sort key보다 길어야 한다'
       - '두 키는 서로 disjoint여야 한다'
       - '제약 없이 자유롭게 정의 가능하다'
-    answer: 1
+    answer: 0
     explanation: |
       docs(mergetree.md) — "the primary key expression tuple must be a prefix of the sorting key expression tuple".
       SummingMergeTree/AggregatingMergeTree에서 dimension을 sort key에 추가하면서 primary key는 짧게 유지하는 패턴.

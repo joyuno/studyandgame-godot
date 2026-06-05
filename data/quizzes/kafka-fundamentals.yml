@@ -20,10 +20,10 @@ questions:
     q: 'Apache Kafka는 무엇인가?'
     choices:
       - '데이터베이스'
-      - '분산 이벤트 스트리밍 플랫폼 — 메시지를 받아 durable한 로그로 저장하고 여러 소비자가 읽을 수 있게 함'
       - '운영체제'
+      - '분산 이벤트 스트리밍 플랫폼 — 메시지를 받아 durable한 로그로 저장하고 여러 소비자가 읽을 수 있게 함'
       - 'CI/CD 도구'
-    answer: 1
+    answer: 2
     explanation: |
       Kafka = LinkedIn에서 시작 (2011 오픈소스화), 현재 Apache 재단 프로젝트.
       "분산 이벤트 스트리밍 플랫폼" 카테고리. 핵심 동작: 메시지를 받아
@@ -55,11 +55,11 @@ questions:
   - type: mcq
     q: 'Kafka가 전통 메시지 큐(RabbitMQ 같은 point-to-point 큐)와 다른 핵심 차이는?'
     choices:
-      - 'Kafka는 무료, 메시지 큐는 유료다'
       - 'Kafka는 메시지를 읽어도 사라지지 않는 durable log로 저장 — 여러 소비자가 같은 메시지를 독립적으로 다시 읽을 수 있음'
+      - 'Kafka는 무료, 메시지 큐는 유료다'
       - 'Kafka는 메모리, 메시지 큐는 디스크에 저장한다'
       - '둘은 같은 것의 다른 이름'
-    answer: 1
+    answer: 0
     explanation: |
       전통 큐: consumer가 읽으면 메시지가 큐에서 제거됨.
       Kafka: 메시지는 retention 정책으로 정해진 시간/사이즈 동안 그대로 남음.
@@ -77,10 +77,10 @@ questions:
     q: 'Kafka에서 "broker"란?'
     choices:
       - 'Kafka 클라이언트 라이브러리'
-      - 'Kafka 서버 프로세스 한 개 (메시지를 받아 디스크에 저장하고 소비자에게 제공)'
       - '메시지를 자동 번역하는 서비스'
       - 'Kafka의 관리자 UI'
-    answer: 1
+      - 'Kafka 서버 프로세스 한 개 (메시지를 받아 디스크에 저장하고 소비자에게 제공)'
+    answer: 3
     explanation: |
       Kafka 서버 1대 = 1 broker. 보통 하나의 host(VM/K8s pod)에 1 broker.
       여러 broker가 모여 cluster를 이룸. 클라이언트(producer/consumer)는
@@ -94,10 +94,10 @@ questions:
     q: '"Kafka cluster"란?'
     choices:
       - '여러 topic의 집합'
-      - '여러 broker가 협력해서 함께 동작하는 묶음 (분산 시스템 단위)'
       - 'consumer 그룹의 다른 이름'
+      - '여러 broker가 협력해서 함께 동작하는 묶음 (분산 시스템 단위)'
       - '하나의 데이터센터 전체'
-    answer: 1
+    answer: 2
     explanation: |
       cluster = broker 여러 대가 메타데이터를 공유하며 같이 동작하는 단위.
       replica 분산 / leader 선출 / 장애 시 fail-over가 cluster 안에서 일어남.
@@ -131,11 +131,11 @@ questions:
   - type: mcq
     q: 'Kafka의 "partition"이란?'
     choices:
-      - 'broker의 디스크 파티션'
       - 'topic을 더 작은 단위로 나눈 정렬된 메시지 로그 — 병렬 처리·확장의 기본 단위'
+      - 'broker의 디스크 파티션'
       - '메시지의 boolean 분기'
       - 'consumer 그룹의 이름'
-    answer: 1
+    answer: 0
     explanation: |
       partition = topic을 N개로 쪼갠 정렬 로그. 한 topic = 여러 partition.
       각 partition은 broker 한 대가 leader로 담당 → partition 수를 늘리면
@@ -150,10 +150,10 @@ questions:
     q: 'Kafka의 "offset"이란?'
     choices:
       - '클러스터의 IP 주소'
-      - 'partition 안에서 각 메시지의 순차 번호 (그 partition 안 위치)'
       - '메시지의 timestamp'
       - 'consumer의 ID'
-    answer: 1
+      - 'partition 안에서 각 메시지의 순차 번호 (그 partition 안 위치)'
+    answer: 3
     explanation: |
       partition 내 각 메시지는 0부터 시작하는 단조 증가 정수 offset을 가짐.
       Consumer는 offset 기준으로 "어디까지 읽었는지" 추적. offset은
@@ -166,11 +166,11 @@ questions:
   - type: mcq
     q: 'Kafka의 message record가 보통 가지는 필드는?'
     choices:
-      - 'key, value, timestamp, headers (옵션) + 시스템이 부여하는 partition + offset'
       - 'sender, receiver, body — 셋뿐'
       - 'JSON object 하나만 — 다른 필드 없음'
+      - 'key, value, timestamp, headers (옵션) + 시스템이 부여하는 partition + offset'
       - 'SQL row와 동일'
-    answer: 0
+    answer: 2
     explanation: |
       Kafka 메시지(record): producer가 보낸 key(bytes, optional) + value
       (bytes, 본문) + timestamp + headers(key-value 메타, optional). 시스템
@@ -203,11 +203,11 @@ questions:
   - type: mcq
     q: 'Kafka의 "consumer"란?'
     choices:
-      - '메시지를 소비하지 않는 백업 서비스'
       - 'topic에서 메시지를 읽어 처리하는 클라이언트 애플리케이션'
+      - '메시지를 소비하지 않는 백업 서비스'
       - 'broker의 자식 프로세스'
       - 'cluster 매니저'
-    answer: 1
+    answer: 0
     explanation: |
       consumer = topic을 구독해서 메시지를 가져오는 측. 자신의 offset을
       관리하며 원하는 위치부터 읽을 수 있음 (earliest / latest / 특정
@@ -221,10 +221,10 @@ questions:
     q: 'Producer가 key 없이 메시지를 보낼 때 partition 선택 방식의 일반적 동작은?'
     choices:
       - '항상 partition 0번으로 감'
-      - 'sticky 또는 round-robin 방식으로 partition을 분배 (라이브러리·버전 의존)'
       - 'consumer가 결정'
       - '에러 발생'
-    answer: 1
+      - 'sticky 또는 round-robin 방식으로 partition을 분배 (라이브러리·버전 의존)'
+    answer: 3
     explanation: |
       key가 없으면 producer 라이브러리는 partition을 자동 분배. 옛 round-
       robin → 현대 Java client(2.4+)는 "sticky partitioning" (한 partition
@@ -256,11 +256,11 @@ questions:
   - type: mcq
     q: 'Kafka의 "consumer group"이란?'
     choices:
-      - '같은 group ID를 공유하는 consumer들의 묶음 — broker가 partition을 그 안에서 분배해 줌'
       - '하나의 회사 안 모든 consumer'
       - '같은 메시지를 받는 consumer들'
+      - '같은 group ID를 공유하는 consumer들의 묶음 — broker가 partition을 그 안에서 분배해 줌'
       - 'broker 내부 캐시 그룹'
-    answer: 0
+    answer: 2
     explanation: |
       consumer 시작 시 `group.id` 설정. 같은 group.id를 공유하면 한 묶음.
       Kafka는 한 topic의 partition들을 그 group의 consumer들에게 분배 —
@@ -328,10 +328,10 @@ questions:
     q: 'Kafka의 "replication factor"란?'
     choices:
       - '메시지를 압축하는 비율'
-      - '한 partition의 데이터를 broker 몇 대에 복제 보관할지 — 운영 환경 권장값은 3'
       - 'producer가 메시지를 몇 번 재전송할지'
       - 'consumer가 메시지를 몇 번 다시 읽을지'
-    answer: 1
+      - '한 partition의 데이터를 broker 몇 대에 복제 보관할지 — 운영 환경 권장값은 3'
+    answer: 3
     explanation: |
       replication-factor=3 = 한 partition의 데이터를 3개 broker에 복제.
       한 broker가 죽어도 다른 두 곳에 데이터가 있어 가용성 유지. 1로 두면
@@ -345,10 +345,10 @@ questions:
     q: '한 partition의 replica 중 "leader"와 "follower"의 역할은?'
     choices:
       - '둘 다 똑같이 쓰기·읽기 받음'
-      - 'leader가 모든 쓰기·읽기를 받고, follower는 leader의 데이터를 비동기로 복제만 함'
       - 'follower가 쓰기를 받고 leader는 백업'
+      - 'leader가 모든 쓰기·읽기를 받고, follower는 leader의 데이터를 비동기로 복제만 함'
       - 'leader는 디스크, follower는 메모리에 저장'
-    answer: 1
+    answer: 2
     explanation: |
       partition마다 replica 중 하나가 leader. producer/consumer는 leader
       에만 통신. follower들은 leader의 로그를 따라 복제 (catchup). leader
@@ -383,11 +383,11 @@ questions:
   - type: mcq
     q: '메시지 전달 보장(delivery semantics) 3가지 수준은?'
     choices:
-      - 'fast / slow / async'
       - 'at-most-once / at-least-once / exactly-once'
+      - 'fast / slow / async'
       - 'sync / async / hybrid'
       - 'tcp / udp / http'
-    answer: 1
+    answer: 0
     explanation: |
       - at-most-once: 최대 1번, 실패 시 손실 가능 (재전송 없음)
       - at-least-once: 최소 1번, 실패 시 재전송으로 중복 가능 (기본·흔함)
@@ -403,10 +403,10 @@ questions:
     q: '"Idempotent producer"가 보장하는 것은?'
     choices:
       - '메시지 압축이 멱등'
-      - 'producer가 재시도해도 같은 메시지가 partition에 중복 기록되지 않음'
       - 'consumer가 같은 메시지를 두 번 받지 않음'
       - 'broker가 한 번에 하나의 producer만 받음'
-    answer: 1
+      - 'producer가 재시도해도 같은 메시지가 partition에 중복 기록되지 않음'
+    answer: 3
     explanation: |
       `enable.idempotence=true` (현대 client 기본값) — producer가 보낸
       메시지에 sequence 번호를 붙여 broker가 중복을 detect. retry로 인한
@@ -438,10 +438,10 @@ questions:
     q: 'Kafka의 "log retention" 정책이란?'
     choices:
       - '얼마나 빨리 메시지를 전달할지 결정'
-      - 'topic의 메시지를 디스크에 얼마나 오래(또는 어느 사이즈까지) 보관할지 — 기본 7일'
       - 'consumer를 얼마나 유지할지'
+      - 'topic의 메시지를 디스크에 얼마나 오래(또는 어느 사이즈까지) 보관할지 — 기본 7일'
       - 'producer 연결을 얼마나 유지할지'
-    answer: 1
+    answer: 2
     explanation: |
       `log.retention.hours` (기본 168 = 7일) 또는 `log.retention.bytes` 기준.
       이 기간/사이즈를 넘으면 오래된 segment 파일을 삭제. consumer가 다 안
@@ -477,11 +477,11 @@ questions:
   - type: mcq
     q: 'Kafka가 메타데이터(어떤 topic이 있고, 어떤 broker가 어떤 partition의 leader인지)를 관리하는 방식의 현대적 변화는?'
     choices:
-      - '여전히 외부 ZooKeeper만 사용'
       - 'KRaft 모드 — ZooKeeper 없이 broker들이 Raft 합의로 메타데이터를 자체 관리 (Kafka 3.3+ 정식, 4.0+ 기본)'
+      - '여전히 외부 ZooKeeper만 사용'
       - '외부 DB 필요'
       - 'consumer가 관리'
-    answer: 1
+    answer: 0
     explanation: |
       과거: ZooKeeper(외부 분산 합의)에 메타데이터 저장. 운영 부담 커서
       Kafka 측이 자체 합의 프로토콜(KRaft, Kafka Raft)을 만들어 ZK 의존
@@ -496,10 +496,10 @@ questions:
     q: 'Producer 처리량을 늘리는 가장 기본적이고 즉효성 있는 설정은?'
     choices:
       - 'partition 수를 1로 줄이기'
-      - 'batching — producer가 메시지를 묶어 보내도록 `linger.ms`와 `batch.size`를 늘리기'
       - '메시지를 더 자게 자르기'
       - 'replication-factor 늘리기'
-    answer: 1
+      - 'batching — producer가 메시지를 묶어 보내도록 `linger.ms`와 `batch.size`를 늘리기'
+    answer: 3
     explanation: |
       Kafka producer는 send() 호출을 즉시 안 보내고 잠깐 모아 batch로 전송.
       `linger.ms`(기다리는 시간)와 `batch.size`(쌓이는 바이트)를 늘리면
@@ -515,9 +515,9 @@ questions:
     choices:
       - 'gzip'
       - 'snappy'
-      - 'lz4 / zstd'
       - 'bzip2'
-    answer: 3
+      - 'lz4 / zstd'
+    answer: 2
     explanation: |
       `compression.type`은 none(기본) / gzip / snappy / lz4 / zstd. bzip2는
       미지원. zstd가 최근 추가되며 압축률/속도 균형 우수해 점차 표준화.

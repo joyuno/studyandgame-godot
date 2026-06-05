@@ -16,11 +16,11 @@
       "q": "OpenTelemetry가 표준화하는 텔레메트리 신호 3종은?",
       "choices": [
         "traces, logs, events",
-        "metrics, traces, logs",
         "profiles, traces, errors",
+        "metrics, traces, logs",
         "alerts, dashboards, traces"
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "OTel은 traces·metrics·logs 세 신호를 공통 데이터 모델·SDK·collector로 묶는다.\nprofiles는 OTel 1.36(2024) 이후 추가 신호로 발전 중.\n",
       "tags": [
         "signals"
