@@ -58,12 +58,12 @@ const DIFFICULTY_MULT: Dictionary = {
 #     shards: shards gained (only non-zero on destroy) }
 # `roll` is exposed so tests can pass a deterministic value; callers should
 # omit it for real attempts (randf() is sampled internally).
-static func try_attempt(level: int, use_scroll: bool, roll: float = -1.0, difficulty: String = "easy") -> Dictionary:
+static func try_attempt(level: int, use_scroll: bool, roll: float = -1.0, difficulty: String = "easy", success_bonus: float = 0.0) -> Dictionary:
 	if level >= ENHANCE_MAX_LEVEL:
 		return { "result": "max", "level": level, "shards": 0 }
 	if level < 0 or level >= ENHANCE_TABLE.size():
 		return { "result": "stay", "level": level, "shards": 0 }
-	var success_rate: float = success_rate_at(level, difficulty)
+	var success_rate: float = clampf(success_rate_at(level, difficulty) + maxf(0.0, success_bonus), 0.0, 1.0)
 	var destroy_rate: float = destroy_rate_at(level, difficulty)
 	var r: float = randf() if roll < 0.0 else roll
 	if r < success_rate:

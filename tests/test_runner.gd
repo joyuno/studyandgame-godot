@@ -131,6 +131,10 @@ func _test_weapon() -> void:
 	var d_hard_14: float = Weapon.destroy_rate_at(14, "hard")
 	_eq(s_hard_14 + d_hard_14 <= 1.0001, true, "hard +14 success+destroy ≤ 1")
 
+	# 행운 부적 성공률 보너스
+	_eq(Weapon.try_attempt(5, false, 0.45, "easy")["result"] == "success", false, "+5 roll0.45 보너스X → 실패")
+	_eq(Weapon.try_attempt(5, false, 0.45, "easy", 0.10)["result"], "success", "+5 roll0.45 +10%p → 성공")
+
 
 # -----------------------------------------------------------------------------
 # SRS
