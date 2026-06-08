@@ -25,6 +25,12 @@
       "tags": [
         "mergetree",
         "indexing"
+      ],
+      "glossary": [
+        "ORDER BY｜｜정렬 기준 컬럼을 지정하는 SQL 절",
+        "primary key｜｜행을 식별·정렬하는 기준 키",
+        "B+Tree｜｜범위 검색에 쓰는 균형 트리 인덱스",
+        "part｜｜MergeTree가 저장하는 데이터 묶음 단위"
       ]
     },
     {
@@ -41,6 +47,11 @@
       "tags": [
         "storage",
         "compression"
+      ],
+      "glossary": [
+        "row 단위｜｜한 행씩 묶어 처리하는 방식",
+        "LZ4｜｜빠른 무손실 압축 알고리즘",
+        "컬럼｜｜표의 세로 한 열, 같은 종류 값 모음"
       ]
     },
     {
@@ -57,6 +68,12 @@
       "tags": [
         "insert",
         "performance"
+      ],
+      "glossary": [
+        "INSERT｜｜테이블에 새 행을 추가하는 명령",
+        "part｜｜INSERT마다 생기는 데이터 묶음 단위",
+        "merge｜｜작은 part들을 합치는 백그라운드 작업",
+        "TRUNCATE｜｜테이블 전체 행을 비우는 명령"
       ]
     },
     {
@@ -73,6 +90,12 @@
       "tags": [
         "engines",
         "dedup"
+      ],
+      "glossary": [
+        "PK｜｜행을 식별하는 기본 키",
+        "sorting key｜｜part 내부 정렬 기준 컬럼",
+        "SummingMergeTree｜｜동일 키 수치를 합산하는 엔진",
+        "FINAL｜｜중복 제거를 강제하는 쿼리 수식어"
       ]
     },
     {
@@ -88,6 +111,12 @@
       "explanation": "ClickHouse MV는 source table의 INSERT 시 동일 트랜잭션 내에서\n변환 SQL을 실행해 target table에 기록한다. UPDATE/DELETE는\n반영되지 않는다.\n",
       "tags": [
         "materialized-view"
+      ],
+      "glossary": [
+        "source table｜｜MV가 입력을 받아오는 원본 테이블",
+        "trigger｜｜특정 이벤트 시 자동 실행되는 동작",
+        "cron｜｜정해진 주기로 작업을 실행하는 스케줄러",
+        "lazy 계산｜｜필요할 때까지 미루는 지연 계산"
       ]
     },
     {
@@ -104,6 +133,12 @@
       "tags": [
         "index",
         "internals"
+      ],
+      "glossary": [
+        "B+Tree｜｜범위 검색용 균형 트리 인덱스",
+        "LSM tree｜｜쓰기에 강한 로그 구조 머지 트리",
+        "Bloom filter｜｜존재 여부를 확률로 판단하는 자료구조",
+        "DBMS｜｜데이터베이스 관리 시스템"
       ]
     },
     {
@@ -119,6 +154,12 @@
       "explanation": "ClickHouse는 hash, parallel_hash, partial_merge, full_sorting_merge,\ngrace_hash, direct(딕셔너리) JOIN을 지원한다. 전통적 nested loop는\n옵션으로 존재하지 않는다 (직접 cross join + WHERE는 가능).\n",
       "tags": [
         "joins"
+      ],
+      "glossary": [
+        "hash join｜｜해시 테이블로 매칭하는 조인 방식",
+        "merge join｜｜정렬 후 병합하며 매칭하는 조인",
+        "parallel hash｜｜병렬로 수행하는 해시 조인",
+        "JOIN｜｜여러 테이블을 키로 결합하는 연산"
       ]
     },
     {
@@ -135,6 +176,11 @@
       "tags": [
         "schema",
         "mergetree"
+      ],
+      "glossary": [
+        "PRIMARY KEY｜｜인덱스의 기준이 되는 기본 키",
+        "ORDER BY｜｜정렬 기준을 지정하는 절",
+        "prefix｜｜앞에서부터 이어지는 부분 컬럼 집합"
       ]
     },
     {
@@ -150,6 +196,11 @@
       "explanation": "ALTER DELETE/UPDATE는 mutation으로 부분이 다시 쓰여진다.\n대량 mutation은 비싸며 system.mutations에서 진행 상황을 관찰한다.\n",
       "tags": [
         "mutations"
+      ],
+      "glossary": [
+        "ALTER TABLE｜｜테이블 구조·데이터를 변경하는 명령",
+        "part｜｜MergeTree의 데이터 저장 묶음 단위",
+        "WHERE｜｜조건으로 대상 행을 거르는 절"
       ]
     },
     {
@@ -166,6 +217,12 @@
       "tags": [
         "distributed",
         "replication"
+      ],
+      "glossary": [
+        "MergeTree｜｜ClickHouse 기본 저장 엔진",
+        "Replicated｜｜노드 간 복제를 지원하는 엔진 접두",
+        "node｜｜클러스터를 이루는 개별 서버",
+        "Buffer｜｜메모리에 임시 모았다 기록하는 엔진"
       ]
     }
   ]

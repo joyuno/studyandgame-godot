@@ -17,6 +17,10 @@ questions:
       - 'stream'
       - 'pipeline'
     answer: 3
+    glossary:
+      - 'OpenTelemetry Collector｜｜텔레메트리 수집·처리·전송 중계 서버'
+      - 'stream｜｜끊임없이 흐르는 연속 데이터 흐름'
+      - 'channel｜｜데이터를 주고받는 통신 경로'
     explanation: |
       docs(architecture.md) — "Data receiving, processing, and exporting are done using pipelines".
       pipeline = receivers → processors → exporters의 한 경로.
@@ -33,6 +37,11 @@ questions:
       - 'traces / metrics / logs'
       - 'http / grpc / database'
     answer: 2
+    glossary:
+      - 'telemetry｜｜시스템 동작을 측정한 관측 데이터'
+      - 'span｜｜분산 추적의 작업 단위 한 구간'
+      - 'trace｜｜요청이 거친 전체 경로 기록'
+      - 'metric｜｜수치로 측정한 시스템 지표'
     explanation: |
       docs(architecture.md) — "Pipelines can operate on three telemetry data types: traces, metrics, and logs".
     concept: pipeline-signal-types
@@ -48,6 +57,10 @@ questions:
       - 'exporters → processors → receivers'
       - 'processors → receivers → exporters'
     answer: 1
+    glossary:
+      - 'receiver｜｜외부 데이터를 받아들이는 입력 컴포넌트'
+      - 'processor｜｜파이프라인 중간에서 데이터를 가공'
+      - 'exporter｜｜처리된 데이터를 외부로 내보내는 출력'
     explanation: |
       docs(architecture.md) — pipeline = "A set of receivers... A series of optional processors... A set of exporters which get the data from processors and send it outside".
     concept: pipeline-component-order
@@ -63,6 +76,11 @@ questions:
       - '첫 exporter만 동기, 나머지는 비동기'
       - 'exporter 우선순위로 정렬 후 단일 전달'
     answer: 0
+    glossary:
+      - 'processor｜｜파이프라인 중간에서 데이터를 가공'
+      - 'exporter｜｜처리된 데이터를 외부로 내보내는 출력'
+      - 'round-robin｜｜순번대로 돌아가며 분배하는 방식'
+      - '비동기｜｜응답을 기다리지 않고 진행하는 처리'
     explanation: |
       docs(architecture.md) — "Each exporter gets a copy of each data element. The last processor uses a fanoutconsumer to send the data to multiple exporters".
     concept: fanout-to-exporters
@@ -78,6 +96,10 @@ questions:
       - '정수 인덱스'
       - '이름에 `/<name>` 접미사 (예 `traces/dev`, `traces/2`)'
     answer: 3
+    glossary:
+      - 'pipeline｜｜receiver→processor→exporter 데이터 경로'
+      - 'service 블록｜｜파이프라인을 묶어 활성화하는 설정'
+      - '접미사｜｜이름 뒤에 붙이는 식별 문자열'
     explanation: |
       docs(architecture.md) — "The configuration uses composite key names in the form of type[/name]".
       OmniTrace의 `logs` / `logs/syslog`도 이 패턴.
@@ -94,6 +116,10 @@ questions:
       - '가능 — 여러 `pipelines`의 `receivers` 키에 같은 receiver 이름을 적으면 됨'
       - '가능하지만 별도 instance가 만들어짐'
     answer: 2
+    glossary:
+      - 'receiver｜｜외부 데이터를 받아들이는 입력 컴포넌트'
+      - 'pipeline｜｜receiver→processor→exporter 데이터 경로'
+      - 'instance｜｜실제로 실행 중인 개별 객체'
     explanation: |
       docs(architecture.md) — "It is also possible to configure the same receiver to send the same received data to multiple pipelines. This can be done by listing the same receiver in the receivers key of several pipelines".
     concept: receiver-fan-in
@@ -109,6 +135,11 @@ questions:
       - 'Processors'
       - 'Exporters'
     answer: 1
+    glossary:
+      - 'pipeline component｜｜파이프라인을 구성하는 기능 단위'
+      - 'Connector｜｜파이프라인끼리 잇는 컴포넌트'
+      - 'Receiver｜｜외부 데이터를 받는 입력 컴포넌트'
+      - 'Exporter｜｜데이터를 외부로 내보내는 출력'
     explanation: |
       docs(configuration.md) — "four classes of pipeline components: Receivers / Processors / Exporters / Connectors".
       Routers는 표준 클래스 이름이 아님.
@@ -125,6 +156,10 @@ questions:
       - '`/var/lib/otelcol/config.yaml`'
       - '`/opt/otelcol/config.yaml`'
     answer: 0
+    glossary:
+      - 'configuration｜｜동작 방식을 정의한 설정 파일'
+      - 'otelcol｜｜Collector 실행 바이너리 이름'
+      - 'config.yaml｜｜YAML 형식 설정 파일'
     explanation: |
       docs(configuration.md) — "By default, the Collector configuration is located in /etc/<otel-directory>/config.yaml, where <otel-directory> can be otelcol, otelcol-contrib, or another value".
     concept: collector-config-path
@@ -140,6 +175,10 @@ questions:
       - 'yaml'
       - 'sqlite'
     answer: 3
+    glossary:
+      - '--config 플래그｜｜설정 소스를 지정하는 실행 옵션'
+      - 'provider scheme｜｜설정을 불러오는 출처 종류'
+      - 'env｜｜환경 변수에서 값을 읽는 방식'
     explanation: |
       docs(configuration.md) — "Currently, the OpenTelemetry Collector supports the following providers for scheme: file, env, yaml, http, https".
     concept: collector-config-providers
@@ -155,6 +194,10 @@ questions:
       - '`otelcol validate --config=<file>`'
       - '`otelcol verify <file>`'
     answer: 2
+    glossary:
+      - 'otelcol｜｜Collector 실행 바이너리 이름'
+      - 'lint｜｜코드·설정 정적 오류 검사'
+      - '--config｜｜설정 파일을 지정하는 옵션'
     explanation: |
       docs(configuration.md) — "To validate a configuration file, use the validate command. For example: otelcol validate --config=customconfig.yaml".
     concept: collector-validate-cmd
@@ -170,6 +213,11 @@ questions:
       - 'SDK가 직접 backend로 전송'
       - 'Collector가 클라이언트 라이브러리로 embed'
     answer: 1
+    glossary:
+      - 'Collector｜｜텔레메트리 중계 서버'
+      - 'sidecar｜｜앱 옆에 붙여 함께 도는 보조 컨테이너'
+      - 'DaemonSet｜｜노드마다 1개씩 띄우는 쿠버네티스 리소스'
+      - 'SDK｜｜앱에 넣는 계측 라이브러리'
     explanation: |
       docs(deploy-agent.md) — "signals are sent to a Collector instance that runs alongside the application or on the same host, such as a sidecar or DaemonSet".
     concept: agent-deployment
@@ -185,6 +233,11 @@ questions:
       - 'tail sampling exporter'
       - 'prometheus exporter'
     answer: 0
+    glossary:
+      - 'span｜｜분산 추적의 작업 단위 한 구간'
+      - 'trace ID｜｜한 trace를 식별하는 고유 키'
+      - 'tail sampling｜｜trace 완료 후 샘플링 결정'
+      - 'otlp exporter｜｜OTLP 프로토콜로 보내는 출력'
     explanation: |
       docs(deploy-gateway.md) — "The first tier Collector has a pipeline configured with the Trace ID/service-name-aware load-balancing exporter... all spans for a given trace reach the same Collector instance where the tail sampling policy is applied".
     concept: load-balancing-by-trace-id
@@ -200,6 +253,11 @@ questions:
       - 'capacity 초과 시점'
       - 'capacity의 60~70%'
     answer: 3
+    glossary:
+      - 'scaling｜｜부하에 맞춰 처리 용량 조절'
+      - 'exporter queue｜｜전송 대기 데이터를 쌓는 버퍼'
+      - 'scale up｜｜처리 용량을 늘림'
+      - 'capacity｜｜큐가 담을 수 있는 최대치'
     explanation: |
       docs(scaling.md) — "monitor queue size and consider scaling up when it reaches 60-70% of capacity, and scaling down if it's consistently low".
     concept: exporter-queue-threshold
@@ -215,6 +273,11 @@ questions:
       - 'otelcol_processor_refused_spans (그리고 다른 signal 타입 카운터)'
       - 'otelcol_dropped_records'
     answer: 2
+    glossary:
+      - 'processor｜｜파이프라인 중간에서 데이터를 가공'
+      - 'metric｜｜수치로 측정한 시스템 지표'
+      - 'span｜｜분산 추적의 작업 단위 한 구간'
+      - 'pipeline｜｜데이터가 흐르는 처리 경로'
     explanation: |
       docs(scaling.md) — "the metric otelcol_processor_refused_spans... The same metric exists for all other telemetry data types. If data is being refused from entering the pipeline too often, you'll probably want to scale up".
     concept: memory-limiter-refused-metric
@@ -230,6 +293,10 @@ questions:
       - '2'
       - '5'
     answer: 1
+    glossary:
+      - 'scaling｜｜부하에 맞춰 처리 용량 조절'
+      - 'replica｜｜동일 역할로 복제된 인스턴스'
+      - 'resilience｜｜장애에도 견디는 복원력'
     explanation: |
       docs(scaling.md) — "maintaining a minimum number of replicas, for example three, for resilience".
     concept: collector-min-replicas
@@ -240,6 +307,10 @@ questions:
   - type: ox
     q: '같은 exporter를 여러 pipeline에 포함시킬 수 있다.'
     answer: true
+    glossary:
+      - 'exporter｜｜데이터를 외부로 내보내는 출력 컴포넌트'
+      - 'receiver｜｜외부 데이터를 받는 입력 컴포넌트'
+      - 'pipeline｜｜데이터가 흐르는 처리 경로'
     explanation: |
       docs(architecture.md) — "The same receiver can be included in multiple pipelines and multiple pipelines can include the same exporter".
     concept: exporter-fan-in
@@ -251,6 +322,11 @@ questions:
   - type: ox
     q: 'Collector configuration에서 endpoint를 `0.0.0.0`으로 두는 것은 모든 환경에서 권장된다.'
     answer: false
+    glossary:
+      - 'endpoint｜｜연결을 받는 주소+포트 지점'
+      - '0.0.0.0｜｜모든 네트워크에서 접속 허용 주소'
+      - 'localhost｜｜자기 자신만 접속하는 주소'
+      - 'DoS 공격｜｜과부하로 서비스를 마비시키는 공격'
     explanation: |
       docs(configuration.md) — "it is generally preferable to bind endpoints to localhost when all clients are local, our example configurations use the 'unspecified' address 0.0.0.0 as a convenience. The Collector currently defaults to 0.0.0.0, but the default will be changed to localhost in the near future".
       DoS 공격 노출 위험.
@@ -263,6 +339,10 @@ questions:
   - type: ox
     q: '`--config` 옵션은 여러 번 지정해 여러 파일을 merge할 수 있다.'
     answer: true
+    glossary:
+      - '--config｜｜설정 파일을 지정하는 실행 옵션'
+      - 'merge｜｜여러 설정을 하나로 병합'
+      - 'configuration｜｜동작을 정의한 설정'
     explanation: |
       docs(configuration.md) — "You can also provide multiple configurations using multiple files at different paths... Pass in multiple file paths at the command line".
     concept: collector-multi-config
@@ -274,6 +354,11 @@ questions:
   - type: ox
     q: 'Collector pipeline에서 traces 타입 pipeline에 metrics receiver를 포함시키면 자동으로 metrics 데이터를 traces로 변환해준다.'
     answer: false
+    glossary:
+      - 'pipeline｜｜데이터가 흐르는 처리 경로'
+      - 'receiver｜｜외부 데이터를 받는 입력 컴포넌트'
+      - 'connector｜｜signal 타입을 변환·연결하는 컴포넌트'
+      - 'signal｜｜traces·metrics·logs 같은 데이터 종류'
     explanation: |
       docs(architecture.md) — "Receivers, processors, and exporters used in a pipeline must support the particular data type, otherwise the pipeline.ErrSignalNotSupported exception is reported when the configuration loads".
       signal 타입 변환은 connector를 통해야 한다.

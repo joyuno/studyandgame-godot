@@ -17,6 +17,11 @@ questions:
       - '컬럼명 알파벳 순'
       - 'ORDER BY로 지정한 primary key'
     answer: 3
+    glossary:
+      - 'MergeTree｜｜파트 단위 정렬·머지하는 ClickHouse 기본 엔진'
+      - 'part｜｜MergeTree가 디스크에 쓰는 데이터 묶음 단위'
+      - 'ORDER BY｜｜데이터 정렬 기준을 지정하는 절'
+      - 'primary key｜｜정렬·인덱싱 기준이 되는 키'
     explanation: |
       docs(mergetree.md) — "A table consists of data parts sorted by primary key... within each CounterID, it is ordered by Date".
       각 part는 primary key 기준으로 lexicographic하게 정렬되어 저장된다.
@@ -33,6 +38,11 @@ questions:
       - 'granule(기본 8192 rows) 단위로 mark 하나씩 sparse 저장'
       - 'Bloom filter로만 구성된 확률적 인덱스'
     answer: 2
+    glossary:
+      - 'primary index｜｜데이터 위치를 빠르게 찾는 색인'
+      - 'B+Tree｜｜정렬 데이터를 노드로 관리하는 트리 인덱스'
+      - 'LSM tree｜｜쓰기 최적화된 로그 기반 저장 구조'
+      - 'Bloom filter｜｜존재 여부를 확률적으로 판단하는 자료구조'
     explanation: |
       docs(mergetree.md) — "primary key... does not reference individual rows but blocks of 8192 rows called granules".
       각 granule의 첫 row만 mark로 저장하는 sparse index 구조다.
@@ -49,6 +59,11 @@ questions:
       - '모든 컬럼이 자동으로 sort key가 된다'
       - '임의의 컬럼 하나가 자동으로 선택된다'
     answer: 1
+    glossary:
+      - 'MergeTree｜｜파트 단위 정렬·머지하는 ClickHouse 기본 엔진'
+      - 'ORDER BY｜｜데이터 정렬 기준을 지정하는 절'
+      - 'sort key｜｜part 내부 정렬 기준 컬럼'
+      - 'INSERT｜｜테이블에 행을 추가하는 명령'
     explanation: |
       docs(mergetree.md) — "You can create a table without a primary key using the ORDER BY tuple() syntax. In this case, ClickHouse stores data in the order of inserting".
     concept: mergetree-empty-sort-key-behavior
@@ -64,6 +79,11 @@ questions:
       - 'OPTIMIZE TABLE ... FINAL을 쓰면 머지된다'
       - 'partition이 같은 disk에 있으면 머지된다'
     answer: 0
+    glossary:
+      - 'partition｜｜키 값으로 나눈 데이터 논리 구획'
+      - 'part｜｜MergeTree가 디스크에 쓰는 데이터 묶음 단위'
+      - 'OPTIMIZE TABLE｜｜part 머지를 수동 강제하는 명령'
+      - 'FINAL｜｜머지 완료 상태로 강제 처리하는 옵션'
     explanation: |
       docs(custom-partitioning-key.md) — "A merge only works for data parts that have the same value for the partitioning expression".
       partition 경계는 머지의 절대 경계로, OPTIMIZE FINAL로도 넘을 수 없다.
@@ -80,6 +100,11 @@ questions:
       - 'timestamp / shard / replica / level / mutation'
       - 'partition / minBlock / maxBlock / level / mutation'
     answer: 3
+    glossary:
+      - 'partition｜｜키 값으로 나눈 데이터 논리 구획'
+      - 'level｜｜part가 머지된 깊이(횟수)'
+      - 'block｜｜INSERT 단위로 부여되는 일련번호'
+      - 'mutation｜｜기존 데이터 수정·삭제 작업 버전'
     explanation: |
       docs(custom-partitioning-key.md) — "201901_1_9_2_11... 201901 partition, 1 min block, 9 max block, 2 chunk level (merge depth), 11 mutation version".
     concept: part-naming-format
@@ -95,6 +120,11 @@ questions:
       - '파일 수·file descriptor 폭증으로 SELECT 성능 저하'
       - 'replication이 자동으로 비활성화된다'
     answer: 2
+    glossary:
+      - 'partition｜｜키 값으로 나눈 데이터 논리 구획'
+      - 'file descriptor｜｜OS가 열린 파일에 부여하는 핸들'
+      - 'SELECT｜｜데이터를 조회하는 쿼리'
+      - 'replication｜｜데이터를 복제본에 복사하는 기능'
     explanation: |
       docs(custom-partitioning-key.md) — "you shouldn't make overly granular partitions (more than about a thousand)... the SELECT query performs poorly because of an unreasonably large number of files in the file system and open file descriptors".
     concept: partition-cardinality-limit
@@ -110,6 +140,11 @@ questions:
       - 'replicated 테이블일 때'
       - 'LowCardinality 컬럼이 있을 때'
     answer: 1
+    glossary:
+      - 'data part｜｜MergeTree가 디스크에 쓰는 데이터 묶음 단위'
+      - 'Wide 포맷｜｜컬럼마다 파일을 따로 두는 저장 방식'
+      - 'LowCardinality｜｜고유값이 적은 컬럼을 사전 인코딩하는 타입'
+      - 'replicated 테이블｜｜복제본을 가진 분산 테이블'
     explanation: |
       docs(mergetree.md) — "If the number of bytes or rows in a data part is less then the corresponding setting's value, the part is stored in Compact format. Otherwise it is stored in Wide format".
       Compact = 모든 컬럼 한 파일, Wide = 컬럼별 파일.
@@ -126,6 +161,11 @@ questions:
       - '두 키는 서로 disjoint여야 한다'
       - '제약 없이 자유롭게 정의 가능하다'
     answer: 0
+    glossary:
+      - 'primary key｜｜정렬·인덱싱 기준이 되는 키'
+      - 'sort key｜｜part 내부 정렬 기준 컬럼'
+      - 'prefix｜｜튜플 앞부분 일부 컬럼 묶음'
+      - 'SummingMergeTree｜｜머지 시 수치를 합산하는 엔진'
     explanation: |
       docs(mergetree.md) — "the primary key expression tuple must be a prefix of the sorting key expression tuple".
       SummingMergeTree/AggregatingMergeTree에서 dimension을 sort key에 추가하면서 primary key는 짧게 유지하는 패턴.
@@ -137,6 +177,11 @@ questions:
   - type: ox
     q: 'ClickHouse MergeTree의 primary key는 row의 uniqueness를 보장한다.'
     answer: false
+    glossary:
+      - 'MergeTree｜｜파트 단위 정렬·머지하는 ClickHouse 기본 엔진'
+      - 'row｜｜테이블의 한 행 레코드'
+      - 'unique 제약｜｜값 중복을 막는 데이터 제약'
+      - 'sparse index｜｜일부 행만 표시하는 성긴 색인'
     explanation: |
       docs(mergetree.md) — "ClickHouse does not require a unique primary key. You can insert multiple rows with the same primary key".
       primary key는 sparse index의 기준일 뿐 unique 제약이 아니다.
@@ -149,6 +194,10 @@ questions:
   - type: ox
     q: 'MergeTree의 part는 background 프로세스에 의해 자동으로 머지된다.'
     answer: true
+    glossary:
+      - 'part｜｜MergeTree가 디스크에 쓰는 데이터 묶음 단위'
+      - 'INSERT｜｜테이블에 행을 추가하는 명령'
+      - 'background 프로세스｜｜뒤에서 자동 실행되는 작업'
     explanation: |
       docs(mergetree.md) — "Insert operations create table parts which are merged by a background process".
       INSERT마다 새 part가 생기고 백그라운드에서 점차 큰 part로 합쳐진다.
@@ -161,6 +210,11 @@ questions:
   - type: ox
     q: 'ALTER로 sort key에 새 컬럼을 추가하는 것은 기존 데이터를 다시 정렬하는 무거운 연산이다.'
     answer: false
+    glossary:
+      - 'ALTER｜｜테이블 구조를 변경하는 명령'
+      - 'sort key｜｜part 내부 정렬 기준 컬럼'
+      - 'prefix｜｜튜플 앞부분 일부 컬럼 묶음'
+      - 'data part｜｜MergeTree가 디스크에 쓰는 데이터 묶음 단위'
     explanation: |
       docs(mergetree.md) — "ALTER of the sorting key is a lightweight operation because... existing data parts do not need to be changed".
       단, 새 sort key는 기존 sort key의 prefix를 그대로 유지해야 한다.
@@ -173,6 +227,9 @@ questions:
   - type: ox
     q: 'Granule 안의 row 수는 항상 정확히 index_granularity와 같다.'
     answer: false
+    glossary:
+      - 'index_granularity｜｜한 mark가 담당하는 행 수 설정'
+      - 'index_granularity_bytes｜｜granule 크기를 바이트로 제한하는 설정'
     explanation: |
       docs(mergetree.md) — "The number of rows in a granule lays in the [1, index_granularity] range, depending on the size of the rows".
       index_granularity는 상한이며, index_granularity_bytes 제약이나 큰 row로 인해 더 작아질 수 있다.
@@ -185,6 +242,10 @@ questions:
   - type: ox
     q: 'sparse primary index 덕분에 인덱스가 보통 RAM에 통째로 올라갈 수 있다.'
     answer: true
+    glossary:
+      - 'primary index｜｜데이터 위치를 빠르게 찾는 색인'
+      - 'granule｜｜인덱스가 가리키는 행 묶음 단위'
+      - 'RAM｜｜빠른 휘발성 주기억장치'
     explanation: |
       docs(mergetree.md) — "Sparse indexes allow you to work with a very large number of table rows, because in most cases, such indexes fit in the computer's RAM".
     concept: sparse-index-in-ram
