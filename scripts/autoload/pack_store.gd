@@ -22,6 +22,7 @@ signal sword_broken  # 강제 강등 직후
 const SESSION_PHASES = ["IDLE", "IN_QUESTION", "FEEDBACK", "COMPLETED"]
 
 const COMBO_BONUS_EVERY: int = 5    # 5콤보 = +1 보너스 강화권
+const COMPLETION_TICKET_REWARD: int = 10  # 문제집 완주 보상 강화권
 const FAST_ANSWER_DIVISOR: float = 3.0  # default_time / 3 이내 정답 = +1 보너스
 const SWORD_DURABILITY_THRESHOLD: int = 5  # 세션 누적 오답 5개 = 강제 강등
 const DEFAULT_QUESTION_TIME: float = 25.0
@@ -296,6 +297,12 @@ func _complete_session() -> void:
 	# Finished — drop the resume cursor so re-entering starts fresh (no popup).
 	if not is_review_mode and not pack_source.is_empty():
 		ProgressStore.clear_quiz_session(pack_source)
+	# Completion reward — full quiz pack grants tickets (review/concept excluded
+	# so they can't be farmed for free tickets).
+	var reward := 0
+	if not is_review_mode:
+		reward = COMPLETION_TICKET_REWARD
+		ProgressStore.add_enhance_ticket(reward)
 	var record := {
 		"startedAt": Time.get_datetime_string_from_unix_time(int(session_started_at_unix), true),
 		"packTitle": pack.get("meta", {}).get("title", ""),
@@ -305,6 +312,7 @@ func _complete_session() -> void:
 		"bestCombo": best_combo_this_session,
 		"sessionWrongs": session_wrong_count,
 		"durationMs": int((Time.get_unix_time_from_system() - session_started_at_unix) * 1000),
+		"reward_tickets": reward,
 	}
 	ProgressStore.record_session(record)
 	session_completed.emit(record)

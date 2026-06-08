@@ -428,7 +428,7 @@ func _render_glossary(entries) -> void:
 		return
 	_glossary_box.visible = true
 	var header := Label.new()
-	header.text = "📖 단어 — 지문 속 N3+ 어휘 (정답 단어 제외)"
+	header.text = "📖 용어·단어 카드 — 지문 속 핵심어 설명"
 	header.add_theme_font_size_override("font_size", maxi(11, _font_sizes["hud"] - 3))
 	header.modulate = Color(0.62, 0.76, 0.95)
 	_glossary_box.add_child(header)
@@ -671,6 +671,123 @@ func _render_completion(record: Dictionary) -> void:
 		_advance_button.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/WrongNote.tscn"))
 	else:
 		_advance_button.pressed.connect(_go_home)
+	_show_celebration(record)
+
+
+# Animated congrats overlay on pack completion — bounce-in panel, pulsing title,
+# light confetti, and the completion reward (강화권 +N). Sits on top of the
+# completion screen; dismissed with its 확인 button.
+func _show_celebration(record: Dictionary) -> void:
+	var reward := int(record.get("reward_tickets", 0))
+	if reward <= 0 and PackStore.is_review_mode:
+		return  # review sessions: no celebration/reward
+
+	var overlay := ColorRect.new()
+	overlay.color = Color(0, 0, 0, 0)
+	overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	overlay.mouse_filter = Control.MOUSE_FILTER_STOP
+	add_child(overlay)
+
+	var center := CenterContainer.new()
+	center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	overlay.add_child(center)
+
+	var panel := PanelContainer.new()
+	panel.add_theme_stylebox_override("panel", _celebration_stylebox())
+	panel.pivot_offset = Vector2(180, 130)
+	center.add_child(panel)
+
+	var margin := MarginContainer.new()
+	margin.add_theme_constant_override("margin_left", 44)
+	margin.add_theme_constant_override("margin_right", 44)
+	margin.add_theme_constant_override("margin_top", 32)
+	margin.add_theme_constant_override("margin_bottom", 28)
+	panel.add_child(margin)
+
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 14)
+	box.alignment = BoxContainer.ALIGNMENT_CENTER
+	margin.add_child(box)
+
+	var title := Label.new()
+	title.text = "🎉  축하합니다!  🎉"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size", 34)
+	title.modulate = Color(1.0, 0.9, 0.4)
+	box.add_child(title)
+
+	var sub := Label.new()
+	sub.text = "%s 완주!" % record.get("packTitle", "문제집")
+	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	sub.add_theme_font_size_override("font_size", 18)
+	sub.modulate = Color(0.9, 0.93, 1.0)
+	box.add_child(sub)
+
+	var score := Label.new()
+	score.text = "%d / %d 정답  ·  최고 콤보 %d" % [
+		int(record.get("correct", 0)), int(record.get("total", 0)), int(record.get("bestCombo", 0)),
+	]
+	score.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	score.add_theme_font_size_override("font_size", 15)
+	score.modulate = Color(0.75, 0.82, 0.95)
+	box.add_child(score)
+
+	if reward > 0:
+		var reward_label := Label.new()
+		reward_label.text = "🎟  강화권 +%d 지급!" % reward
+		reward_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		reward_label.add_theme_font_size_override("font_size", 22)
+		reward_label.modulate = Color(0.55, 1.0, 0.7)
+		box.add_child(reward_label)
+
+	var ok := Button.new()
+	ok.text = "확인"
+	ok.custom_minimum_size = Vector2(160, 46)
+	ok.add_theme_font_size_override("font_size", 17)
+	ok.pressed.connect(func(): overlay.queue_free())
+	var ok_row := HBoxContainer.new()
+	ok_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	ok_row.add_child(ok)
+	box.add_child(ok_row)
+
+	# Animate: dim fades in, panel bounces in, title pulses, confetti falls.
+	panel.scale = Vector2(0.6, 0.6)
+	var t := create_tween().set_parallel(true)
+	t.tween_property(overlay, "color:a", 0.62, 0.25)
+	t.tween_property(panel, "scale", Vector2(1.06, 1.06), 0.28).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	t.chain().tween_property(panel, "scale", Vector2(1.0, 1.0), 0.12)
+	var pulse := create_tween().set_loops()
+	pulse.tween_property(title, "modulate", Color(1.0, 1.0, 0.65), 0.6)
+	pulse.tween_property(title, "modulate", Color(1.0, 0.85, 0.3), 0.6)
+	_spawn_confetti(overlay)
+
+
+func _celebration_stylebox() -> StyleBoxFlat:
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0.12, 0.14, 0.20)
+	sb.border_color = Color(1.0, 0.85, 0.4)
+	sb.set_border_width_all(2)
+	sb.set_corner_radius_all(16)
+	sb.shadow_color = Color(0, 0, 0, 0.5)
+	sb.shadow_size = 12
+	return sb
+
+
+func _spawn_confetti(parent: Control) -> void:
+	var glyphs := ["🎉", "✨", "🎊", "⭐", "🌟"]
+	for i in 14:
+		var c := Label.new()
+		c.text = glyphs[i % glyphs.size()]
+		c.add_theme_font_size_override("font_size", 20 + (i % 3) * 8)
+		c.position = Vector2(randf_range(40.0, size.x - 40.0), -30.0)
+		c.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		parent.add_child(c)
+		var fall := create_tween().set_parallel(true)
+		var dur := randf_range(1.6, 2.8)
+		fall.tween_property(c, "position:y", size.y + 40.0, dur).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+		fall.tween_property(c, "position:x", c.position.x + randf_range(-60.0, 60.0), dur)
+		fall.tween_property(c, "modulate:a", 0.0, dur).set_ease(Tween.EASE_IN)
+		fall.chain().tween_callback(c.queue_free)
 
 
 func _go_home() -> void:
