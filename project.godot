@@ -1,8 +1,10 @@
-; Godot project configuration file.
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
 ;
-; The format is INI-like. Lines starting with ";" are comments.
-; This file was hand-authored as part of porting study_game (Electron/React)
-; to Godot 4. Engine will fill in additional sections on first open.
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
 
 config_version=5
 
@@ -12,8 +14,8 @@ config/name="문제풀고 강화하자"
 config/description="학습 퀴즈 + 검 강화. Godot 4 (GDScript)."
 run/main_scene="res://scenes/Home.tscn"
 config/features=PackedStringArray("4.6", "GL Compatibility")
-config/icon="res://icon.svg"
 boot_splash/show_image=false
+config/icon="res://icon.svg"
 
 [autoload]
 
@@ -26,10 +28,8 @@ ThemeSetup="*res://scripts/autoload/theme_setup.gd"
 
 window/size/viewport_width=1280
 window/size/viewport_height=800
-window/size/resizable=true
 window/size/window_width_override=1280
 window/size/window_height_override=800
-window/dpi/allow_hidpi=true
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 
@@ -43,8 +43,9 @@ ui_skip={
 
 [rendering]
 
+textures/canvas_textures/default_texture_filter=0
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
-textures/canvas_textures/default_texture_filter=0
+textures/vram_compression/import_etc2_astc=true
 2d/snap/snap_2d_transforms_to_pixel=true
 2d/snap/snap_2d_vertices_to_pixel=true
