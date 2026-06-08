@@ -10,6 +10,7 @@ const MARKET_SCENE := "res://scenes/Market.tscn"
 const WRONG_NOTE_SCENE := "res://scenes/WrongNote.tscn"
 const SETTINGS_SCENE := "res://scenes/Settings.tscn"
 const SWORD_DISPLAY := preload("res://scenes/SwordDisplay.tscn")
+const COLLECTION_SCENE := "res://scenes/Collection.tscn"
 
 var _tickets_label: Label
 var _gold_label: Label
@@ -18,6 +19,7 @@ var _weapon_label: Label
 var _xp_label: Label
 var _status_label: Label
 var _sword_slot: Control
+var _title_label: Label
 
 
 func _ready() -> void:
@@ -29,6 +31,8 @@ func _ready() -> void:
 	ProgressStore.scrolls_changed.connect(func(_n): _refresh())
 	ProgressStore.weapon_changed.connect(func(_lv): _refresh())
 	get_window().files_dropped.connect(_on_files_dropped)
+	_refresh_title()
+	ProgressStore.title_changed.connect(func(_id): _refresh_title())
 
 
 func _build_layout() -> void:
@@ -103,6 +107,14 @@ func _build_layout() -> void:
 	stage_wrap.add_child(_sword_slot)
 	_apply_quiet_mode()
 
+	# ── Equipped title label
+	_title_label = Label.new()
+	_title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_title_label.add_theme_font_size_override("font_size", 15)
+	_title_label.modulate = Color(1.0, 0.9, 0.5)
+	_title_label.visible = false
+	root.add_child(_title_label)
+
 	# ── Quiz pack picker — auto-listed from res://data/quizzes/ so newly added
 	# packs appear without editing this scene. .yml wins over a same-name .json.
 	var pack_header := HBoxContainer.new()
@@ -164,6 +176,10 @@ func _build_layout() -> void:
 	var btn_settings := _make_button("⚙  설정", Vector2(120, 50))
 	btn_settings.pressed.connect(_open_scene.bind(SETTINGS_SCENE))
 	nav_row.add_child(btn_settings)
+
+	var btn_collection := _make_button("🏆 수집", Vector2(120, 50))
+	btn_collection.pressed.connect(_open_scene.bind(COLLECTION_SCENE))
+	nav_row.add_child(btn_collection)
 
 	# ── Status hint
 	_status_label = Label.new()
@@ -240,6 +256,13 @@ func _refresh() -> void:
 	_gold_label.text = "골드 %d" % ProgressStore.get_gold()
 	_scrolls_label.text = "주문서 %d" % ProgressStore.get_protection_scrolls()
 	_weapon_label.text = "검 +%d" % ProgressStore.get_weapon_level()
+
+
+func _refresh_title() -> void:
+	var id := ProgressStore.get_title()
+	var t := Achievements.title_for(id) if id != "" else ""
+	_title_label.text = ("「%s」" % t) if t != "" else ""
+	_title_label.visible = t != ""
 
 
 func _on_load_sample(path: String) -> void:
