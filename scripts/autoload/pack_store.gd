@@ -180,6 +180,9 @@ func submit_answer(answer) -> void:
 			best_combo_this_session = combo_count
 		var multiplier := Leveling.combo_multiplier(combo_count)
 		var xp_award := int(round(Leveling.XP_PER_CORRECT * multiplier))
+		if ProgressStore.get_progress_value("xp_boost_remaining", 0) > 0:
+			xp_award *= 2
+			info["bonuses"].append("XP 부스터 ×2")
 		ProgressStore.add_xp(xp_award)
 		ProgressStore.add_enhance_ticket(base_reward)
 		# Bonus 1: combo milestone (5콤보마다 +1 보너스)
@@ -193,8 +196,12 @@ func submit_answer(answer) -> void:
 			info["bonuses"].append("⚡ 빠른 정답 +1 (%.1fs)" % elapsed_for_q)
 		combo_changed.emit(combo_count, Leveling.is_on_fire(combo_count))
 	else:
-		combo_count = 0
-		combo_changed.emit(0, false)
+		if ProgressStore.consume_combo_insurance_if_armed():
+			info["bonuses"].append("콤보 보험 — 콤보 유지")
+			combo_changed.emit(combo_count, Leveling.is_on_fire(combo_count))
+		else:
+			combo_count = 0
+			combo_changed.emit(0, false)
 		# Review mode: skip both wrong-note re-registration (entry already
 		# exists) and sword durability (safer review). The SRS update below
 		# handles tracking instead.
@@ -228,6 +235,8 @@ func submit_answer(answer) -> void:
 				int(next_state.get("review_level", prev_level)),
 				String(next_state.get("next_review_at", "")),
 			)
+	if ProgressStore.get_progress_value("xp_boost_remaining", 0) > 0:
+		ProgressStore.decrement_xp_boost()
 	feedback.emit(is_correct, q.get("explanation", ""), info)
 	phase = "FEEDBACK"
 
@@ -318,6 +327,7 @@ func _complete_session() -> void:
 		"reward_tickets": reward,
 	}
 	ProgressStore.record_session(record)
+	ProgressStore.check_achievements_public()
 	session_completed.emit(record)
 
 

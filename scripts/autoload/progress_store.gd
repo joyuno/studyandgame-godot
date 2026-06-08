@@ -510,6 +510,47 @@ func check_achievements_public() -> void:
 	_check_achievements()
 
 
+func get_progress_value(key: String, fallback):
+	return progress.get(key, fallback)
+
+
+func decrement_xp_boost() -> void:
+	progress["xp_boost_remaining"] = maxi(0, int(progress.get("xp_boost_remaining", 0)) - 1)
+	_persist()
+
+
+func activate_xp_boost() -> bool:
+	if get_consumable("xp_boost") <= 0:
+		return false
+	var c: Dictionary = progress.get("consumables", {})
+	c["xp_boost"] = int(c["xp_boost"]) - 1
+	progress["consumables"] = c
+	progress["xp_boost_remaining"] = Economy.XP_BOOST_QUESTIONS
+	_persist()
+	consumables_changed.emit(get_consumables())
+	return true
+
+
+func arm_combo_insurance() -> bool:
+	if get_consumable("combo_insure") <= 0:
+		return false
+	var c: Dictionary = progress.get("consumables", {})
+	c["combo_insure"] = int(c["combo_insure"]) - 1
+	progress["consumables"] = c
+	progress["combo_insure_armed"] = true
+	_persist()
+	consumables_changed.emit(get_consumables())
+	return true
+
+
+func consume_combo_insurance_if_armed() -> bool:
+	if not bool(progress.get("combo_insure_armed", false)):
+		return false
+	progress["combo_insure_armed"] = false
+	_persist()
+	return true
+
+
 # Legacy idle-RPG boss material drop — disabled in sword mode. Kept as a
 # no-op so PackStore can still call it without conditionals.
 func roll_material_drop(_boss_defeats: int) -> int:
