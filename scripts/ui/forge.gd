@@ -40,6 +40,12 @@ func _ready() -> void:
 	ProgressStore.consumables_changed.connect(func(_s): _refresh())
 	ProgressStore.difficulty_changed.connect(func(_d): _refresh())
 	ProgressStore.enhance_result.connect(_render_result)
+	ProgressStore.achievement_unlocked.connect(_on_achievement)
+
+
+func _on_achievement(id: String) -> void:
+	_result_label.text = "🏆 업적 달성: %s" % Achievements.title_for(id)
+	_result_label.modulate = Color(1.0, 0.9, 0.5)
 
 
 func _build_layout() -> void:

@@ -90,6 +90,11 @@ func _ready() -> void:
 	ProgressStore.consumables_changed.connect(func(_s): _refresh_consumable_badges())
 	_apply_timer_visibility()
 	_refresh_consumable_badges()
+	ProgressStore.achievement_unlocked.connect(_on_achievement)
+
+
+func _on_achievement(id: String) -> void:
+	_show_toast("🏆 업적 달성: %s" % Achievements.title_for(id), Color(1.0, 0.9, 0.5))
 
 
 func _build_layout() -> void:
