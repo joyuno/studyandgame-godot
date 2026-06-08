@@ -23,8 +23,10 @@ var _rate_label: Label
 var _result_label: Label
 var _try_button: Button
 var _scroll_check: CheckBox
+var _charm_check: CheckBox
 var _charging := false
 var _pending_scroll := false
+var _pending_charm := false
 
 
 func _ready() -> void:
@@ -35,6 +37,7 @@ func _ready() -> void:
 	ProgressStore.gold_changed.connect(func(_n): _refresh())
 	ProgressStore.scrolls_changed.connect(func(_n): _refresh())
 	ProgressStore.shards_changed.connect(func(_n): _refresh())
+	ProgressStore.consumables_changed.connect(func(_s): _refresh())
 	ProgressStore.difficulty_changed.connect(func(_d): _refresh())
 	ProgressStore.enhance_result.connect(_render_result)
 
@@ -113,6 +116,10 @@ func _build_layout() -> void:
 	_scroll_check.add_theme_font_size_override("font_size", 14)
 	scroll_row.add_child(_scroll_check)
 
+	_charm_check = CheckBox.new()
+	_charm_check.add_theme_font_size_override("font_size", 14)
+	scroll_row.add_child(_charm_check)
+
 	# ── Enhance button
 	var btn_row := HBoxContainer.new()
 	btn_row.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -178,6 +185,14 @@ func _refresh() -> void:
 	else:
 		_scroll_check.disabled = false
 		_scroll_check.text = "주문서 사용 (파괴 방지) · 보유 %d개" % scrolls
+	var charms := ProgressStore.get_consumable("luck_charm")
+	if charms == 0:
+		_charm_check.disabled = true
+		_charm_check.button_pressed = false
+		_charm_check.text = "행운 부적 — 보유 0개 (시장)"
+	else:
+		_charm_check.disabled = false
+		_charm_check.text = "행운 부적 (+10%p) · 보유 %d개" % charms
 
 
 func _on_try() -> void:
@@ -193,12 +208,14 @@ func _on_try() -> void:
 		_result_label.modulate = Color(1, 0.65, 0.65)
 		return
 
-	# Snapshot the scroll choice now; the roll happens when the blade finishes
-	# charging.
+	# Snapshot the scroll and charm choices now; the roll happens when the blade
+	# finishes charging.
 	_pending_scroll = _scroll_check.button_pressed and ProgressStore.get_protection_scrolls() > 0
+	_pending_charm = _charm_check.button_pressed and ProgressStore.get_consumable("luck_charm") > 0
 	_charging = true
 	_try_button.disabled = true
 	_scroll_check.disabled = true
+	_charm_check.disabled = true
 	_result_label.text = "⚡ 강화 중..."
 	_result_label.modulate = Color(0.8, 0.9, 1.0)
 
@@ -214,7 +231,7 @@ func _on_try() -> void:
 # all synchronously, so text + button state are already correct on return.
 func _do_enhance() -> void:
 	_charging = false
-	var result := ProgressStore.try_enhance(_pending_scroll)
+	var result := ProgressStore.try_enhance(_pending_scroll, _pending_charm)
 	if not result.get("ok", false):
 		var reason: String = result.get("reason", "")
 		_result_label.text = "강화 실패: %s" % reason
