@@ -27,6 +27,9 @@ signal font_size_scale_changed(scale: int)
 # shards_gained is non-zero only when result == "destroy".
 signal enhance_result(result: String, before: int, after: int, materials_left: int, shards_gained: int)
 signal material_drop(amount: int)  # legacy; idle-RPG boss drops are off in sword mode
+signal consumables_changed(state: Dictionary)
+signal achievement_unlocked(id: String)
+signal title_changed(title_id: String)
 
 const SCHEMA_VERSION: int = 2
 const MAX_SESSION_HISTORY: int = 100
@@ -158,6 +161,28 @@ func get_font_size_scale() -> int:
 func get_wrong_note() -> Array:
 	var w = progress.get("wrongNote", [])
 	return w if typeof(w) == TYPE_ARRAY else []
+
+
+func get_consumables() -> Dictionary:
+	return progress.get("consumables", {}).duplicate()
+
+
+func get_consumable(id: String) -> int:
+	return int(progress.get("consumables", {}).get(id, 0))
+
+
+func get_achievements() -> Array:
+	return progress.get("achievements", []).duplicate()
+
+
+func get_title() -> String:
+	return String(progress.get("title", ""))
+
+
+func set_title(id: String) -> void:
+	progress["title"] = id
+	_persist()
+	title_changed.emit(id)
 
 
 # -----------------------------------------------------------------------------
@@ -559,4 +584,10 @@ func _default_progress() -> Dictionary:
 		"shards": 0,           # 파편 — earned from destroyed swords; spent at the shop
 		"difficulty": "easy",  # "easy" or "hard" — applied to Weapon rates
 		"quizSessions": {},    # pack_path → { index, total, correct, ... } resume cursor
+		"consumables": { "luck_charm": 0, "xp_boost": 0, "combo_insure": 0 },
+		"xp_boost_remaining": 0,
+		"combo_insure_armed": false,
+		"achievements": [],
+		"title": "",
+		"everDestroyed": false,
 	}
