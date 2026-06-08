@@ -38,6 +38,10 @@ var _durability_row: HBoxContainer
 var _bonus_toast: Label
 var _toast_tween: Tween
 var _fire_tween: Tween
+var _boost_button: Button
+var _insure_button: Button
+var _boost_label: Label
+var _insure_label: Label
 
 var _glossary_box: VBoxContainer
 # Set of the current question's card (glossary) words — excluded from dictionary
@@ -83,7 +87,9 @@ func _ready() -> void:
 	ProgressStore.timer_enabled_changed.connect(func(_e): _apply_timer_visibility())
 	ProgressStore.font_size_scale_changed.connect(func(_s): _apply_font_scale())
 	ProgressStore.weapon_changed.connect(func(_lv): _apply_durability_view())
+	ProgressStore.consumables_changed.connect(func(_s): _refresh_consumable_badges())
 	_apply_timer_visibility()
+	_refresh_consumable_badges()
 
 
 func _build_layout() -> void:
@@ -129,6 +135,26 @@ func _build_layout() -> void:
 	_combo_label.modulate = Color(0.85, 0.9, 1.0)
 	_combo_label.visible = false
 	top.add_child(_combo_label)
+
+	_boost_button = Button.new()
+	_boost_button.add_theme_font_size_override("font_size", _font_sizes["hud"])
+	_boost_button.pressed.connect(_on_activate_boost)
+	top.add_child(_boost_button)
+
+	_insure_button = Button.new()
+	_insure_button.add_theme_font_size_override("font_size", _font_sizes["hud"])
+	_insure_button.pressed.connect(_on_arm_insurance)
+	top.add_child(_insure_button)
+
+	_boost_label = Label.new()
+	_boost_label.add_theme_font_size_override("font_size", _font_sizes["hud"])
+	_boost_label.modulate = Color(1.0, 0.9, 0.4)
+	top.add_child(_boost_label)
+
+	_insure_label = Label.new()
+	_insure_label.add_theme_font_size_override("font_size", _font_sizes["hud"])
+	_insure_label.modulate = Color(1.0, 0.6, 0.4)
+	top.add_child(_insure_label)
 
 	var sp := Control.new()
 	sp.size_flags_horizontal = SIZE_EXPAND_FILL
@@ -436,6 +462,29 @@ func _update_ticket_counter() -> void:
 	_tickets_label.text = "강화권 %d" % ProgressStore.get_enhance_tickets()
 
 
+func _on_activate_boost() -> void:
+	if ProgressStore.activate_xp_boost():
+		_refresh_consumable_badges()
+
+
+func _on_arm_insurance() -> void:
+	if ProgressStore.arm_combo_insurance():
+		_refresh_consumable_badges()
+
+
+func _refresh_consumable_badges() -> void:
+	var boost_owned := ProgressStore.get_consumable("xp_boost")
+	var boost_left := int(ProgressStore.get_progress_value("xp_boost_remaining", 0))
+	_boost_button.text = "⚡ 부스터(%d)" % boost_owned
+	_boost_button.visible = boost_owned > 0 and boost_left == 0
+	_boost_label.text = ("⚡ XP×2 (%d문제)" % boost_left) if boost_left > 0 else ""
+	var insure_owned := ProgressStore.get_consumable("combo_insure")
+	var armed := bool(ProgressStore.get_progress_value("combo_insure_armed", false))
+	_insure_button.text = "🔥 보험(%d)" % insure_owned
+	_insure_button.visible = insure_owned > 0 and not armed
+	_insure_label.text = "🔥 보험 장착" if armed else ""
+
+
 func _render_idle_button() -> void:
 	for child in _answer_area.get_children():
 		child.queue_free()
@@ -450,6 +499,7 @@ func _render_idle_button() -> void:
 
 
 func _render_question(index: int, q: Dictionary) -> void:
+	_refresh_consumable_badges()
 	_build_card_words(q.get("glossary", []))
 	var passage := String(q.get("passage", ""))
 	_passage_panel.visible = not passage.is_empty()
