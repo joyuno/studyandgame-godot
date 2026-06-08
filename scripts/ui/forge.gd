@@ -10,11 +10,9 @@ extends Control
 
 const SWORD_DISPLAY := preload("res://scenes/SwordDisplay.tscn")
 
-# Charge-up suspense before the roll resolves. The gauge blocks light up over
-# CHARGE_TIME, then the actual try_enhance() roll happens at the reveal.
+# Charge-up suspense before the roll resolves. The blade glows for CHARGE_TIME,
+# then the actual try_enhance() roll happens at the reveal.
 const CHARGE_TIME := 1.2
-const GAUGE_BLOCKS := 14
-const BLOCK_DIM := Color(0.17, 0.19, 0.26)
 
 var _sword_slot: Control
 var _tickets_label: Label
@@ -25,8 +23,6 @@ var _rate_label: Label
 var _result_label: Label
 var _try_button: Button
 var _scroll_check: CheckBox
-var _gauge_row: HBoxContainer
-var _gauge_blocks: Array[ColorRect] = []
 var _charging := false
 var _pending_scroll := false
 
@@ -117,19 +113,6 @@ func _build_layout() -> void:
 	_scroll_check.add_theme_font_size_override("font_size", 14)
 	scroll_row.add_child(_scroll_check)
 
-	# ── Charge gauge (segmented blocks; hidden until 강화 시도)
-	_gauge_row = HBoxContainer.new()
-	_gauge_row.alignment = BoxContainer.ALIGNMENT_CENTER
-	_gauge_row.add_theme_constant_override("separation", 4)
-	_gauge_row.visible = false
-	root.add_child(_gauge_row)
-	for i in GAUGE_BLOCKS:
-		var blk := ColorRect.new()
-		blk.custom_minimum_size = Vector2(20, 24)
-		blk.color = BLOCK_DIM
-		_gauge_blocks.append(blk)
-		_gauge_row.add_child(blk)
-
 	# ── Enhance button
 	var btn_row := HBoxContainer.new()
 	btn_row.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -199,36 +182,25 @@ func _on_try() -> void:
 		_result_label.modulate = Color(1, 0.65, 0.65)
 		return
 
-	# Snapshot the scroll choice now; the roll happens when the gauge fills.
+	# Snapshot the scroll choice now; the roll happens when the blade finishes
+	# charging.
 	_pending_scroll = _scroll_check.button_pressed and ProgressStore.get_protection_scrolls() > 0
 	_charging = true
 	_try_button.disabled = true
 	_scroll_check.disabled = true
 	_result_label.text = "⚡ 강화 중..."
 	_result_label.modulate = Color(0.8, 0.9, 1.0)
-	_gauge_row.visible = true
-	_set_gauge_fill(0.0)
 
+	# Charge glow layered on the sword; roll when it finishes.
+	_sword_slot.play_charge(CHARGE_TIME)
 	var tw := create_tween()
-	tw.tween_method(_set_gauge_fill, 0.0, 1.0, CHARGE_TIME) \
-		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	tw.tween_interval(CHARGE_TIME)
 	tw.tween_callback(_do_enhance)
 
 
-# Light the gauge blocks left→right (blue→gold) as the charge fills.
-func _set_gauge_fill(t: float) -> void:
-	var lit := int(ceil(t * GAUGE_BLOCKS))
-	for i in _gauge_blocks.size():
-		if i < lit:
-			var f := float(i) / float(maxi(1, GAUGE_BLOCKS - 1))
-			_gauge_blocks[i].color = Color(0.3, 0.6, 1.0).lerp(Color(1.0, 0.8, 0.2), f)
-		else:
-			_gauge_blocks[i].color = BLOCK_DIM
-
-
-# Gauge full → roll now. try_enhance() emits enhance_result (→ _render_result)
-# and weapon/ticket signals (→ _refresh) synchronously, so the text + button
-# state are already correct when we return; we just color + retract the gauge.
+# Charge done → roll now. try_enhance() emits enhance_result (→ SwordDisplay
+# flashes the result fx on the blade) and weapon/ticket signals (→ _refresh),
+# all synchronously, so text + button state are already correct on return.
 func _do_enhance() -> void:
 	_charging = false
 	var result := ProgressStore.try_enhance(_pending_scroll)
@@ -236,22 +208,7 @@ func _do_enhance() -> void:
 		var reason: String = result.get("reason", "")
 		_result_label.text = "강화 실패: %s" % reason
 		_result_label.modulate = Color(1, 0.65, 0.65)
-		_gauge_row.visible = false
 		_refresh()
-		return
-	var col := Color(0.85, 0.85, 0.6)
-	match String(result.get("result", "")):
-		"success": col = Color(0.4, 1.0, 0.6)
-		"destroy": col = Color(1.0, 0.4, 0.4)
-		"stay_protected": col = Color(0.9, 0.7, 1.0)
-	for blk in _gauge_blocks:
-		blk.color = col
-	var hide_tw := create_tween()
-	hide_tw.tween_interval(0.7)
-	hide_tw.tween_callback(func():
-		if not _charging:
-			_gauge_row.visible = false
-	)
 
 
 func _render_result(result: String, before: int, after: int, tickets_left: int, shards_gained: int) -> void:

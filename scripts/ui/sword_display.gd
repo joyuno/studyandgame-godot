@@ -13,10 +13,11 @@ const FLASH_DURATION: float = 0.45
 var _root: VBoxContainer
 var _stage: Control
 var _sprite: TextureRect
-var _fx_overlay: TextureRect
+var _charge_overlay: TextureRect  # gold glow that fills during enhance charge-up
+var _fx_overlay: TextureRect      # result flash (success / fail / destroy)
 var _level_badge: Label
-var _multiplier_label: Label
 var _flash_tween: Tween
+var _charge_tween: Tween
 
 
 func _ready() -> void:
@@ -51,6 +52,17 @@ func _build_layout() -> void:
 	_sprite.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_stage.add_child(_sprite)
 
+	# Charge glow — a gold-tinted copy of the blade layered over it, ramped up
+	# in alpha during the enhance charge so the "gauge" reads on the sword itself.
+	_charge_overlay = TextureRect.new()
+	_charge_overlay.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_charge_overlay.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_charge_overlay.size = Vector2(300, 300)
+	_charge_overlay.position = Vector2.ZERO
+	_charge_overlay.modulate = Color(1, 1, 1, 0)
+	_charge_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_stage.add_child(_charge_overlay)
+
 	_fx_overlay = TextureRect.new()
 	_fx_overlay.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	_fx_overlay.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
@@ -66,37 +78,56 @@ func _build_layout() -> void:
 	_level_badge.size_flags_horizontal = SIZE_EXPAND_FILL
 	_root.add_child(_level_badge)
 
-	_multiplier_label = Label.new()
-	_multiplier_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_multiplier_label.add_theme_font_size_override("font_size", 14)
-	_multiplier_label.modulate = Color(0.75, 0.8, 0.9)
-	_multiplier_label.size_flags_horizontal = SIZE_EXPAND_FILL
-	_root.add_child(_multiplier_label)
-
 
 func _refresh() -> void:
 	var lv := ProgressStore.get_weapon_level()
 	_sprite.texture = SwordStore.texture_for_level(lv)
 	_level_badge.text = SwordStore.tier_name(lv)
 	_level_badge.add_theme_color_override("font_color", SwordStore.glow_color(lv))
-	_multiplier_label.text = "데미지 ×%.2f" % Weapon.weapon_damage_multiplier(lv)
 
 
 func _on_weapon_changed(_lv: int) -> void:
 	_refresh()
 
 
-func _on_enhance_result(success: bool, before: int, after: int, _tickets_left: int) -> void:
-	var fx_name := "success"
-	var tint := Color(1, 1, 1, 1)
-	if not success:
-		if after < before:
-			fx_name = "destroy"
-			tint = Color(1, 0.6, 0.6, 1)
-		else:
-			fx_name = "fail"
-			tint = Color(1, 0.85, 0.7, 1)
+# enhance_result(result, before, after, materials_left, shards_gained). `result`
+# is a STRING — "success" / "stay" / "stay_protected" / "destroy" / "max".
+func _on_enhance_result(result: String, _before: int, _after: int, _materials_left: int, _shards_gained: int) -> void:
+	# Charge glow is fading out as the result lands; clear it so it doesn't
+	# linger under the flash.
+	if _charge_tween and _charge_tween.is_valid():
+		_charge_tween.kill()
+	_charge_overlay.modulate.a = 0.0
+	var fx_name := "fail"
+	var tint := Color(1, 0.85, 0.7, 1)
+	match result:
+		"success":
+			fx_name = "success"; tint = Color(1, 1, 1, 1)
+		"destroy":
+			fx_name = "destroy"; tint = Color(1, 0.6, 0.6, 1)
+		"stay_protected":
+			fx_name = "fail"; tint = Color(0.85, 0.7, 1.0, 1)
+		_:  # "stay"
+			fx_name = "fail"; tint = Color(1, 0.85, 0.7, 1)
 	_play_fx(fx_name, tint)
+
+
+# Charge-up animation layered on the blade — a gold copy of the sword whose
+# alpha pulses up over `duration`, reading as a gauge filling on the sword.
+# Forge calls this, then runs the roll when it finishes.
+func play_charge(duration: float) -> void:
+	_charge_overlay.texture = _sprite.texture
+	_charge_overlay.modulate = Color(1.7, 1.35, 0.45, 0.0)  # bright gold
+	if _charge_tween and _charge_tween.is_valid():
+		_charge_tween.kill()
+	_charge_tween = create_tween()
+	var steps := 5
+	for i in steps:
+		var ceiling := 0.18 + 0.62 * float(i + 1) / float(steps)  # rising peak
+		var st := duration / float(steps)
+		_charge_tween.tween_property(_charge_overlay, "modulate:a", ceiling, st * 0.6) \
+			.set_trans(Tween.TRANS_SINE)
+		_charge_tween.tween_property(_charge_overlay, "modulate:a", ceiling * 0.45, st * 0.4)
 
 
 func _play_fx(fx: String, tint: Color) -> void:
