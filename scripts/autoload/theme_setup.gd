@@ -12,6 +12,11 @@ extends Node
 # and fails on a cold project tree.
 const FONT_REGULAR_PATH := "res://assets/fonts/Pretendard-Regular.otf"
 const FONT_BOLD_PATH := "res://assets/fonts/Pretendard-Bold.otf"
+# Japanese fallback — Pretendard has no kana/kanji, so quiz content tofu'd on iOS
+# (no OS font fallback there). Attached as a fallback so Korean UI keeps
+# Pretendard and Japanese glyphs resolve through Noto Sans JP.
+const FONT_JP_REGULAR_PATH := "res://assets/fonts/NotoSansJP-Regular.woff2"
+const FONT_JP_BOLD_PATH := "res://assets/fonts/NotoSansJP-Bold.woff2"
 
 # Tailwind-ish dark palette (matches study_game Electron --color-* tokens)
 const C_BG        := Color("#0c111c")  # zinc-950 ish
@@ -31,6 +36,15 @@ func _ready() -> void:
 	var theme := Theme.new()
 	var font_regular: Font = load(FONT_REGULAR_PATH) as Font
 	var font_bold: Font = load(FONT_BOLD_PATH) as Font
+
+	# Attach the Japanese fallback so missing glyphs (kana/kanji) resolve instead
+	# of rendering as tofu boxes on platforms without OS font fallback (iOS).
+	var jp_regular: Font = load(FONT_JP_REGULAR_PATH) as Font
+	var jp_bold: Font = load(FONT_JP_BOLD_PATH) as Font
+	if font_regular and jp_regular:
+		font_regular.fallbacks = [jp_regular]
+	if font_bold and jp_bold:
+		font_bold.fallbacks = [jp_bold]
 
 	# ─ Default font (skip if asset import not ready — falls back to Godot default)
 	if font_regular:
