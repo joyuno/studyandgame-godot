@@ -399,20 +399,52 @@ func update_wrong_entry_srs(question_hash: String, review_level: int, next_revie
 			return
 
 
+# id ∈ {"luck_charm","xp_boost","combo_insure"}. pay ∈ {"shards","gold"}.
+func buy_consumable(id: String, pay: String) -> Dictionary:
+	var cost: Dictionary
+	match id:
+		"luck_charm": cost = Economy.LUCK_CHARM_COST
+		"xp_boost": cost = Economy.XP_BOOST_COST
+		"combo_insure": cost = Economy.COMBO_INSURE_COST
+		_: return { "ok": false, "reason": "unknown_item" }
+	if not cost.has(pay):
+		return { "ok": false, "reason": "bad_payment" }
+	var amount: int = int(cost[pay])
+	if pay == "gold":
+		if not spend_gold(amount):
+			return { "ok": false, "reason": "not_enough_gold" }
+	else:
+		if get_shards() < amount:
+			return { "ok": false, "reason": "not_enough_shards" }
+		progress["shards"] = get_shards() - amount
+	var c: Dictionary = progress.get("consumables", {})
+	c[id] = int(c.get(id, 0)) + 1
+	progress["consumables"] = c
+	_persist()
+	progress_changed.emit()
+	consumables_changed.emit(get_consumables())
+	if pay == "shards":
+		shards_changed.emit(get_shards())
+	return { "ok": true }
+
+
 # Attempt weapon enhancement (검강화하기 3-outcome). One ticket per attempt.
 # If `use_scroll` is true and the player owns a scroll, a destroy outcome is
 # absorbed (the sword stays at its current level instead of resetting to +0).
 # The scroll has no effect on a plain "stay" outcome — only on destroys.
-func try_enhance(use_scroll: bool = false) -> Dictionary:
+# If `use_charm` is true and the player owns a luck_charm, success rate is
+# boosted by Economy.LUCK_CHARM_BONUS and the charm is consumed.
+func try_enhance(use_scroll: bool = false, use_charm: bool = false) -> Dictionary:
 	if get_enhance_tickets() < Weapon.ENHANCE_MATERIAL_COST:
 		return { "ok": false, "reason": "not_enough_tickets" }
-
 	var before := get_weapon_level()
 	if before >= Weapon.ENHANCE_MAX_LEVEL:
 		return { "ok": false, "reason": "max_level" }
 
 	var scroll_armed := use_scroll and get_protection_scrolls() > 0
-	var outcome := Weapon.try_attempt(before, scroll_armed, -1.0, get_difficulty())
+	var charm_armed := use_charm and get_consumable("luck_charm") > 0
+	var bonus := Economy.LUCK_CHARM_BONUS if charm_armed else 0.0
+	var outcome := Weapon.try_attempt(before, scroll_armed, -1.0, get_difficulty(), bonus)
 	var result: String = outcome.get("result", "stay")
 	var after: int = int(outcome.get("level", before))
 	var shards_gained: int = int(outcome.get("shards", 0))
@@ -430,6 +462,12 @@ func try_enhance(use_scroll: bool = false) -> Dictionary:
 	progress["materials"] = get_enhance_tickets() - Weapon.ENHANCE_MATERIAL_COST
 	if scroll_consumed:
 		progress["protectionScrolls"] = get_protection_scrolls() - 1
+	if charm_armed:
+		var c: Dictionary = progress.get("consumables", {})
+		c["luck_charm"] = maxi(0, int(c.get("luck_charm", 0)) - 1)
+		progress["consumables"] = c
+	if result == "destroy":
+		progress["everDestroyed"] = true
 	if shards_gained > 0:
 		progress["shards"] = get_shards() + shards_gained
 
@@ -440,9 +478,12 @@ func try_enhance(use_scroll: bool = false) -> Dictionary:
 	materials_changed.emit(get_enhance_tickets())
 	if scroll_consumed:
 		scrolls_changed.emit(get_protection_scrolls())
+	if charm_armed:
+		consumables_changed.emit(get_consumables())
 	if shards_gained > 0:
 		shards_changed.emit(get_shards())
 	enhance_result.emit(result, before, after, get_enhance_tickets(), shards_gained)
+	_check_achievements()
 	return {
 		"ok": true,
 		"result": result,
@@ -451,6 +492,22 @@ func try_enhance(use_scroll: bool = false) -> Dictionary:
 		"shards_gained": shards_gained,
 		"scroll_consumed": scroll_consumed,
 	}
+
+
+func _check_achievements() -> void:
+	var newly := Achievements.check(progress)
+	if newly.is_empty():
+		return
+	var owned: Array = progress.get("achievements", [])
+	for id in newly:
+		owned.append(id)
+		achievement_unlocked.emit(String(id))
+	progress["achievements"] = owned
+	_persist()
+
+
+func check_achievements_public() -> void:
+	_check_achievements()
 
 
 # Legacy idle-RPG boss material drop — disabled in sword mode. Kept as a
