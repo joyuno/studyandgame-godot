@@ -18,6 +18,7 @@ func _initialize() -> void:
 	_test_leveling()
 	_test_pack_parser()
 	_test_sword_store()
+	_test_economy()
 	print("--- %d passed, %d failed ---" % [_passes, _failures])
 	quit(0 if _failures == 0 else 1)
 
@@ -312,6 +313,21 @@ questions:
 		var q_text: String = folded_result["pack"]["questions"][0]["q"]
 		_truthy(q_text.contains("First line"), "fold keeps head text")
 		_truthy(q_text.contains("`code on the second paragraph`"), "fold absorbs deeper continuation")
+
+
+# -----------------------------------------------------------------------------
+# Economy
+# -----------------------------------------------------------------------------
+func _test_economy() -> void:
+	_section("Economy")
+	_eq(Economy.max_buyable_sword_level(4), 0, "Lv4 → 검 구매 잠금")
+	_eq(Economy.max_buyable_sword_level(5), 5, "Lv5 → 최대 +5 구매")
+	_eq(Economy.max_buyable_sword_level(10), 9, "Lv10 → 최대 +9 구매")
+	_eq(Economy.max_buyable_sword_level(20), 12, "Lv20 → 최대 +12 구매")
+	_eq(Economy.consumable_shop_unlocked(4), false, "Lv4 소비상점 잠금")
+	_eq(Economy.consumable_shop_unlocked(5), true, "Lv5 소비상점 해금")
+	_eq(Economy.xp_boost_unlocked(9), false, "Lv9 부스터 잠금")
+	_eq(Economy.xp_boost_unlocked(10), true, "Lv10 부스터 해금")
 
 
 # -----------------------------------------------------------------------------
