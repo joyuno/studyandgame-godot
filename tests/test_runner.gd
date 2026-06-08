@@ -19,6 +19,7 @@ func _initialize() -> void:
 	_test_pack_parser()
 	_test_sword_store()
 	_test_economy()
+	_test_achievements()
 	print("--- %d passed, %d failed ---" % [_passes, _failures])
 	quit(0 if _failures == 0 else 1)
 
@@ -328,6 +329,31 @@ func _test_economy() -> void:
 	_eq(Economy.consumable_shop_unlocked(5), true, "Lv5 소비상점 해금")
 	_eq(Economy.xp_boost_unlocked(9), false, "Lv9 부스터 잠금")
 	_eq(Economy.xp_boost_unlocked(10), true, "Lv10 부스터 해금")
+
+
+# -----------------------------------------------------------------------------
+# Achievements
+# -----------------------------------------------------------------------------
+func _test_achievements() -> void:
+	_section("Achievements")
+	var empty := { "weapon": {}, "achievements": [] }
+	_eq(Achievements.check(empty).has("first_enhance"), false, "0시도 → first_enhance 미달")
+	var p := {
+		"weapon": { "attempts": 3, "highestEver": 10 },
+		"totalCorrect": 100, "everDestroyed": true,
+		"sessions": [ { "bestCombo": 21 } ], "achievements": [],
+	}
+	var got := Achievements.check(p)
+	_eq(got.has("first_enhance"), true, "3시도 → first_enhance")
+	_eq(got.has("reach_5"), true, "highest10 → reach_5")
+	_eq(got.has("reach_10"), true, "highest10 → reach_10")
+	_eq(got.has("reach_15"), false, "highest10 → reach_15 미달")
+	_eq(got.has("correct_100"), true, "100정답 → correct_100")
+	_eq(got.has("combo_20"), true, "콤보21 → combo_20")
+	_eq(got.has("first_destroy"), true, "파괴경험 → first_destroy")
+	p["achievements"] = ["first_enhance"]
+	_eq(Achievements.check(p).has("first_enhance"), false, "보유분은 제외")
+	_eq(Achievements.title_for("reach_10"), "미스릴 장인", "칭호 매핑")
 
 
 # -----------------------------------------------------------------------------
