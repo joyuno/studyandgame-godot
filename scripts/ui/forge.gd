@@ -163,10 +163,21 @@ func _refresh() -> void:
 			lv, lv + 1, Weapon.format_percent(rate), destroy_warning, diff_tag,
 		]
 		_try_button.disabled = tickets < Weapon.ENHANCE_MATERIAL_COST
-	# Scroll toggle is only useful where destroy can actually happen (+3+).
-	_scroll_check.disabled = scrolls == 0 or Weapon.destroy_rate_at(lv, diff) <= 0.0
+	# Scroll toggle is only useful where destroy can actually happen (+3+) and the
+	# player actually owns a scroll. Spell out *why* it's disabled so it never
+	# looks broken — a disabled checkbox with no reason reads as a bug.
+	var can_destroy := Weapon.destroy_rate_at(lv, diff) > 0.0
 	if scrolls == 0:
+		_scroll_check.disabled = true
 		_scroll_check.button_pressed = false
+		_scroll_check.text = "주문서 사용 — 보유 0개 (시장에서 구매)"
+	elif not can_destroy:
+		_scroll_check.disabled = true
+		_scroll_check.button_pressed = false
+		_scroll_check.text = "주문서 사용 — 이 레벨은 파괴 위험 없음"
+	else:
+		_scroll_check.disabled = false
+		_scroll_check.text = "주문서 사용 (파괴 방지) · 보유 %d개" % scrolls
 
 
 func _on_try() -> void:
