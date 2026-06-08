@@ -264,12 +264,42 @@ func _on_files_dropped(paths: PackedStringArray) -> void:
 
 
 func _load_pack(path: String) -> void:
-	var result := PackStore.load_pack_from_path(path)
+	# Resume prompt — if this pack has a saved in-progress cursor, ask whether to
+	# continue or restart before loading.
+	var saved := ProgressStore.get_quiz_session(path)
+	var idx := int(saved.get("index", 0))
+	var total := int(saved.get("total", 0))
+	if idx > 0 and total > 0 and idx < total:
+		_show_resume_popup(path, idx, total)
+	else:
+		_start_pack(path, false)
+
+
+func _start_pack(path: String, resume: bool) -> void:
+	var result := PackStore.load_pack_from_path(path, resume)
 	if not result.get("ok", false):
 		_status_label.text = "❌ %s — %s" % [result.get("code", "ERR"), result.get("message", "")]
 		_status_label.modulate = Color(1, 0.4, 0.4)
 		return
 	_open_scene(QUIZ_SCENE)
+
+
+func _show_resume_popup(path: String, idx: int, total: int) -> void:
+	var dialog := AcceptDialog.new()
+	dialog.title = "이어서 풀기"
+	dialog.dialog_text = "이 문제집을 풀던 기록이 있어요.\n%d / %d 문항까지 진행했습니다.\n\n이어서 풀까요, 처음부터 다시 풀까요?" % [idx, total]
+	dialog.ok_button_text = "▶ 이어서 풀기"
+	dialog.add_button("↺ 처음부터 다시", true, "restart")
+	dialog.confirmed.connect(func(): _start_pack(path, true))
+	dialog.custom_action.connect(func(action):
+		if action == "restart":
+			dialog.hide()
+			ProgressStore.clear_quiz_session(path)
+			_start_pack(path, false)
+	)
+	dialog.canceled.connect(func(): dialog.queue_free())
+	add_child(dialog)
+	dialog.popup_centered()
 
 
 func _open_scene(path: String) -> void:

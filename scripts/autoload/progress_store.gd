@@ -288,6 +288,40 @@ func buy_sword_with_gold(target_level: int) -> Dictionary:
 	return { "ok": true, "level": target_level, "gold_spent": cost }
 
 
+# ─── Quiz session resume — per-pack cursor so an interrupted pack can continue.
+# Keyed by the pack's source path. Saved silently (no progress_changed) on each
+# advance so leaving home / quitting mid-pack keeps the place; cleared on
+# completion. Survives via the same atomic-write _persist().
+func get_quiz_session(pack_id: String) -> Dictionary:
+	var s = progress.get("quizSessions", {})
+	if typeof(s) != TYPE_DICTIONARY:
+		return {}
+	var e = (s as Dictionary).get(pack_id, {})
+	return e if typeof(e) == TYPE_DICTIONARY else {}
+
+
+func save_quiz_session(pack_id: String, data: Dictionary) -> void:
+	if pack_id.is_empty():
+		return
+	var s: Dictionary = progress.get("quizSessions", {})
+	if typeof(s) != TYPE_DICTIONARY:
+		s = {}
+	s[pack_id] = data
+	progress["quizSessions"] = s
+	_persist()
+
+
+func clear_quiz_session(pack_id: String) -> void:
+	if pack_id.is_empty():
+		return
+	var s = progress.get("quizSessions", {})
+	if typeof(s) != TYPE_DICTIONARY or not (s as Dictionary).has(pack_id):
+		return
+	(s as Dictionary).erase(pack_id)
+	progress["quizSessions"] = s
+	_persist()
+
+
 func record_session(record: Dictionary) -> void:
 	var sessions: Array = progress.get("sessions", [])
 	sessions.append(record)
@@ -524,4 +558,5 @@ func _default_progress() -> Dictionary:
 		"protectionScrolls": 0,
 		"shards": 0,           # 파편 — earned from destroyed swords; spent at the shop
 		"difficulty": "easy",  # "easy" or "hard" — applied to Weapon rates
+		"quizSessions": {},    # pack_path → { index, total, correct, ... } resume cursor
 	}

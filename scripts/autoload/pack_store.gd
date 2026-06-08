@@ -27,6 +27,9 @@ const SWORD_DURABILITY_THRESHOLD: int = 5  # 세션 누적 오답 5개 = 강제 
 const DEFAULT_QUESTION_TIME: float = 25.0
 
 var pack: Dictionary = {}
+# Source path of the active pack — the key under which resume progress is saved.
+# Empty for transient sessions (review / concept-focus) so they never persist.
+var pack_source: String = ""
 var question_index: int = 0
 var correct_count: int = 0
 var combo_count: int = 0
@@ -52,7 +55,7 @@ var review_hashes: Array[String] = []
 var review_levels: Array[int] = []
 
 
-func load_pack_from_path(path: String) -> Dictionary:
+func load_pack_from_path(path: String, resume: bool = false) -> Dictionary:
 	var result := PackParser.parse_file(path)
 	if not result.get("ok", false):
 		return result
@@ -60,12 +63,23 @@ func load_pack_from_path(path: String) -> Dictionary:
 	review_hashes.clear()
 	review_levels.clear()
 	pack = result["pack"]
+	pack_source = path
 	_reset_session()
 	pack_loaded.emit(pack.get("meta", {}), questions_count())
 	if questions_count() > 0:
+		var start_index := 0
+		if resume:
+			var saved := ProgressStore.get_quiz_session(path)
+			var si := int(saved.get("index", 0))
+			if si > 0 and si < questions_count():
+				start_index = si
+				correct_count = int(saved.get("correct", 0))
+				best_combo_this_session = int(saved.get("bestCombo", 0))
+				session_wrong_count = int(saved.get("wrong", 0))
+		question_index = start_index
 		phase = "IN_QUESTION"
 		question_started_at_unix = Time.get_unix_time_from_system()
-		question_changed.emit(0, current_question())
+		question_changed.emit(start_index, current_question())
 	return { "ok": true, "title": pack.get("meta", {}).get("title", "") }
 
 
@@ -87,6 +101,7 @@ func load_review_session(entries: Array) -> bool:
 	if questions.is_empty():
 		return false
 	is_review_mode = true
+	pack_source = ""
 	review_hashes = hashes
 	review_levels = levels
 	pack = {
@@ -221,6 +236,24 @@ func advance() -> void:
 	phase = "IN_QUESTION"
 	question_started_at_unix = Time.get_unix_time_from_system()
 	question_changed.emit(question_index, current_question())
+	_persist_session()
+
+
+# Save the resume cursor for the current normal pack. `question_index` here is
+# the next un-answered question (advance() already incremented), so resuming
+# re-enters exactly where the player left off without re-counting answers.
+func _persist_session() -> void:
+	if is_review_mode or pack_source.is_empty():
+		return
+	ProgressStore.save_quiz_session(pack_source, {
+		"index": question_index,
+		"total": questions_count(),
+		"correct": correct_count,
+		"bestCombo": best_combo_this_session,
+		"wrong": session_wrong_count,
+		"packTitle": pack.get("meta", {}).get("title", ""),
+		"savedAt": Time.get_datetime_string_from_system(true),
+	})
 
 
 # Reset the in-memory cursor — call when re-entering a pack fresh.
@@ -260,6 +293,9 @@ func _register_wrong(q: Dictionary, user_answer) -> void:
 
 func _complete_session() -> void:
 	phase = "COMPLETED"
+	# Finished — drop the resume cursor so re-entering starts fresh (no popup).
+	if not is_review_mode and not pack_source.is_empty():
+		ProgressStore.clear_quiz_session(pack_source)
 	var record := {
 		"startedAt": Time.get_datetime_string_from_unix_time(int(session_started_at_unix), true),
 		"packTitle": pack.get("meta", {}).get("title", ""),
@@ -357,6 +393,7 @@ func load_concept_focus(concept_id: String) -> bool:
 		return false
 	var q: Dictionary = hit["question"]
 	is_review_mode = true
+	pack_source = ""
 	review_hashes = [_hash_question(q)]
 	review_levels = [0]
 	pack = {
