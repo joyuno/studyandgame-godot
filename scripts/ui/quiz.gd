@@ -17,6 +17,8 @@ const SWORD_DISPLAY := preload("res://scenes/SwordDisplay.tscn")
 const FONT_SCALE_FACTOR := [0.85, 1.0, 1.2]  # 0=small, 1=medium, 2=large
 
 var _sword_slot: Control
+var _passage_panel: PanelContainer
+var _passage_label: Label
 var _question_label: Label
 var _question_panel: PanelContainer
 var _glossary_box: VBoxContainer
@@ -174,6 +176,34 @@ func _build_layout() -> void:
 		_sword_slot.add_child(display)
 	root.add_child(_sword_slot)
 
+	# ── Reading passage panel (독해 지문). Hidden unless q.passage is set.
+	# Scrollable so a long N2 passage doesn't push the answer buttons off-screen.
+	_passage_panel = PanelContainer.new()
+	_passage_panel.size_flags_horizontal = SIZE_EXPAND_FILL
+	_passage_panel.add_theme_stylebox_override("panel", _passage_stylebox())
+	_passage_panel.visible = false
+	root.add_child(_passage_panel)
+
+	var passage_scroll := ScrollContainer.new()
+	passage_scroll.custom_minimum_size = Vector2(0, 200)
+	passage_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_passage_panel.add_child(passage_scroll)
+
+	var passage_margin := MarginContainer.new()
+	passage_margin.size_flags_horizontal = SIZE_EXPAND_FILL
+	passage_margin.add_theme_constant_override("margin_left", 22)
+	passage_margin.add_theme_constant_override("margin_right", 22)
+	passage_margin.add_theme_constant_override("margin_top", 16)
+	passage_margin.add_theme_constant_override("margin_bottom", 16)
+	passage_scroll.add_child(passage_margin)
+
+	_passage_label = Label.new()
+	_passage_label.add_theme_font_size_override("font_size", _font_sizes["answer"])
+	_passage_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_passage_label.size_flags_horizontal = SIZE_EXPAND_FILL
+	_passage_label.modulate = Color(0.92, 0.94, 0.98)
+	passage_margin.add_child(_passage_label)
+
 	# ── Question panel (larger, accent border)
 	_question_panel = PanelContainer.new()
 	_question_panel.size_flags_horizontal = SIZE_EXPAND_FILL
@@ -268,6 +298,17 @@ func _question_stylebox() -> StyleBoxFlat:
 	return sb
 
 
+func _passage_stylebox() -> StyleBoxFlat:
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0.09, 0.11, 0.15)
+	sb.border_color = Color(0.30, 0.40, 0.55)
+	sb.set_border_width_all(1)
+	sb.border_width_left = 4  # accent bar, distinct teal from question's blue
+	sb.border_color = Color(0.35, 0.70, 0.65)
+	sb.set_corner_radius_all(10)
+	return sb
+
+
 func _feedback_stylebox(correct: bool) -> StyleBoxFlat:
 	var sb := StyleBoxFlat.new()
 	if correct:
@@ -324,6 +365,7 @@ func _apply_font_scale() -> void:
 	for k in _font_sizes:
 		_font_sizes[k] = int(round(_default_size(k) * f))
 	if _question_label: _question_label.add_theme_font_size_override("font_size", _font_sizes["question"])
+	if _passage_label: _passage_label.add_theme_font_size_override("font_size", _font_sizes["answer"])
 	if _feedback_label: _feedback_label.add_theme_font_size_override("font_size", _font_sizes["feedback"])
 	if _session_time_label: _session_time_label.add_theme_font_size_override("font_size", _font_sizes["hud"])
 	if _combo_label: _combo_label.add_theme_font_size_override("font_size", _font_sizes["combo"])
@@ -368,6 +410,10 @@ func _render_idle_button() -> void:
 
 
 func _render_question(index: int, q: Dictionary) -> void:
+	var passage := String(q.get("passage", ""))
+	_passage_panel.visible = not passage.is_empty()
+	if _passage_panel.visible:
+		_passage_label.text = passage
 	_question_label.text = q.get("q", "(빈 문항)")
 	_render_glossary(q.get("glossary", []))
 	_progress_label.text = "%d / %d" % [index + 1, PackStore.questions_count()]
@@ -534,7 +580,8 @@ func _render_feedback(correct: bool, explanation: String, info: Dictionary) -> v
 	_feedback_box.add_theme_stylebox_override("panel", _feedback_stylebox(correct))
 	_feedback_icon.text = "✓" if correct else "✗"
 	_feedback_icon.modulate = Color(0.4, 1.0, 0.6) if correct else Color(1.0, 0.55, 0.55)
-	var prefix := "정답  (+1 강화권)" if correct else "오답"
+	var base_reward := int(info.get("base_reward", 1))
+	var prefix := ("정답  (+%d 강화권)" % base_reward) if correct else "오답"
 	_feedback_label.text = "%s\n\n%s" % [prefix, explanation]
 	_advance_button.visible = true
 	var bonuses: Array = info.get("bonuses", [])
@@ -623,6 +670,11 @@ func _on_copy_question() -> void:
 
 func _format_question_for_copy(q: Dictionary, include_answer: bool) -> String:
 	var lines: Array[String] = []
+	var passage := String(q.get("passage", ""))
+	if not passage.is_empty():
+		lines.append("[지문]")
+		lines.append(passage)
+		lines.append("")
 	lines.append(String(q.get("q", "")))
 	match q.get("type", ""):
 		"mcq":
@@ -664,6 +716,7 @@ func _render_completion(record: Dictionary) -> void:
 	_question_timer.visible = false
 	_copy_button.visible = false
 	_glossary_box.visible = false
+	_passage_panel.visible = false
 	_advance_button.text = "📓 오답노트로" if PackStore.is_review_mode else "홈으로"
 	_advance_button.visible = true
 	_advance_button.pressed.disconnect(_on_advance)

@@ -148,9 +148,13 @@ func submit_answer(answer) -> void:
 		return
 	var elapsed_for_q := Time.get_unix_time_from_system() - question_started_at_unix
 	var is_correct := _check_answer(q, answer)
+	# Base reward — q.reward 강화권 per correct answer (default 1). 독해/장문처럼
+	# 한 문제에 시간이 더 드는 유형은 reward를 2~3으로 줘서 시간 대비 보상을 맞춘다.
+	var base_reward := maxi(1, int(q.get("reward", 1)))
 	var info := {
 		"correct": is_correct,
 		"elapsed": elapsed_for_q,
+		"base_reward": base_reward,
 		"bonuses": [],  # list of strings describing extra tickets awarded
 	}
 	if is_correct:
@@ -161,8 +165,7 @@ func submit_answer(answer) -> void:
 		var multiplier := Leveling.combo_multiplier(combo_count)
 		var xp_award := int(round(Leveling.XP_PER_CORRECT * multiplier))
 		ProgressStore.add_xp(xp_award)
-		# Base reward — 1 강화권 per correct answer
-		ProgressStore.add_enhance_ticket(1)
+		ProgressStore.add_enhance_ticket(base_reward)
 		# Bonus 1: combo milestone (5콤보마다 +1 보너스)
 		if combo_count > 0 and combo_count % COMBO_BONUS_EVERY == 0:
 			ProgressStore.add_enhance_ticket(1)

@@ -108,6 +108,28 @@ questions:
     explanation: '공식 docs — Parts are merged in background'
 ```
 
+### 독해(reading) 문항 — `passage` + `reward` + `time`
+
+독해는 새 type이 아니라 **`mcq` + 선택 필드**로 표현한다. `passage`(지문)는 문제 위에
+스크롤 패널로 표시되고, 정답은 100% 지문에서 도출되어야 한다. 한 문제에 시간이 더 드는
+만큼 `time`(초)·`reward`(강화권 배수, 기본 1)로 보상을 비례시킨다.
+
+```yaml
+  - type: mcq
+    passage: |
+      在宅勤務が広まってから、多くの企業で働き方が大きく変わった。…
+      専門家は、各自が意識して休憩を取り、定期的に同僚と連絡を取り合う…
+    q: '専門家は在宅勤務を成功させるために何が必要だと述べているか。'
+    choices: ['制度を導入しさえすればよい', '通勤を完全になくすこと',
+              '休憩を取り、同僚と連絡を取り合う仕組みを整えること', '一人で集中し続けること']
+    answer: 2
+    explanation: '本文に「各自が意識して休憩を取り…仕組みを整えることが欠かせない」とある。'
+    time: 90        # 短文 60 / 中文 90 / 長文·主張 120 (JLPT 평균 소요시간)
+    reward: 3       # 短文 2 / 中文·長文 3
+```
+
+샘플: [`data/quizzes/jlpt-n2-reading.yml`](data/quizzes/jlpt-n2-reading.yml) (원본 지문 → `data/sources/`).
+
 [workbook 플러그인](https://github.com/joyuno/workbook)으로 자료를 YAML 퀴즈로 변환 → 게임에 드래그 앤 드롭.
 
 ## 진행 저장
