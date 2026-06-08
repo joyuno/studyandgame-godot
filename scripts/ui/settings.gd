@@ -94,7 +94,7 @@ func _build_layout() -> void:
 		b.button_group = diff_group
 		b.custom_minimum_size = Vector2(110, 44)
 		b.button_pressed = (value == current_diff)
-		var capture := value
+		var capture: String = value
 		b.pressed.connect(func(): ProgressStore.set_difficulty(capture))
 		diff_row.add_child(b)
 
