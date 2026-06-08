@@ -18,10 +18,9 @@ const FONT_SCALE_FACTOR := [0.85, 1.0, 1.2]  # 0=small, 1=medium, 2=large
 
 var _sword_slot: Control
 var _passage_panel: PanelContainer
-var _passage_label: Label
-var _question_label: Label
+var _passage_label: RichTextLabel
+var _question_label: RichTextLabel
 var _question_panel: PanelContainer
-var _glossary_box: VBoxContainer
 var _answer_area: VBoxContainer
 var _feedback_box: PanelContainer
 var _feedback_label: Label
@@ -40,6 +39,19 @@ var _bonus_toast: Label
 var _toast_tween: Tween
 var _fire_tween: Tween
 
+var _glossary_box: VBoxContainer
+# Set of the current question's card (glossary) words — excluded from dictionary
+# tagging so cards and inline tap-words never duplicate.
+var _card_words: Dictionary = {}
+# Bundled JP→KO dictionary (word → "단어【읽기】 뜻"), loaded once, shared.
+static var _dict: Dictionary = {}
+static var _dict_loaded := false
+# In-scene popover shown right below the tapped word (avoids the HiDPI screen-
+# coordinate offset that a PopupPanel window suffered from).
+var _word_popup: PanelContainer
+var _word_popup_label: Label
+var _word_popup_timer: Timer
+
 # Cached scales so we can re-apply when font size changes.
 var _font_sizes := {
 	"question": 26, "answer": 18, "feedback": 17,
@@ -49,9 +61,10 @@ var _font_sizes := {
 
 func _ready() -> void:
 	_build_layout()
+	_load_dict()
 	_apply_font_scale()
 	if PackStore.questions_count() == 0:
-		_question_label.text = "퀴즈 팩이 로드되지 않았습니다. 홈으로 돌아가서 선택하세요."
+		_question_label.text = "[center]퀴즈 팩이 로드되지 않았습니다. 홈으로 돌아가서 선택하세요.[/center]"
 		_render_idle_button()
 		_question_timer.visible = false
 		_durability_row.visible = false
@@ -197,11 +210,15 @@ func _build_layout() -> void:
 	passage_margin.add_theme_constant_override("margin_bottom", 16)
 	passage_scroll.add_child(passage_margin)
 
-	_passage_label = Label.new()
-	_passage_label.add_theme_font_size_override("font_size", _font_sizes["answer"])
+	_passage_label = RichTextLabel.new()
+	_passage_label.bbcode_enabled = true
+	_passage_label.fit_content = true
+	_passage_label.scroll_active = false
+	_passage_label.add_theme_font_size_override("normal_font_size", _font_sizes["answer"])
 	_passage_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_passage_label.size_flags_horizontal = SIZE_EXPAND_FILL
 	_passage_label.modulate = Color(0.92, 0.94, 0.98)
+	_passage_label.meta_clicked.connect(_on_gloss_meta)
 	passage_margin.add_child(_passage_label)
 
 	# ── Question panel (larger, accent border)
@@ -217,10 +234,14 @@ func _build_layout() -> void:
 	q_margin.add_theme_constant_override("margin_bottom", 26)
 	_question_panel.add_child(q_margin)
 
-	_question_label = Label.new()
-	_question_label.add_theme_font_size_override("font_size", _font_sizes["question"])
+	_question_label = RichTextLabel.new()
+	_question_label.bbcode_enabled = true
+	_question_label.fit_content = true
+	_question_label.scroll_active = false
+	_question_label.add_theme_font_size_override("normal_font_size", _font_sizes["question"])
 	_question_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_question_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_question_label.size_flags_horizontal = SIZE_EXPAND_FILL
+	_question_label.meta_clicked.connect(_on_gloss_meta)
 	q_margin.add_child(_question_label)
 
 	# ── Vocab gloss cards (N3+ words in the stem — reading + Korean meaning)
@@ -285,6 +306,25 @@ func _build_layout() -> void:
 	_advance_button.visible = false
 	_advance_button.pressed.connect(_on_advance)
 	advance_row.add_child(_advance_button)
+
+	# ── Word popover (top-level so it floats above the layout, near the tap).
+	_word_popup = PanelContainer.new()
+	_word_popup.top_level = true
+	_word_popup.z_index = 100
+	_word_popup.visible = false
+	_word_popup.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_word_popup.add_theme_stylebox_override("panel", _word_popup_stylebox())
+	_word_popup_label = Label.new()
+	_word_popup_label.add_theme_font_size_override("font_size", 17)
+	_word_popup_label.modulate = Color(0.96, 0.97, 1.0)
+	_word_popup.add_child(_word_popup_label)
+	add_child(_word_popup)
+
+	_word_popup_timer = Timer.new()
+	_word_popup_timer.one_shot = true
+	_word_popup_timer.wait_time = 4.0
+	_word_popup_timer.timeout.connect(_hide_word_popup)
+	add_child(_word_popup_timer)
 
 
 func _question_stylebox() -> StyleBoxFlat:
@@ -364,8 +404,8 @@ func _apply_font_scale() -> void:
 	var f: float = FONT_SCALE_FACTOR[clampi(idx, 0, 2)]
 	for k in _font_sizes:
 		_font_sizes[k] = int(round(_default_size(k) * f))
-	if _question_label: _question_label.add_theme_font_size_override("font_size", _font_sizes["question"])
-	if _passage_label: _passage_label.add_theme_font_size_override("font_size", _font_sizes["answer"])
+	if _question_label: _question_label.add_theme_font_size_override("normal_font_size", _font_sizes["question"])
+	if _passage_label: _passage_label.add_theme_font_size_override("normal_font_size", _font_sizes["answer"])
 	if _feedback_label: _feedback_label.add_theme_font_size_override("font_size", _font_sizes["feedback"])
 	if _session_time_label: _session_time_label.add_theme_font_size_override("font_size", _font_sizes["hud"])
 	if _combo_label: _combo_label.add_theme_font_size_override("font_size", _font_sizes["combo"])
@@ -410,12 +450,14 @@ func _render_idle_button() -> void:
 
 
 func _render_question(index: int, q: Dictionary) -> void:
+	_build_card_words(q.get("glossary", []))
 	var passage := String(q.get("passage", ""))
 	_passage_panel.visible = not passage.is_empty()
 	if _passage_panel.visible:
-		_passage_label.text = passage
-	_question_label.text = q.get("q", "(빈 문항)")
+		_passage_label.text = _gloss_markup(passage)
+	_question_label.text = "[center]%s[/center]" % _gloss_markup(String(q.get("q", "(빈 문항)")))
 	_render_glossary(q.get("glossary", []))
+	_hide_word_popup()
 	_progress_label.text = "%d / %d" % [index + 1, PackStore.questions_count()]
 	_feedback_box.visible = false
 	_advance_button.visible = false
@@ -465,6 +507,107 @@ func _render_question(index: int, q: Dictionary) -> void:
 			_answer_area.add_child(row)
 
 
+# Collect this question's card words so the dictionary markup can skip them
+# (cards already show them — no duplication).
+func _build_card_words(entries) -> void:
+	_card_words.clear()
+	var list: Array = entries if typeof(entries) == TYPE_ARRAY else []
+	for e in list:
+		var parts := String(e).replace("|", "｜").split("｜")
+		if parts.size() >= 1:
+			var word := parts[0].strip_edges()
+			if not word.is_empty():
+				_card_words[word] = true
+
+
+# Load the bundled JLPT dictionary once (word → "단어【읽기】 뜻"). Static cache
+# is shared across quiz instances.
+func _load_dict() -> void:
+	if _dict_loaded:
+		return
+	_dict_loaded = true
+	var path := "res://data/dict/jlpt-n2.json"
+	if not FileAccess.file_exists(path):
+		return
+	var raw = JSON.parse_string(FileAccess.get_file_as_string(path))
+	if typeof(raw) != TYPE_DICTIONARY:
+		return
+	for word in raw:
+		if word == "_meta":
+			continue
+		var v = raw[word]
+		if typeof(v) == TYPE_ARRAY and (v as Array).size() >= 2:
+			_dict[word] = "%s【%s】  %s" % [word, v[0], v[1]]
+
+
+# Tag dictionary words found in `text` that are NOT already shown as cards, so
+# the learner can tap a non-card word for its reading + meaning. Longest-match +
+# placeholder pass prevents a shorter word (在宅) re-matching inside a wrapped
+# longer one (在宅勤務). Placeholders use private-use chars so digits in the text
+# are never mistaken for a placeholder.
+func _gloss_markup(text: String) -> String:
+	var out := text.replace("[", "[lb]")
+	if _dict.is_empty():
+		return out
+	var words: Array = []
+	for w in _dict:
+		if not _card_words.has(w) and text.find(w) != -1:
+			words.append(w)
+	words.sort_custom(func(a, b): return a.length() > b.length())
+	var subs := {}
+	var i := 0
+	for w in words:
+		if out.find(w) == -1:
+			continue
+		var ph := "%d" % i
+		i += 1
+		out = out.replace(w, ph)
+		subs[ph] = "[color=#ffd95a][url=%s]%s[/url][/color]" % [w, w]
+	for ph in subs:
+		out = out.replace(ph, subs[ph])
+	return out
+
+
+
+# A tapped word → in-scene popover with reading + meaning, anchored just below
+# the tap point. In-scene positioning uses canvas coords (get_global_mouse_
+# position), so no HiDPI screen-coordinate offset. Auto-hides after a few sec.
+func _on_gloss_meta(meta) -> void:
+	var info := String(_dict.get(String(meta), ""))
+	if info.is_empty():
+		return
+	_word_popup_label.text = info
+	_word_popup.reset_size()
+	var sz := _word_popup.size
+	var p := get_global_mouse_position() + Vector2(-sz.x * 0.5, 16)
+	var vp := get_viewport_rect().size
+	p.x = clampf(p.x, 8.0, vp.x - sz.x - 8.0)
+	p.y = clampf(p.y, 8.0, vp.y - sz.y - 8.0)
+	_word_popup.global_position = p
+	_word_popup.visible = true
+	_word_popup_timer.start()
+
+
+func _hide_word_popup() -> void:
+	if _word_popup:
+		_word_popup.visible = false
+	if _word_popup_timer:
+		_word_popup_timer.stop()
+
+
+func _word_popup_stylebox() -> StyleBoxFlat:
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0.13, 0.16, 0.23)
+	sb.border_color = Color(0.45, 0.62, 0.85)
+	sb.set_border_width_all(1)
+	sb.set_corner_radius_all(8)
+	sb.content_margin_left = 14
+	sb.content_margin_right = 14
+	sb.content_margin_top = 10
+	sb.content_margin_bottom = 10
+	return sb
+
+
 func _render_glossary(entries) -> void:
 	for child in _glossary_box.get_children():
 		child.queue_free()
@@ -488,9 +631,7 @@ func _render_glossary(entries) -> void:
 			flow.add_child(card)
 
 
-# Build one vocab card from a 'word｜reading｜meaning' scalar (the in-tree YAML
-# parser can't nest maps, so glossary entries are delimited strings) or, if a
-# richer parser is ever used, a {word, reading, meaning} dictionary.
+# Build one vocab card from a 'word｜reading｜meaning' scalar.
 func _make_gloss_card(entry) -> Control:
 	var word := ""
 	var reading := ""
@@ -706,7 +847,7 @@ func _on_advance() -> void:
 
 
 func _render_completion(record: Dictionary) -> void:
-	_question_label.text = "세션 완료"
+	_question_label.text = "[center]세션 완료[/center]"
 	_progress_label.text = "%d / %d 정답  ·  최고 콤보 %d" % [
 		record.get("correct", 0), record.get("total", 0), record.get("bestCombo", 0),
 	]
@@ -717,6 +858,7 @@ func _render_completion(record: Dictionary) -> void:
 	_copy_button.visible = false
 	_glossary_box.visible = false
 	_passage_panel.visible = false
+	_hide_word_popup()
 	_advance_button.text = "📓 오답노트로" if PackStore.is_review_mode else "홈으로"
 	_advance_button.visible = true
 	_advance_button.pressed.disconnect(_on_advance)
