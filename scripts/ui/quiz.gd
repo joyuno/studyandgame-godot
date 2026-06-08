@@ -221,9 +221,12 @@ func _build_layout() -> void:
 		_durability_row.visible = false
 
 	# ── Sword preview (collapses under 차분 모드)
+	# SwordDisplay's stage is 300×300; this slot reserves less height, so clip
+	# the overflow — otherwise the blade + glow bleed onto the question below.
 	_sword_slot = Control.new()
-	_sword_slot.custom_minimum_size = Vector2(0, 170)
+	_sword_slot.custom_minimum_size = Vector2(0, 200)
 	_sword_slot.size_flags_horizontal = SIZE_EXPAND_FILL
+	_sword_slot.clip_contents = true
 	_sword_slot.visible = not ProgressStore.is_quiet_mode()
 	if _sword_slot.visible:
 		var display := SWORD_DISPLAY.instantiate()
