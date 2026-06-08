@@ -53,3 +53,6 @@
 - v0.1 (Electron 포팅 직후): OpenGameArt CC0 시트 23장
 
 이전 자산 출처·라이선스는 git 히스토리에 보존됨 (`joyuno/studyandgame-godot` 커밋 트리).
+
+## Icons
+- Lucide (https://lucide.dev) — ISC License. UI / 아이템 아이콘 (assets/icons/).

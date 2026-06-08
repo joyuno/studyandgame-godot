@@ -42,6 +42,8 @@ var _boost_button: Button
 var _insure_button: Button
 var _boost_label: Label
 var _insure_label: Label
+var _boost_icon: TextureRect
+var _insure_icon: TextureRect
 
 var _glossary_box: VBoxContainer
 # Set of the current question's card (glossary) words — excluded from dictionary
@@ -141,10 +143,18 @@ func _build_layout() -> void:
 	_combo_label.visible = false
 	top.add_child(_combo_label)
 
+	_boost_icon = Icons.make("xp_boost", Color(1.0, 0.85, 0.3), 18)
+	_boost_icon.visible = false
+	top.add_child(_boost_icon)
+
 	_boost_button = Button.new()
 	_boost_button.add_theme_font_size_override("font_size", _font_sizes["hud"])
 	_boost_button.pressed.connect(_on_activate_boost)
 	top.add_child(_boost_button)
+
+	_insure_icon = Icons.make("combo_insure", Color(1.0, 0.5, 0.35), 18)
+	_insure_icon.visible = false
+	top.add_child(_insure_icon)
 
 	_insure_button = Button.new()
 	_insure_button.add_theme_font_size_override("font_size", _font_sizes["hud"])
@@ -480,14 +490,18 @@ func _on_arm_insurance() -> void:
 func _refresh_consumable_badges() -> void:
 	var boost_owned := ProgressStore.get_consumable("xp_boost")
 	var boost_left := int(ProgressStore.get_progress_value("xp_boost_remaining", 0))
-	_boost_button.text = "⚡ 부스터(%d)" % boost_owned
-	_boost_button.visible = boost_owned > 0 and boost_left == 0
-	_boost_label.text = ("⚡ XP×2 (%d문제)" % boost_left) if boost_left > 0 else ""
+	var show_boost_btn: bool = boost_owned > 0 and boost_left == 0
+	_boost_button.text = "부스터(%d)" % boost_owned
+	_boost_button.visible = show_boost_btn
+	_boost_icon.visible = show_boost_btn
+	_boost_label.text = ("XP×2 (%d문제)" % boost_left) if boost_left > 0 else ""
 	var insure_owned := ProgressStore.get_consumable("combo_insure")
 	var armed := bool(ProgressStore.get_progress_value("combo_insure_armed", false))
-	_insure_button.text = "🔥 보험(%d)" % insure_owned
-	_insure_button.visible = insure_owned > 0 and not armed
-	_insure_label.text = "🔥 보험 장착" if armed else ""
+	var show_insure_btn: bool = insure_owned > 0 and not armed
+	_insure_button.text = "보험(%d)" % insure_owned
+	_insure_button.visible = show_insure_btn
+	_insure_icon.visible = show_insure_btn
+	_insure_label.text = "보험 장착" if armed else ""
 
 
 func _render_idle_button() -> void:

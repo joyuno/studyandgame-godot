@@ -309,6 +309,8 @@ func _make_counter(initial: String, color: Color) -> Label:
 func _make_consumable_row(id: String, item_name: String, cost: Dictionary) -> Control:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 10)
+	var color := { "luck_charm": Color(0.5, 0.9, 0.5), "xp_boost": Color(1.0, 0.85, 0.3), "combo_insure": Color(1.0, 0.5, 0.35) }.get(id, Color.WHITE)
+	row.add_child(Icons.make(id, color, 22))
 	var lbl := Label.new()
 	lbl.text = item_name
 	lbl.size_flags_horizontal = SIZE_EXPAND_FILL
