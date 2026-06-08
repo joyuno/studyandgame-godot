@@ -20,6 +20,9 @@ var _exchange_buttons: Dictionary = {}    # target_level (int) → shard-buy But
 var _gold_buy_buttons: Dictionary = {}    # target_level (int) → gold-buy Button
 var _status_label: Label
 var _sword_slot: Control
+var _consumable_section: Control         # container that can be locked/unlocked
+var _consumable_lock_label: Label        # shown when shop is locked
+var _consumable_buttons: Dictionary = {} # id → Array[Button] — per-currency buttons
 
 
 func _ready() -> void:
@@ -30,6 +33,8 @@ func _ready() -> void:
 	ProgressStore.scrolls_changed.connect(func(_n): _refresh())
 	ProgressStore.tickets_changed.connect(func(_n): _refresh())
 	ProgressStore.shards_changed.connect(func(_n): _refresh())
+	ProgressStore.consumables_changed.connect(func(_s): _refresh())
+	ProgressStore.progress_changed.connect(_refresh)
 
 
 func _build_layout() -> void:
@@ -252,6 +257,40 @@ func _build_layout() -> void:
 		gp_box.add_child(btn)
 		_gold_buy_buttons[tier] = btn
 
+	# Consumable shop — level-gated at Lv5 (whole section) and Lv10 (xp_boost).
+	var consumable_panel := PanelContainer.new()
+	right.add_child(consumable_panel)
+	var cp_margin := MarginContainer.new()
+	cp_margin.add_theme_constant_override("margin_left", 16)
+	cp_margin.add_theme_constant_override("margin_right", 16)
+	cp_margin.add_theme_constant_override("margin_top", 12)
+	cp_margin.add_theme_constant_override("margin_bottom", 12)
+	consumable_panel.add_child(cp_margin)
+	var cp_box := VBoxContainer.new()
+	cp_box.add_theme_constant_override("separation", 8)
+	cp_margin.add_child(cp_box)
+
+	var cp_title := Label.new()
+	cp_title.text = "소비 아이템"
+	cp_title.add_theme_font_size_override("font_size", 18)
+	cp_box.add_child(cp_title)
+
+	_consumable_lock_label = Label.new()
+	_consumable_lock_label.add_theme_font_size_override("font_size", 13)
+	_consumable_lock_label.modulate = Color(0.7, 0.75, 0.85)
+	cp_box.add_child(_consumable_lock_label)
+
+	_consumable_section = cp_box
+
+	var consumable_items: Array = [
+		["luck_charm",  "행운 부적",   Economy.LUCK_CHARM_COST],
+		["xp_boost",    "XP 부스터",   Economy.XP_BOOST_COST],
+		["combo_insure","콤보 보험",   Economy.COMBO_INSURE_COST],
+	]
+	for entry in consumable_items:
+		var row := _make_consumable_row(entry[0], entry[1], entry[2])
+		cp_box.add_child(row)
+
 	# Status text
 	_status_label = Label.new()
 	_status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -265,6 +304,51 @@ func _make_counter(initial: String, color: Color) -> Label:
 	l.add_theme_font_size_override("font_size", 16)
 	l.modulate = color
 	return l
+
+
+func _make_consumable_row(id: String, item_name: String, cost: Dictionary) -> Control:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 10)
+	var lbl := Label.new()
+	lbl.text = item_name
+	lbl.size_flags_horizontal = SIZE_EXPAND_FILL
+	row.add_child(lbl)
+	var btns: Array = []
+	if cost.has("shards"):
+		var b := Button.new()
+		b.text = "파편 %d" % int(cost["shards"])
+		b.pressed.connect(func(): _buy_consumable(id, "shards"))
+		row.add_child(b)
+		btns.append(b)
+	if cost.has("gold"):
+		var b2 := Button.new()
+		b2.text = "골드 %d" % int(cost["gold"])
+		b2.pressed.connect(func(): _buy_consumable(id, "gold"))
+		row.add_child(b2)
+		btns.append(b2)
+	_consumable_buttons[id] = btns
+	return row
+
+
+func _buy_consumable(id: String, pay: String) -> void:
+	var r := ProgressStore.buy_consumable(id, pay)
+	if r.get("ok", false):
+		_status_label.text = "✅ 구매 완료"
+		_status_label.modulate = Color(0.6, 1.0, 0.7)
+	else:
+		_status_label.text = "구매 실패: %s" % str(r.get("reason", ""))
+		_status_label.modulate = Color(1, 0.6, 0.6)
+	_refresh()
+
+
+# Returns the minimum player level at which `tier` becomes purchasable.
+# Mirrors the thresholds in Economy.max_buyable_sword_level().
+func _sword_unlock_level(tier: int) -> int:
+	if tier <= 5:
+		return 5
+	if tier <= 9:
+		return 10
+	return 20
 
 
 func _refresh() -> void:
@@ -289,20 +373,67 @@ func _refresh() -> void:
 		b.text = "주문서 %d개 구매  (-%d G  /  장당 %dG)" % [qty, cost, roundi(unit_g)]
 		b.disabled = gold < cost
 
-	# Refresh each exchange button's label + affordability. Tiers below the
-	# player's current sword are still clickable — at that point they're a
-	# *downgrade*, but the player paid in shards so let them choose.
-	for tier in _exchange_buttons.keys():
-		var cost: int = int(ProgressStore.SHARD_EXCHANGE[tier])
-		var btn: Button = _exchange_buttons[tier]
-		btn.text = "+%d 검 교환  (-%d 파편)" % [tier, cost]
-		btn.disabled = shards < cost
+	# Refresh exchange + gold buttons with level gating.
+	var player_level: int = ProgressStore.get_level()
+	var max_sword: int = Economy.max_buyable_sword_level(player_level)
 
+	# Tiers below player's current sword are still clickable (a downgrade the
+	# player chose to pay for). Tiers above max_buyable_sword_level are locked.
+	for tier in _exchange_buttons.keys():
+		var ebtn: Button = _exchange_buttons[tier]
+		var cost_e: int = int(ProgressStore.SHARD_EXCHANGE[tier])
+		if tier > max_sword:
+			var unlock_lv: int = _sword_unlock_level(tier)
+			ebtn.text = "+%d 검 교환  (-%d 파편)  🔒 Lv%d 해금" % [tier, cost_e, unlock_lv]
+			ebtn.disabled = true
+		else:
+			ebtn.text = "+%d 검 교환  (-%d 파편)" % [tier, cost_e]
+			ebtn.disabled = shards < cost_e
 	for tier in _gold_buy_buttons.keys():
-		var cost2: int = int(ProgressStore.SWORD_GOLD_PRICE[tier])
-		var btn2: Button = _gold_buy_buttons[tier]
-		btn2.text = "+%d 검 구매  (-%d G)" % [tier, cost2]
-		btn2.disabled = gold < cost2
+		var gbtn: Button = _gold_buy_buttons[tier]
+		var cost_g: int = int(ProgressStore.SWORD_GOLD_PRICE[tier])
+		if tier > max_sword:
+			var unlock_lv: int = _sword_unlock_level(tier)
+			gbtn.text = "+%d 검 구매  (-%d G)  🔒 Lv%d 해금" % [tier, cost_g, unlock_lv]
+			gbtn.disabled = true
+		else:
+			gbtn.text = "+%d 검 구매  (-%d G)" % [tier, cost_g]
+			gbtn.disabled = gold < cost_g
+
+	# ── Level-gated consumable shop
+	var shop_open: bool = Economy.consumable_shop_unlocked(player_level)
+	if shop_open:
+		_consumable_lock_label.text = ""
+		_consumable_lock_label.visible = false
+	else:
+		_consumable_lock_label.text = "🔒 Lv%d에 해금" % Economy.UNLOCK_CONSUMABLE_SHOP
+		_consumable_lock_label.visible = true
+	var xp_boost_open: bool = Economy.xp_boost_unlocked(player_level)
+	# Rebuild consumable button labels and disabled state from the cost dicts
+	# so we never accumulate stale lock-hint text.
+	var consumable_costs: Dictionary = {
+		"luck_charm": Economy.LUCK_CHARM_COST,
+		"xp_boost":   Economy.XP_BOOST_COST,
+		"combo_insure": Economy.COMBO_INSURE_COST,
+	}
+	for cid in _consumable_buttons.keys():
+		var row_btns: Array = _consumable_buttons[cid]
+		var cost_dict: Dictionary = consumable_costs.get(cid, {})
+		var pay_keys: Array = cost_dict.keys()
+		for i in row_btns.size():
+			var cbtn: Button = row_btns[i]
+			var pay_key: String = pay_keys[i]
+			var amount: int = int(cost_dict[pay_key])
+			var label_prefix: String = ("파편" if pay_key == "shards" else "골드") + " %d" % amount
+			if not shop_open:
+				cbtn.text = label_prefix
+				cbtn.disabled = true
+			elif cid == "xp_boost" and not xp_boost_open:
+				cbtn.text = label_prefix + "  🔒 Lv%d" % Economy.UNLOCK_XP_BOOST
+				cbtn.disabled = true
+			else:
+				cbtn.text = label_prefix
+				cbtn.disabled = false
 
 
 func _on_sell() -> void:
