@@ -180,6 +180,8 @@ func get_title() -> String:
 
 
 func set_title(id: String) -> void:
+	if id != "" and not get_achievements().has(id):
+		return
 	progress["title"] = id
 	_persist()
 	title_changed.emit(id)
@@ -272,6 +274,8 @@ func buy_scroll_bundle(qty: int) -> Dictionary:
 func exchange_shards_for_sword(target_level: int) -> Dictionary:
 	if not SHARD_EXCHANGE.has(target_level):
 		return { "ok": false, "reason": "invalid_tier" }
+	if target_level > Economy.max_buyable_sword_level(get_level()):
+		return { "ok": false, "reason": "level_locked" }
 	var cost: int = int(SHARD_EXCHANGE[target_level])
 	if get_shards() < cost:
 		return { "ok": false, "reason": "not_enough_shards", "cost": cost }
@@ -296,6 +300,8 @@ func exchange_shards_for_sword(target_level: int) -> Dictionary:
 func buy_sword_with_gold(target_level: int) -> Dictionary:
 	if not SWORD_GOLD_PRICE.has(target_level):
 		return { "ok": false, "reason": "invalid_tier" }
+	if target_level > Economy.max_buyable_sword_level(get_level()):
+		return { "ok": false, "reason": "level_locked" }
 	var cost: int = int(SWORD_GOLD_PRICE[target_level])
 	if not spend_gold(cost):
 		return { "ok": false, "reason": "not_enough_gold", "cost": cost }
@@ -401,6 +407,11 @@ func update_wrong_entry_srs(question_hash: String, review_level: int, next_revie
 
 # id ∈ {"luck_charm","xp_boost","combo_insure"}. pay ∈ {"shards","gold"}.
 func buy_consumable(id: String, pay: String) -> Dictionary:
+	var level := get_level()
+	if not Economy.consumable_shop_unlocked(level):
+		return { "ok": false, "reason": "level_locked" }
+	if id == "xp_boost" and not Economy.xp_boost_unlocked(level):
+		return { "ok": false, "reason": "level_locked" }
 	var cost: Dictionary
 	match id:
 		"luck_charm": cost = Economy.LUCK_CHARM_COST
@@ -411,8 +422,9 @@ func buy_consumable(id: String, pay: String) -> Dictionary:
 		return { "ok": false, "reason": "bad_payment" }
 	var amount: int = int(cost[pay])
 	if pay == "gold":
-		if not spend_gold(amount):
+		if get_gold() < amount:
 			return { "ok": false, "reason": "not_enough_gold" }
+		progress["gold"] = get_gold() - amount
 	else:
 		if get_shards() < amount:
 			return { "ok": false, "reason": "not_enough_shards" }
@@ -425,6 +437,8 @@ func buy_consumable(id: String, pay: String) -> Dictionary:
 	consumables_changed.emit(get_consumables())
 	if pay == "shards":
 		shards_changed.emit(get_shards())
+	if pay == "gold":
+		gold_changed.emit(get_gold())
 	return { "ok": true }
 
 

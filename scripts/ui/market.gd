@@ -435,7 +435,8 @@ func _refresh() -> void:
 				cbtn.disabled = true
 			else:
 				cbtn.text = label_prefix
-				cbtn.disabled = false
+				var can_afford: bool = (shards if pay_key == "shards" else gold) >= amount
+				cbtn.disabled = not can_afford
 
 
 func _on_sell() -> void:
