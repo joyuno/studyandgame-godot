@@ -1,0 +1,623 @@
+meta:
+  title: '메모리반도체(DRAM·NAND) 3'
+  version: '1.0.0'
+  default_time: 45
+  set_time: 1750
+  tags: [engineering, semiconductor, memory]
+  source: '대학 학부 전공 표준 범위(공개 강의목차·교재 기반, exa 리서치 + 멀티에이전트 생성). 특정 상용 교재 본문 미복제.'
+
+questions:
+  - type: mcq
+    q: '1T-1C DRAM 셀에서 읽기 동작에 대한 설명으로 가장 옳은 것은?'
+    choices:
+      - '읽기는 전하 공유로 셀 전하를 흩뜨리는 파괴적 동작이므로 센스앰프가 데이터를 셀에 재기록(restore)해야 한다'
+      - '읽기는 셀 캐패시터의 전하를 거의 변화시키지 않는 비파괴적 동작이다'
+      - '읽기 시 워드라인을 끄고 비트라인만 구동하여 데이터를 추출한다'
+      - '읽기는 셀에 새 전하를 강제 주입하므로 재기록이 불필요하다'
+    answer: 0
+    glossary:
+      - 'charge sharing｜｜셀 캐패시터와 비트라인 캐패시턴스가 연결되어 전하가 나뉘면서 비트라인 전압이 미세하게 변하는 현상'
+    explanation: 'DRAM 읽기는 셀 캐패시터와 비트라인 사이의 전하 공유(charge sharing)로 셀의 저장 전하가 흩어지는 파괴적 동작이다. 따라서 센스앰프가 비트라인을 풀스윙으로 래치하면서 셀에 원래 데이터를 다시 써넣는 restore가 반드시 일어난다. 비파괴라는 보기는 SRAM에 해당한다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: '셀 캐패시턴스 C_s, 비트라인 캐패시턴스 C_b, 셀 전압이 V_DD(데이터 ''1'')이고 비트라인이 V_DD/2로 프리차지된 경우, 워드라인 활성화 후 전하 공유로 비트라인에 나타나는 신호전압 ΔV의 크기로 옳은 것은?'
+    choices:
+      - 'ΔV = (V_DD/2) · C_b/(C_s+C_b)'
+      - 'ΔV = (V_DD/2) · C_s/(C_s+C_b)'
+      - 'ΔV = V_DD · C_s/C_b'
+      - 'ΔV = (V_DD/2) · (C_s+C_b)/C_s'
+    answer: 1
+    explanation: '프리차지 V_DD/2에서 ''1''을 읽으면 ΔV = (V_cell − V_DD/2)·C_s/(C_s+C_b) = (V_DD/2)·C_s/(C_s+C_b)이다. C_s ≪ C_b이므로 신호는 매우 작아 센스앰프 증폭이 필수다. C_s가 분자에 와야 한다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: '전형적인 개방형/접힘형 비트라인 DRAM에서 센싱 전에 비트라인 쌍(BL, BLB)을 V_DD/2로 프리차지하는 주된 이유는?'
+    choices:
+      - '전력 소비를 0으로 만들기 위해'
+      - '셀 캐패시터를 완전 방전시키기 위해'
+      - '''0''과 ''1'' 양쪽 데이터에 대해 대칭적인 기준점을 제공해 한쪽으로 치우치지 않게 센싱하기 위해'
+      - '워드라인 부트스트랩 전압을 낮추기 위해'
+    answer: 2
+    glossary:
+      - '접힘형 비트라인｜｜인접한 BL과 BLB를 한 센스앰프에 접어 넣어 공통 잡음을 상쇄하는 folded bit-line 구조'
+    explanation: 'V_DD/2 프리차지는 데이터 ''1''(V_DD)이면 비트라인을 위로, ''0''(0V)이면 아래로 동일한 크기만큼 밀어주는 대칭 기준점을 만든다. 이로써 cross-coupled 래치가 양방향 신호를 공정하게 증폭한다. 전력 0이나 셀 완전 방전은 잘못된 설명이다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: 'DRAM 센스앰프의 핵심인 cross-coupled(교차 결합) 래치의 동작 원리로 가장 정확한 것은?'
+    choices:
+      - '단일 차동 증폭기로 한 번만 증폭하고 래치하지 않는다'
+      - '비트라인 전류를 적분기로 누적하여 디지털화한다'
+      - '아날로그 비교기가 외부 기준전압과 비교만 한다'
+      - '두 인버터의 출력을 서로의 입력에 교차 연결해 정귀환으로 작은 전압차를 풀스윙으로 증폭·래치한다'
+    answer: 3
+    glossary:
+      - '정귀환｜｜출력 변화가 입력을 같은 방향으로 더 키우는 양성 피드백(positive feedback)'
+    explanation: '센스앰프는 NMOS/PMOS 인버터 두 개의 출력을 교차로 입력에 연결한 양성 피드백 래치다. BL과 BLB의 미세한 전압차를 정귀환으로 증폭해 한쪽은 V_DD, 다른 쪽은 0으로 풀스윙시키고 그 상태를 유지(latch)한다. 단일 증폭만 하거나 외부 기준만 비교한다는 보기는 틀리다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: 'DRAM이 주기적 리프레시를 필요로 하는 근본 원인으로 가장 적절한 것은?'
+    choices:
+      - '셀 캐패시터 전하가 접합 누설·서브문턱 누설 등으로 시간이 지나면 빠져나가 데이터가 손실되므로'
+      - '워드라인 절연막의 강한 절연성 때문에 전하가 과충전되므로'
+      - '비트라인이 항상 V_DD로 고정되어 셀을 덮어쓰므로'
+      - '센스앰프가 전하를 능동적으로 흡수하기 때문에'
+    answer: 0
+    glossary:
+      - '서브문턱 누설｜｜MOSFET이 문턱전압 이하에서도 미세하게 흐르는 subthreshold leakage 전류'
+    explanation: 'DRAM 셀의 전하는 액세스 트랜지스터의 접합 누설, 서브문턱 누설, 게이트 누설 등으로 점차 손실된다. 데이터를 잃기 전에 읽고 다시 써넣는 리프레시가 필요하다. 과충전이나 비트라인 고정은 사실과 다르다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: 'DRAM 리프레시 방식에 관한 설명으로 옳지 않은 것은?'
+    choices:
+      - 'auto-refresh는 내부 카운터가 행 주소를 생성해 메모리 컨트롤러가 리프레시 명령만 내리면 된다'
+      - '한 셀의 보존시간(retention time)이 길수록 리프레시 주기를 짧게 잡아야 한다'
+      - 'self-refresh는 저전력 모드에서 DRAM이 자체 타이머·카운터로 스스로 리프레시한다'
+      - '통상 64ms 안에 모든 행을 한 번씩 리프레시해야 데이터가 유지된다'
+    answer: 1
+    glossary:
+      - 'retention time｜｜셀이 데이터를 유효하게 유지하는 최대 시간, 이 시간 안에 리프레시해야 함'
+    explanation: '보존시간이 길수록 전하가 오래 유지되므로 리프레시 주기를 더 길게(드물게) 잡을 수 있다. ''짧게 잡아야 한다''는 반대로 서술되어 틀린 보기다. auto/self-refresh 설명과 64ms 표준은 옳다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: 'DRAM 셀 캐패시터의 스택(stack)형과 트렌치(trench)형 구조 비교로 옳은 것은?'
+    choices:
+      - '스택형은 실리콘 기판 깊숙이 식각한 홈에 캐패시터를 형성한다'
+      - '트렌치형은 액세스 트랜지스터 위쪽에 캐패시터를 쌓아 올린다'
+      - '스택형은 트랜지스터 위에 적층, 트렌치형은 기판에 깊은 홈을 파서 형성하며 둘 다 표면적을 늘려 용량을 확보한다'
+      - '두 방식 모두 평면(planar) 캐패시터로 표면적 확장이 불가능하다'
+    answer: 2
+    glossary:
+      - 'fF｜｜femtofarad, 10^-15 F 단위의 매우 작은 캐패시턴스'
+    explanation: '스택형은 트랜지스터 위로 캐패시터를 적층(stacked)하고, 트렌치형은 기판에 깊은 홈(trench)을 파 측벽을 캐패시터로 쓴다. 둘 다 셀 면적을 줄이면서도 충분한 전하저장용량(통상 수십 fF)을 얻기 위해 3차원으로 표면적을 늘린다. 보기 1·2는 두 구조 설명이 뒤바뀌어 틀렸다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: 'DRAM 셀 캐패시터에서 동일 물리 면적·두께 조건일 때 저장 용량을 키우기 위해 high-k 유전체(예: HfO2, ZrO2)를 도입하는 이유로 가장 옳은 것은?'
+    choices:
+      - '유전율이 클수록 누설전류가 항상 0이 되기 때문'
+      - 'high-k는 두께 d를 무한히 키워도 용량이 유지되기 때문'
+      - '유전율이 클수록 면적 A가 자동으로 증가하기 때문'
+      - '유전율 ε_r이 클수록 C = ε_0·ε_r·A/d 에서 캐패시턴스가 커지기 때문'
+    answer: 3
+    glossary:
+      - 'high-k｜｜SiO2보다 유전율이 높은 유전체'
+      - 'EOT｜｜equivalent oxide thickness, 동일 용량을 내는 SiO2 환산 두께'
+    explanation: '캐패시턴스 C = ε_0·ε_r·A/d 이므로 비유전율 ε_r이 큰 high-k 물질을 쓰면 같은 면적·두께에서 더 큰 용량을 얻는다. 이는 물리적 두께를 유지(또는 늘려) 누설을 억제하면서 등가산화막두께(EOT)를 줄이는 핵심 기법이다. 누설 0이나 면적 자동 증가는 잘못된 설명이다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: 'DRAM 어레이에서 워드라인(WL)과 비트라인(BL)의 역할을 가장 정확히 짝지은 것은?'
+    choices:
+      - 'WL은 액세스 트랜지스터의 게이트를 구동해 행을 선택하고, BL은 셀 데이터를 센스앰프로 전달한다'
+      - 'WL은 데이터를 입출력하고, BL은 액세스 트랜지스터의 게이트를 구동한다'
+      - 'WL과 BL 모두 캐패시터의 한쪽 전극을 직접 구성한다'
+      - 'WL은 컬럼 디코더, BL은 로우 디코더에 의해 선택된다'
+    answer: 0
+    glossary:
+      - '액세스 트랜지스터｜｜셀 캐패시터를 비트라인에 연결/차단하는 1T-1C 셀의 패스 트랜지스터'
+    explanation: '워드라인은 한 행의 액세스 트랜지스터 게이트를 켜서 행을 선택하고, 비트라인은 선택된 셀의 전하를 센스앰프로 전달·기록한다. WL은 로우 디코더, BL(컬럼)은 컬럼 디코더로 선택된다. 보기 1·4는 역할이 뒤바뀌었다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: 'DRAM에서 데이터 ''1''(V_DD)을 셀 캐패시터에 문턱전압 손실 없이 완전히 써넣기 위해 워드라인 구동 전압 V_PP를 V_DD보다 높게(V_PP ≥ V_DD + V_T) 올리는 이유로 옳은 것은?'
+    choices:
+      - '비트라인을 더 빨리 프리차지하기 위해'
+      - 'NMOS 액세스 트랜지스터의 문턱전압 강하(V_T drop) 때문에 게이트를 V_DD+V_T 이상으로 올려야 소스(셀)에 V_DD 전체가 전달되므로'
+      - '캐패시터 유전체를 파괴해 데이터를 강제 저장하기 위해'
+      - '리프레시 주기를 늘리기 위해 셀을 과충전하려고'
+    answer: 1
+    glossary:
+      - 'V_PP｜｜워드라인 부스트 전압(boosted/pumped voltage), 내부 charge pump로 생성'
+      - '문턱전압 강하｜｜NMOS 패스 트랜지스터가 high 전압을 V_T만큼 손실하며 전달하는 현상'
+    explanation: 'NMOS는 소스 전압이 V_G − V_T까지만 올라가는 문턱전압 강하가 있다. 셀에 V_DD를 온전히 쓰려면 워드라인을 V_PP = V_DD + V_T 이상으로 부트스트랩해야 한다. 유전체 파괴나 과충전 목적이 아니다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: 'n비트 행 주소를 받아 2^n개의 워드라인 중 하나를 활성화하는 로우 디코더에 대한 설명으로 옳은 것은?'
+    choices:
+      - '2^n개 입력을 n개 출력으로 압축하는 인코더다'
+      - '주소와 무관하게 모든 워드라인을 동시에 활성화한다'
+      - 'n개 입력으로 2^n개 출력 중 정확히 하나를 활성(one-hot)으로 만드는 조합논리 회로다'
+      - '센스앰프의 출력을 아날로그로 변환하는 DAC다'
+    answer: 2
+    glossary:
+      - 'one-hot｜｜여러 출력 중 정확히 하나만 1이고 나머지는 0인 상태'
+    explanation: '로우 디코더는 n비트 주소를 받아 2^n개의 워드라인 중 단 하나만 활성화하는 n-to-2^n 디코더(one-hot)다. 인코더는 반대 동작이고, 전체 동시 활성화나 DAC 설명은 틀리다. 컬럼 디코더도 같은 원리로 비트라인(또는 센스앰프)을 선택한다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: 'DRAM 멀티플렉스 주소 방식에서 RAS와 CAS를 이용한 접근 순서로 가장 옳은 것은?'
+    choices:
+      - 'CAS로 컬럼을 먼저 래치하고 그다음 RAS로 행을 선택한다'
+      - 'RAS와 CAS가 동시에 동일한 디코더를 구동한다'
+      - 'RAS는 리프레시 전용, CAS는 읽기 전용 신호로 서로 독립이다'
+      - 'RAS로 행 주소를 래치해 워드라인을 켜 행 전체를 센스앰프에 올린 뒤, CAS로 컬럼을 선택해 해당 비트를 입출력한다'
+    answer: 3
+    glossary:
+      - 'RAS｜｜Row Address Strobe, 행 주소 래치 신호'
+      - 'CAS｜｜Column Address Strobe, 열 주소 래치 신호'
+    explanation: 'DRAM은 핀 절감을 위해 행/열 주소를 시분할 멀티플렉스한다. 먼저 RAS로 행 주소를 받아 워드라인을 활성화하고 행 전체가 센스앰프에 래치된 뒤, CAS로 컬럼을 선택해 원하는 비트만 입출력한다. 순서가 바뀌거나 동시 구동, 기능 고정은 틀리다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: '표준 SRAM 6T 셀의 구성에 대한 설명으로 옳은 것은?'
+    choices:
+      - '교차 결합된 인버터 2개(4 트랜지스터)와 액세스 트랜지스터 2개로 구성되어 전원이 있는 한 데이터를 유지한다'
+      - '캐패시터 1개와 트랜지스터 1개로 구성되어 주기적 리프레시가 필요하다'
+      - '부유게이트 트랜지스터 6개로 비휘발성 저장을 한다'
+      - '단일 트랜지스터 6개가 모두 액세스용이며 저장 노드가 없다'
+    answer: 0
+    glossary:
+      - '양안정｜｜두 개의 안정 상태(''0'',''1'')를 갖는 bistable 래치'
+    explanation: '6T SRAM은 교차 결합 인버터 쌍(4 트랜지스터)이 양안정 래치를 이루고, 2개의 액세스 트랜지스터가 비트라인 쌍에 연결된다. 전원이 유지되는 한 리프레시 없이 데이터를 보존한다. 1T-1C나 부유게이트는 각각 DRAM·플래시 설명이다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: 'SRAM과 DRAM을 비교한 설명으로 옳지 않은 것은?'
+    choices:
+      - 'SRAM은 셀당 트랜지스터가 많아 집적밀도가 낮고 비트당 비용이 높다'
+      - 'DRAM은 정적 셀이라 전원만 유지되면 리프레시가 전혀 필요 없다'
+      - 'DRAM은 1T-1C로 밀도가 높지만 리프레시와 파괴적 읽기 때문에 제어가 복잡하다'
+      - 'SRAM은 일반적으로 DRAM보다 접근 속도가 빨라 캐시에 쓰인다'
+    answer: 1
+    glossary:
+      - '정적/동적｜｜static은 전원만으로 유지(SRAM), dynamic은 주기적 갱신 필요(DRAM)'
+    explanation: 'DRAM은 동적(dynamic) 셀이라 전원이 있어도 전하 누설 때문에 반드시 주기적 리프레시가 필요하다. ''정적이라 리프레시 불필요''는 SRAM의 특성을 DRAM에 잘못 붙인 틀린 보기다. 나머지 밀도·속도·비용 비교는 모두 옳다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: 'SRAM 6T 셀의 읽기 동작과 안정성(SNM)에 관한 설명으로 가장 옳은 것은?'
+    choices:
+      - '읽기는 셀 전하를 완전히 파괴하므로 매 읽기 후 재기록이 필요하다'
+      - '읽기 시 워드라인을 끄고 비트라인만으로 데이터를 추출한다'
+      - '읽기 시 액세스 트랜지스터가 켜지면서 저장 노드가 비트라인으로 끌려가 상태가 뒤집힐 위험이 있어, 풀다운/액세스 트랜지스터의 셀 비(cell ratio)로 안정성을 확보한다'
+      - 'SRAM은 읽기 안정성과 무관하게 어떤 트랜지스터 크기에서도 항상 안정하다'
+    answer: 2
+    glossary:
+      - 'SNM｜｜Static Noise Margin, 셀이 잡음에 견디는 정적 잡음여유'
+      - 'cell ratio｜｜풀다운 트랜지스터와 액세스 트랜지스터의 구동력 비(β-ratio)'
+    explanation: 'SRAM 읽기에서는 미리 충전된 비트라인이 켜진 액세스 트랜지스터를 통해 ''0'' 저장 노드를 끌어올려 상태가 반전될 수 있다. 이를 막기 위해 풀다운 트랜지스터를 액세스 트랜지스터보다 강하게(셀 비 > 1) 설계해 SNM을 확보한다. SRAM 읽기는 비파괴이며(재기록 불필요), 트랜지스터 크기와 무관하다는 보기는 틀리다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: '플래시 메모리 부유게이트(floating gate) 셀의 데이터 저장 원리로 가장 옳은 것은?'
+    choices:
+      - '부유게이트에 항상 전류가 흘러야만 데이터가 유지된다'
+      - '부유게이트는 제어게이트와 직접 도선으로 연결되어 전하를 충전한다'
+      - '데이터는 캐패시터 전하 공유로 읽으며 매번 파괴된다'
+      - '부유게이트에 전하 유무에 따라 셀 트랜지스터의 문턱전압 V_T가 변하고, 그 V_T 차이로 0/1을 구분한다'
+    answer: 3
+    glossary:
+      - '부유게이트｜｜절연막으로 둘러싸여 전자를 비휘발적으로 가두는 floating gate 전극'
+    explanation: '부유게이트는 절연막으로 완전히 둘러싸여 주입된 전자를 가둔다. 전자가 있으면 셀의 V_T가 높아지고 없으면 낮아져, 동일 읽기 전압에서 셀의 도통 여부로 0/1을 판별한다. 전류 유지나 제어게이트와의 직접 연결, 캐패시터 파괴 읽기는 모두 틀리다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: '부유게이트 플래시가 전원이 꺼져도 데이터를 유지하는(비휘발성) 근본 이유로 가장 옳은 것은?'
+    choices:
+      - '부유게이트가 고품질 터널 산화막/ONO로 완전히 절연되어, 주입된 전자가 빠져나갈 에너지 장벽이 매우 높아 장기간 갇혀 있기 때문'
+      - '전원이 꺼지면 내부 배터리가 전하를 공급하기 때문'
+      - '부유게이트가 도선으로 접지되어 전하가 고정되기 때문'
+      - '주기적 리프레시가 자동으로 일어나기 때문'
+    answer: 0
+    glossary:
+      - 'ONO｜｜Oxide-Nitride-Oxide, 부유게이트와 제어게이트 사이 절연 적층막'
+    explanation: '부유게이트는 두꺼운 에너지 장벽(약 3.2 eV의 Si-SiO2 장벽)을 가진 절연막에 둘러싸여 있어 상온에서 전자가 거의 빠져나가지 못한다. 그래서 전원 없이도 수년간 데이터를 유지한다. 배터리·접지·리프레시는 비휘발성의 원인이 아니다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: 'CTF(Charge Trap Flash)가 기존 부유게이트(FG) 방식과 구별되는 가장 핵심적인 차이는?'
+    choices:
+      - '전하를 도체인 폴리실리콘 부유게이트에 저장한다'
+      - '전하를 절연성 질화막(Si3N4) 등 트랩 사이트에 분산 포획해 저장하므로, 국부 결함이 생겨도 전하 전체가 한꺼번에 누설되지 않는다'
+      - '전하를 저장하지 않고 저항 변화로 데이터를 기록한다'
+      - '전하를 제어게이트 금속층에 직접 저장한다'
+    answer: 1
+    glossary:
+      - 'CTF｜｜Charge Trap Flash, 절연막 트랩에 전하를 가두는 방식'
+      - 'SONOS｜｜Silicon-Oxide-Nitride-Oxide-Silicon 게이트 적층 구조'
+    explanation: 'CTF는 도체 FG 대신 절연성 질화막(예: SONOS의 Si3N4)의 이산적인 트랩에 전자를 가둔다. 전하가 국소적으로 분리 저장되므로 터널산화막에 한 점 결함이 생겨도 전체 전하가 새지 않아 신뢰성·스케일링에 유리하고, 3D NAND에 널리 쓰인다. 도체 저장이나 저항 변화는 틀리다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: 'NAND 플래시 어레이의 셀 배열 방식에 대한 설명으로 옳은 것은?'
+    choices:
+      - '각 셀이 비트라인에 개별 병렬로 연결되어 임의 셀에 직접 접근한다'
+      - '셀 사이에 콘택을 모두 두어 NOR보다 면적이 크다'
+      - '여러 셀을 직렬(string)로 연결하고 SSL/GSL 선택 트랜지스터로 묶어, 셀당 콘택을 줄여 고밀도를 달성한다'
+      - '워드라인이 없어 비트라인만으로 셀을 선택한다'
+    answer: 2
+    glossary:
+      - 'SSL/GSL｜｜String/Ground Select Line, NAND 스트링을 비트라인·소스에 연결하는 선택 트랜지스터'
+    explanation: 'NAND는 다수의 셀을 직렬 스트링으로 연결하고 양 끝에 string/ground select line 트랜지스터를 둬 셀마다 콘택이 필요 없다. 그 덕분에 비트당 면적이 작아 고밀도·저비용이며, 대신 임의 접근이 어렵고 페이지/블록 단위로 동작한다. 보기 1·3은 NOR 특성이다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: 'NAND와 NOR 플래시의 일반적 특성 비교로 옳지 않은 것은?'
+    choices:
+      - 'NOR는 셀이 비트라인에 병렬 연결되어 바이트 단위 랜덤 읽기가 빠르고 코드 실행(XIP)에 적합하다'
+      - 'NAND는 직렬 구조로 집적밀도가 높고 비트당 비용이 낮아 대용량 데이터 저장에 적합하다'
+      - 'NAND는 읽기/쓰기를 페이지 단위로, 소거를 블록 단위로 수행한다'
+      - 'NOR는 NAND보다 셀 밀도가 높아 SSD 대용량 저장의 주류다'
+    answer: 3
+    glossary:
+      - 'XIP｜｜eXecute In Place, 메모리에서 코드를 복사 없이 직접 실행'
+      - '페이지/블록｜｜NAND의 읽기·쓰기 단위(page)와 소거 단위(block)'
+    explanation: '대용량 저장(SSD)의 주류는 밀도가 높은 NAND이며, NOR는 밀도가 낮은 대신 빠른 랜덤 읽기로 코드 저장/실행에 쓰인다. 따라서 ''NOR가 밀도가 높아 SSD 주류''라는 보기는 틀리다. 나머지 XIP, 페이지/블록 단위, 밀도·비용 설명은 옳다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: 'NAND 플래시의 셀 프로그램(쓰기)에 주로 사용되는 메커니즘과 그 이유로 가장 옳은 것은?'
+    choices:
+      - 'FN(Fowler-Nordheim) 터널링, 셀당 소비전류가 매우 작아 한 페이지의 수만 비트를 동시에 프로그램하기에 적합하므로'
+      - '채널 핫 일렉트론(CHE), 페이지 전체를 가장 빠르게 쓰기 위해'
+      - '자외선 노광, 전기적 쓰기가 불가능하므로'
+      - '전하 공유, 비트라인 캐패시턴스를 이용하므로'
+    answer: 0
+    glossary:
+      - 'FN 터널링｜｜강한 전계로 전자가 얇은 산화막 장벽을 양자역학적으로 통과하는 Fowler-Nordheim tunneling'
+    explanation: 'NAND는 제어게이트에 고전압(약 15~20V)을 걸어 FN 터널링으로 채널의 전자를 부유게이트/트랩으로 주입한다. FN은 셀당 전류가 매우 작아 한 페이지(수만 비트)를 동시에 프로그램해도 전력 폭주가 없다. CHE는 전류가 커 페이지 병렬 쓰기에 부적합하고, 자외선·전하 공유는 무관하다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: 'FN 터널링 전류 밀도 J가 산화막 전계 E에 대해 갖는 의존성으로 가장 옳은 것은?'
+    choices:
+      - 'J는 E에 선형 비례한다 (J ∝ E)'
+      - 'J ∝ E^2 · exp(−B/E) 형태로, 전계가 임계 이상에서 급격히(지수적으로) 증가한다'
+      - 'J는 E와 무관하다'
+      - 'J는 E가 커질수록 감소한다'
+    answer: 1
+    glossary:
+      - '전계 E｜｜단위 두께당 전압(V/cm), 산화막 양단 전압을 두께로 나눈 값'
+    explanation: 'FN 터널링 전류밀도는 J = A·E^2·exp(−B/E) 형태로, 전계 E가 어느 임계를 넘으면 지수항 때문에 급격히 증가한다. 이 강한 비선형성 덕분에 낮은 전계에서는 거의 흐르지 않아 데이터 보존이 되고, 높은 전계에서만 프로그램/소거가 일어난다. 선형·무관·감소는 모두 틀리다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: 'NOR 플래시 프로그램에 쓰이는 채널 핫 일렉트론(CHE) 주입에 대한 설명으로 가장 옳은 것은?'
+    choices:
+      - '제어게이트에만 고전압을 걸고 전류는 전혀 흘리지 않는다'
+      - '전자가 부유게이트에서 채널로 빠져나가는 소거 전용 메커니즘이다'
+      - '드레인-소스 간 큰 전류로 채널 전자를 고에너지로 가속하고, 제어게이트의 양전압으로 일부 핫 일렉트론을 부유게이트로 끌어당겨 주입한다'
+      - '낮은 전류로 한 번에 한 페이지 전체를 쓰는 데 최적이다'
+    answer: 2
+    glossary:
+      - '핫 일렉트론｜｜채널 전계로 가속되어 격자 열평형보다 높은 에너지를 가진 전자(hot electron)'
+    explanation: 'CHE는 드레인에 전압을 걸어 채널에 큰 전류를 흘려 전자를 격자온도보다 뜨겁게(hot) 가속하고, 양의 제어게이트 전압으로 일부 전자를 산화막 장벽 너머 부유게이트로 주입한다. CHE는 프로그램 전용이며(전자를 뺄 수 없음), 큰 전류 때문에 페이지 병렬 쓰기에는 부적합하다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: '플래시(특히 NAND) 셀의 소거(erase) 동작에 대한 설명으로 가장 옳은 것은?'
+    choices:
+      - '제어게이트에 고전압을 걸어 채널에서 부유게이트로 전자를 주입한다'
+      - '셀마다 자외선을 쪼여 한 비트씩 개별 소거한다'
+      - '센스앰프가 셀 전하를 재기록하여 소거한다'
+      - '기판/채널에 양의 고전압(또는 게이트에 음전압)을 걸어 FN 터널링으로 부유게이트의 전자를 채널로 빼내고, 보통 블록 단위로 일괄 수행한다'
+    answer: 3
+    glossary:
+      - '블록 단위 소거｜｜NAND가 다수 페이지를 한꺼번에 지우는 erase 단위'
+    explanation: '소거는 프로그램의 역방향으로, 채널/기판에 양의 고전압을 걸거나 게이트에 음전압을 걸어 FN 터널링으로 부유게이트(또는 트랩)의 전자를 채널로 방출시킨다. 효율을 위해 블록 단위로 일괄 소거한다. 전자 주입은 프로그램, 자외선은 구식 EPROM, 센스앰프 재기록은 DRAM restore로 모두 소거와 무관하다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: 'FN 터널링 프로그램과 CHE 프로그램을 비교한 설명으로 옳지 않은 것은?'
+    choices:
+      - 'CHE는 프로그램과 소거 양쪽 모두에 쓸 수 있어 NAND 소거의 표준이다'
+      - 'CHE는 프로그램 속도가 빠르지만 셀당 소비전류가 커서 병렬 쓰기 규모가 제한된다'
+      - 'FN은 셀당 전류가 작아 대규모 병렬 프로그램에 유리하지만 상대적으로 느리다'
+      - 'NOR는 주로 CHE로 프로그램하고 FN으로 소거하며, NAND는 프로그램·소거 모두 FN을 쓴다'
+    answer: 0
+    glossary:
+      - '병렬 쓰기｜｜여러 셀을 동시에 프로그램하는 것, NAND는 페이지 단위로 수만 비트 동시 쓰기'
+    explanation: 'CHE는 전자를 부유게이트로 ''주입''만 할 수 있어 프로그램 전용이며, 소거(전자 방출)에는 쓸 수 없다. 따라서 ''CHE가 NAND 소거의 표준''은 틀리다. 소거는 FN(또는 일부 NOR의 hot-hole)으로 한다. 나머지 속도·전류·NOR/NAND 구분은 옳다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: 'TLC(triple-level cell) NAND에서 한 셀이 저장하는 비트 수와 그에 대응하는 문턱전압(V_T) 상태(레벨)의 개수를 옳게 짝지은 것은?'
+    choices:
+      - '2비트 / 4개 상태'
+      - '3비트 / 8개 상태'
+      - '3비트 / 6개 상태'
+      - '4비트 / 16개 상태'
+    answer: 1
+    glossary:
+      - 'TLC｜｜한 셀에 3비트를 저장하는 NAND 셀 방식'
+    explanation: '셀당 n비트를 저장하려면 2^n개의 구분 가능한 V_T 상태가 필요하다. TLC는 3비트이므로 2^3=8개 상태(레벨 L0~L7)를 사용한다. 4비트/16상태는 QLC, 2비트/4상태는 MLC이다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: 'MLC, TLC, QLC에서 셀 상태를 모두 구분하는 데 필요한 읽기 기준전압(read reference voltage)의 개수를 옳게 나열한 것은? (V_T 상태가 N개면 인접 상태를 가르는 경계는 N-1개)'
+    choices:
+      - 'MLC 4개, TLC 8개, QLC 16개'
+      - 'MLC 2개, TLC 4개, QLC 8개'
+      - 'MLC 3개, TLC 7개, QLC 15개'
+      - 'MLC 1개, TLC 2개, QLC 3개'
+    answer: 2
+    glossary:
+      - '읽기 기준전압｜｜셀의 V_T가 어느 상태에 속하는지 판별하려 워드라인에 인가하는 비교 전압'
+    explanation: 'N개 상태를 구분하려면 인접 상태 사이의 경계 N-1개에 읽기 전압을 둔다. MLC(4상태)→3개, TLC(8상태)→7개, QLC(16상태)→15개. 그래서 비트 수가 늘수록 읽기 지연이 커진다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: '동일 공정에서 QLC NAND가 TLC NAND보다 raw bit error rate(RBER)가 높고 endurance가 낮은 가장 근본적인 이유는?'
+    choices:
+      - 'QLC는 셀 크기가 물리적으로 더 크기 때문'
+      - 'QLC는 FN tunneling 대신 hot electron injection으로만 프로그램되기 때문'
+      - 'QLC는 3D 구조를 쓸 수 없어 평면 구조에 한정되기 때문'
+      - '동일한 V_T 윈도우 안에 더 많은 상태(16개)를 넣어 인접 분포 간 마진이 좁아지기 때문'
+    answer: 3
+    glossary:
+      - 'RBER｜｜ECC 정정 전 원시 비트 오류율'
+    explanation: '제한된 V_T 윈도우에 상태 수가 16개로 늘면 인접 분포 사이 간격(마진)이 좁아져, retention/read disturb로 분포가 약간만 이동·확장돼도 레벨 교차(level crossing)가 생겨 오류가 급증한다. 셀 크기·프로그램 방식·3D 가능 여부는 원인이 아니다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: '3D NAND가 2D(평면) NAND의 미세화 한계를 극복하기 위해 채택한 핵심 접근으로 가장 옳은 것은?'
+    choices:
+      - '셀을 수직으로 적층하여 평면 셀 면적을 줄이지 않고도 집적도를 높인다'
+      - '셀 간 거리를 평면에서 더 줄여 리소그래피 해상도를 높인다'
+      - 'floating gate를 더 크게 만들어 저장 전하량을 늘린다'
+      - '워드라인 개수를 줄여 셀당 면적을 키운다'
+    answer: 0
+    glossary:
+      - '3D NAND｜｜셀을 수직으로 적층한 NAND 플래시 구조'
+    explanation: '3D NAND는 셀을 수직(층 방향)으로 쌓아 적층 수를 늘림으로써, 평면 셀을 무리하게 축소(셀 간 간섭·전하 부족 유발)하지 않고도 비트 밀도를 높인다. 평면 미세화를 더 밀어붙이는 선택지들은 3D가 회피하려는 한계 그 자체다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: '전형적인 vertical-channel 3D NAND(예: charge-trap 방식)에서 하나의 수직 채널 기둥(channel pillar)을 따라 적층된 워드라인(게이트)들은 무엇을 형성하는가?'
+    choices:
+      - '서로 독립된 여러 개의 비트라인'
+      - '수직으로 직렬 연결된 하나의 NAND 스트링'
+      - '병렬로 연결된 DRAM 셀 어레이'
+      - '한 개의 페이지 버퍼 회로'
+    answer: 1
+    glossary:
+      - 'channel pillar｜｜3D NAND에서 셀들이 둘러싸는 수직 채널 기둥'
+      - 'charge-trap｜｜전하를 절연막 내 트랩 사이트에 저장하는 방식'
+    explanation: '3D NAND에서 적층된 게이트(워드라인)들이 하나의 수직 채널을 공유하며 직렬로 이어져 하나의 NAND 스트링을 이룬다. 비트라인은 채널 기둥 상단에, 페이지 버퍼는 주변 회로에 있어 별개 개념이다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: 'NAND 플래시의 한 스트링(string) 구조에 대한 설명으로 옳은 것은?'
+    choices:
+      - '여러 셀이 병렬로 연결되며 각 셀이 독립된 비트라인을 가진다'
+      - '스트링은 셀 1개와 선택 트랜지스터 1개로만 구성된다'
+      - '여러 셀이 직렬로 연결되고 양 끝에 SSL/GSL 같은 선택 트랜지스터가 있다'
+      - '스트링 내 모든 셀은 같은 워드라인을 공유한다'
+    answer: 2
+    glossary:
+      - 'SSL｜｜스트링을 비트라인에 연결/차단하는 선택 트랜지스터(string select line)'
+      - 'GSL｜｜스트링을 소스라인에 연결/차단하는 선택 트랜지스터(ground select line)'
+    explanation: 'NAND 스트링은 다수의 셀이 직렬(소스-드레인 연결)로 이어지고, 양 끝의 string select line(SSL)과 ground select line(GSL) 트랜지스터로 비트라인·소스라인에 연결/차단된다. 직렬 구조라 셀당 컨택이 없어 고집적이 가능하다. 스트링 내 각 셀은 서로 다른 워드라인에 연결된다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: 'NAND 셀 어레이에서 워드라인(word line)과 비트라인(bit line)의 역할을 옳게 구분한 것은?'
+    choices:
+      - '워드라인은 채널을, 비트라인은 게이트를 연결한다'
+      - '둘 다 게이트만 연결하며 차이가 없다'
+      - '워드라인은 전원 공급용, 비트라인은 접지용 배선이다'
+      - '워드라인은 셀의 게이트를, 비트라인은 스트링의 채널(드레인 측)을 연결한다'
+    answer: 3
+    glossary:
+      - '워드라인｜｜셀 게이트를 행 방향으로 연결하는 배선'
+      - '비트라인｜｜스트링을 열 방향으로 연결해 전류를 센싱하는 배선'
+    explanation: '워드라인은 같은 층(또는 같은 행) 셀들의 컨트롤 게이트를 연결해 동시에 선택하고, 비트라인은 각 스트링의 드레인 측을 통해 셀의 채널 전류를 감지(센싱)한다. 워드라인 선택+비트라인 센싱의 교차로 특정 셀을 읽는다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: 'NAND 스트링에서 특정 워드라인의 셀을 읽을 때, 같은 스트링의 비선택 워드라인 셀들에는 보통 어떤 전압을 인가하며 그 목적은 무엇인가?'
+    choices:
+      - '충분히 높은 통과전압(Vpass)을 인가해 V_T와 무관하게 모두 켜서 도통시킨다'
+      - '0V를 인가해 비선택 셀을 모두 끈다'
+      - '읽기 기준전압을 인가해 함께 센싱한다'
+      - '음(-)의 전압을 인가해 전류를 차단한다'
+    answer: 0
+    glossary:
+      - 'Vpass｜｜읽기 시 비선택 셀을 강제로 켜기 위해 인가하는 통과전압'
+    explanation: '직렬 스트링에서 선택 셀의 상태를 비트라인 전류로 읽으려면 비선택 셀들이 전류 경로 역할만 하도록 항상 켜져 있어야 한다. 그래서 가장 높은 V_T 상태보다도 높은 통과전압(Vpass)을 비선택 워드라인에 인가해 데이터와 무관하게 도통시킨다. 이 Vpass 인가가 read disturb의 원인이 된다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: 'NAND 플래시의 동작 단위에 대한 설명으로 옳은 것은?'
+    choices:
+      - '읽기·프로그램·소거 모두 바이트 단위로 가능하다'
+      - '읽기·프로그램은 페이지 단위, 소거(erase)는 블록 단위로 이루어진다'
+      - '프로그램은 블록 단위, 소거는 페이지 단위로 이루어진다'
+      - '읽기는 블록 단위, 소거는 비트 단위로 이루어진다'
+    answer: 1
+    glossary:
+      - '페이지｜｜읽기/프로그램의 최소 단위'
+      - '블록｜｜소거의 최소 단위(여러 페이지로 구성)'
+    explanation: 'NAND는 읽기와 프로그램(쓰기)을 페이지 단위로, 소거는 그보다 큰 블록 단위로 수행한다. 이미 프로그램된 비트를 직접 1로 되돌릴 수 없어 덮어쓰기 전 블록 소거가 필요하며, 이 비대칭성이 wear leveling·garbage collection의 근거가 된다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: 'NAND에서 소거 단위(블록)가 프로그램 단위(페이지)보다 큰 구조 때문에, 일부 유효 데이터가 섞인 블록을 회수해 재사용하려면 필요한 동작은?'
+    choices:
+      - '해당 비트만 골라 1로 재프로그램한다'
+      - '블록 내 무효 페이지만 개별적으로 소거한다'
+      - '유효 페이지를 다른 블록으로 옮긴 뒤 블록 전체를 소거한다(garbage collection)'
+      - '비트라인 전압만 올려 데이터를 갱신한다'
+    answer: 2
+    glossary:
+      - 'garbage collection｜｜유효 데이터를 모아 옮기고 블록을 소거해 공간을 회수하는 동작'
+      - 'write amplification｜｜실제 사용자 쓰기보다 더 많은 플래시 쓰기가 발생하는 현상'
+    explanation: '소거는 블록 단위이고 페이지 부분 소거나 비트 단위 1로의 복원이 불가능하므로, 유효 페이지를 새 블록에 복사한 뒤 원래 블록을 통째로 소거해 빈 블록으로 회수한다(garbage collection). 이 과정이 write amplification을 유발한다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: 'NAND 플래시의 데이터 retention(데이터 보존) 저하를 가장 정확히 설명한 것은?'
+    choices:
+      - '전원이 켜진 상태에서 반복 읽기로 인접 셀 전하가 증가하는 현상'
+      - '프로그램 전압이 부족해 처음부터 V_T가 목표에 못 미치는 현상'
+      - '비트라인 커패시턴스 증가로 센싱 속도가 느려지는 현상'
+      - '저장된 전하가 시간에 따라 절연막을 통해 누설되어 프로그램된 V_T가 낮아지는 현상'
+    answer: 3
+    glossary:
+      - 'retention｜｜전원 없이도 저장 데이터를 일정 기간 유지하는 능력'
+    explanation: 'retention은 전원과 무관하게 시간이 지나면서 저장 전하가 터널 산화막의 결함 등을 통해 누설되어, 프로그램된 셀의 V_T가 점차 낮아지며 데이터를 잃는 현상이다. 반복 읽기 영향은 read disturb, 프로그램 부족은 별개 문제다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: 'NAND retention(전하 누설에 의한 데이터 손실)에 대한 설명으로 옳지 않은 것은?'
+    choices:
+      - 'P/E cycle 수와 무관하게 retention 시간은 항상 일정하게 유지된다'
+      - '보관 온도가 높을수록 전하 누설이 빨라져 retention이 짧아진다'
+      - 'P/E cycle을 많이 거친 셀일수록 터널 산화막 손상으로 retention이 나빠진다'
+      - 'retention 손실은 주로 프로그램된 셀의 V_T를 낮추는 방향으로 작용한다'
+    answer: 0
+    glossary:
+      - 'P/E cycle｜｜프로그램(쓰기)과 소거를 1회 거치는 주기'
+    explanation: 'retention은 P/E cycle이 누적될수록 짧아진다. 터널 산화막이 마모돼 전하 누설 경로가 늘기 때문으로, 보통 ''신규 칩 10년, 마모 한계 부근 1년''처럼 명시된다. 고온일수록 누설이 빨라지고 손실은 V_T를 낮추는 방향이다. 따라서 ''항상 일정''이라는 4번이 틀렸다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: 'NAND에서 read disturb(읽기 교란) 오류가 발생하는 메커니즘으로 가장 옳은 것은?'
+    choices:
+      - '선택 셀에 너무 높은 읽기 전압을 가해 그 셀의 전하가 빠져나가기 때문'
+      - '반복된 읽기에서 비선택 셀에 인가되는 Vpass가 약한 프로그램처럼 작용해 그 셀의 V_T가 서서히 상승하기 때문'
+      - '프로그램 시 인접 셀로 전하가 누설되기 때문'
+      - '소거 시 블록 전체 전하가 한꺼번에 빠지기 때문'
+    answer: 1
+    glossary:
+      - 'read disturb｜｜반복 읽기 중 Vpass로 인해 비선택 셀의 V_T가 변하는 교란 현상'
+    explanation: 'read disturb는 같은 블록의 셀을 반복해 읽을 때, 읽지 않는 워드라인에 계속 인가되는 통과전압(Vpass)이 약한 프로그램처럼 작용해 비선택(특히 소거 상태) 셀로 전자가 약하게 주입되어 V_T가 점차 올라가며 오류를 만든다. 선택 셀이 아니라 비선택 셀이 주로 교란된다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: 'NAND program disturb(프로그램 교란)에 대한 설명으로 옳은 것은?'
+    choices:
+      - '프로그램하려는 선택 셀의 V_T가 목표보다 낮아지는 현상이다'
+      - '소거된 블록의 모든 셀 V_T가 동시에 올라가는 현상이다'
+      - '프로그램 펄스 인가 시, 같은 워드라인이나 같은 비트라인을 공유하는 비선택(프로그램 금지) 셀의 V_T가 의도치 않게 상승하는 현상이다'
+      - '읽기 동작 중 선택 셀의 전하가 빠지는 현상이다'
+    answer: 2
+    glossary:
+      - 'program disturb｜｜프로그램 중 비선택 셀의 V_T가 원치 않게 변하는 현상'
+      - 'self-boosting｜｜프로그램 금지 셀의 채널 전위를 띄워 교란을 줄이는 기법'
+    explanation: 'program disturb는 한 셀을 프로그램할 때 인가하는 높은 프로그램 전압(Vpgm)이나 Vpass가, 같은 워드라인·비트라인을 공유하는 프로그램 금지(inhibit) 셀에도 약한 전계를 걸어 원치 않게 V_T를 올리는 현상이다. 이를 막으려 self-boosting 등으로 금지 셀 채널 전위를 높인다. 선택 셀이 아닌 비선택 셀이 피해 대상이다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: 'read disturb와 program disturb는 둘 다 비선택 셀의 전자 주입을 통해 일어난다는 공통점이 있다. 두 교란이 비선택 셀 V_T에 미치는 영향으로 옳은 것은?'
+    choices:
+      - 'read disturb는 V_T를 올리고 program disturb는 V_T를 내린다'
+      - '둘 다 V_T를 낮추는 방향으로 작용한다'
+      - 'read disturb는 V_T를 내리고 program disturb는 V_T를 올린다'
+      - '둘 다 약한 전자 주입으로 비선택 셀의 V_T를 상승시키는 방향으로 작용한다'
+    answer: 3
+    glossary:
+      - 'FN 주입｜｜강한 전계에서 전자가 산화막 장벽을 터널링해 들어가는 Fowler-Nordheim 메커니즘'
+    explanation: '두 교란 모두 비선택 셀의 게이트-채널 간 전계로 약한 FN 주입이 일어나 전자가 트랩/플로팅게이트로 들어가므로 V_T가 상승하는 방향이다. 차이는 발생 동작(읽기 시 Vpass 누적 vs 프로그램 시 Vpgm/Vpass 인가)일 뿐, 이동 방향은 같다. 반면 retention은 전하 누설로 V_T를 낮춘다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: 'NAND 플래시의 endurance(내구성)를 가장 정확히 정의한 것은?'
+    choices:
+      - '셀이 신뢰성을 잃기 전까지 견딜 수 있는 프로그램/소거(P/E) cycle의 횟수'
+      - '전원 없이 데이터를 보존할 수 있는 최대 기간'
+      - '한 번에 읽을 수 있는 최대 페이지 수'
+      - '동작 가능한 최고 온도'
+    answer: 0
+    glossary:
+      - 'endurance｜｜셀이 견딜 수 있는 P/E cycle 횟수로 표현되는 내구성'
+    explanation: 'endurance는 셀이 더 이상 신뢰성 있게 동작하지 못하기 전까지 견디는 P/E cycle 수다. SLC가 가장 크고 MLC>TLC>QLC 순으로 작아진다. 데이터 보존 기간은 retention, 온도 한계는 별개 사양이다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: 'P/E cycle이 누적될수록 NAND 셀이 마모(wear out)되는 물리적 메커니즘으로 가장 옳은 것은?'
+    choices:
+      - '비트라인 금속 배선이 점점 두꺼워지기 때문'
+      - '반복된 FN tunneling이 터널 산화막에 결함·트랩 전하를 누적시켜 절연 성능을 떨어뜨리기 때문'
+      - '워드라인 개수가 사용할수록 줄어들기 때문'
+      - '셀 면적이 cycle마다 물리적으로 커지기 때문'
+    answer: 1
+    glossary:
+      - '트랩 전하｜｜산화막 결함 자리에 포획된 전하로, 셀 특성을 열화시킴'
+    explanation: '프로그램·소거 때마다 전자가 터널 산화막을 통과(FN tunneling)하면서 산화막에 결함과 트랩 전하가 쌓인다. 이 손상이 누적되면 전하 누설이 늘고 V_T 제어가 어려워져 retention 단축·오류 증가로 이어진다. 배선·면적이 변하는 것이 아니다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: '유한한 셀 endurance 안에서 SSD의 수명을 늘리기 위해 컨트롤러가 사용하는 기법으로 가장 적절한 것은?'
+    choices:
+      - '모든 쓰기를 항상 같은 블록에 집중시킨다'
+      - 'ECC를 제거해 오버헤드를 줄인다'
+      - '블록별 erase count를 추적해 쓰기를 고르게 분산한다(wear leveling)'
+      - '소거 단위를 비트 단위로 바꾼다'
+    answer: 2
+    glossary:
+      - 'wear leveling｜｜블록 간 쓰기를 균등 분배해 마모를 고르게 하는 기법'
+      - 'ECC｜｜오류 정정 부호'
+    explanation: 'wear leveling은 각 블록의 erase count를 관리해 특정 블록에 쓰기가 몰리지 않도록 고르게 분산시켜, 일부 블록이 먼저 마모되어 전체 수명이 단축되는 것을 막는다. ECC는 오히려 오류를 정정해 수명에 기여하며, 소거는 구조상 블록 단위다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: 'SLC, MLC, TLC, QLC를 비교한 설명으로 옳지 않은 것은?'
+    choices:
+      - '셀당 비트 수가 많을수록 비트당 저장 비용(cost-per-bit)이 낮아진다'
+      - '셀당 비트 수가 많을수록 endurance(P/E cycle 한계)는 일반적으로 낮아진다'
+      - '셀당 비트 수가 많을수록 읽기에 필요한 기준전압이 늘어 읽기 지연이 커진다'
+      - '셀당 비트 수가 많을수록 인접 V_T 분포 간 마진이 넓어져 오류가 줄어든다'
+    answer: 3
+    glossary:
+      - 'cost-per-bit｜｜저장 1비트당 단가'
+    explanation: '셀당 비트 수가 늘면 같은 V_T 윈도우에 더 많은 상태가 들어가 인접 분포 간 마진이 좁아지고 오류가 늘어난다(4번이 반대로 서술돼 틀림). 대신 cost-per-bit는 낮아지고, 상태가 많아 읽기 기준전압이 늘며 endurance는 낮아진다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: 'HBM(High Bandwidth Memory)에서 수직으로 적층된 여러 DRAM die들을 전기적으로 연결하는 핵심 수단은?'
+    choices:
+      - '실리콘 die를 관통하는 수직 전극인 TSV(through-silicon via)'
+      - '와이어 본딩(wire bonding)'
+      - '광섬유 인터커넥트'
+      - '표면 실장 솔더볼만으로 측면 연결'
+    answer: 0
+    glossary:
+      - 'TSV｜｜실리콘 칩을 수직으로 관통해 적층 die를 잇는 전극'
+      - 'microbump｜｜die 간 미세 솔더 범프 접합'
+    explanation: 'HBM은 DRAM die를 수직으로 쌓고, 각 die를 관통하는 TSV(through-silicon via)와 microbump로 층 사이를 짧은 수직 경로로 연결한다. 이 짧은 경로가 넓은 버스를 가능하게 한다. 와이어 본딩은 경로가 길고 폭이 좁아 HBM의 대역폭 목표에 부적합하다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: 'HBM이 GDDR 대비 낮은 동작 주파수에서도 매우 높은 대역폭을 달성하는 설계 철학으로 가장 옳은 것은?'
+    choices:
+      - '좁은 버스를 극단적으로 높은 클럭으로 구동한다'
+      - '1024비트급 이상의 매우 넓은 인터페이스를 비교적 낮은 주파수로 구동한다(wide and slow)'
+      - '단일 die만 사용해 배선 길이를 최소화한다'
+      - 'DRAM 대신 SRAM을 적층한다'
+    answer: 1
+    glossary:
+      - 'wide-interface｜｜핀 수를 크게 늘려 낮은 주파수로도 높은 총 대역폭을 얻는 구조'
+    explanation: 'HBM은 스택당 1024비트(HBM4는 2048비트)에 이르는 넓은 데이터 경로를 상대적으로 낮은 핀당 속도로 구동하는 ''wide and slow'' 방식으로, 핀당 신호 무결성·전력 부담을 낮추면서 총 대역폭을 키운다. 좁고 빠른 방식은 GDDR의 접근이다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: '한 HBM 스택의 데이터 버스 폭이 1024비트이고 핀(I/O)당 데이터 전송률이 8 Gb/s일 때, 이 스택의 이론적 최대 대역폭에 가장 가까운 값은? (1 GB = 8 Gb로 환산)'
+    choices:
+      - '약 128 GB/s'
+      - '약 512 GB/s'
+      - '약 1024 GB/s (≈1 TB/s)'
+      - '약 8 GB/s'
+    answer: 2
+    glossary:
+      - '대역폭｜｜단위 시간당 전송 가능한 데이터량(여기서는 버스폭×핀속도)'
+    explanation: '대역폭 = 버스 폭(bit) × 핀당 전송률 = 1024 × 8 Gb/s = 8192 Gb/s. 이를 바이트로 환산하면 8192/8 = 1024 GB/s ≈ 1 TB/s이다. 넓은 버스 폭 덕분에 핀당 속도가 낮아도 TB/s급 대역폭이 나온다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: 'HBM 스택을 GPU/CPU 같은 호스트 다이와 같은 패키지 안에서 수천 가닥의 미세 배선으로 연결하는, 칩들을 나란히 얹는 기판은?'
+    choices:
+      - 'PCB 메인보드'
+      - 'DIMM 소켓'
+      - '방열판(heat sink)'
+      - '실리콘 인터포저(silicon interposer)'
+    answer: 3
+    glossary:
+      - '인터포저｜｜칩들을 나란히 얹어 미세 배선으로 잇는 중간 기판(2.5D 패키징)'
+      - '2.5D 패키징｜｜인터포저 위에 여러 칩을 평면 배치해 고밀도로 연결하는 방식'
+    explanation: 'HBM은 보통 실리콘 인터포저 위에 HBM 스택과 프로세서를 나란히 올리는 2.5D 패키징을 쓴다. 인터포저에 새겨진 미세 피치 배선이 1024비트급 넓은 인터페이스를 짧은 거리로 연결해 준다. PCB·소켓은 피치가 커서 이 정도 배선 밀도를 못 낸다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: 'HBM이 DRAM die를 TSV로 수직 적층하는 방식이 평면(2D) 모듈 대비 갖는 신호·전력 측면 이점으로 가장 옳은 것은?'
+    choices:
+      - '신호 경로가 짧아져 지연과 비트당 전력이 줄고 더 넓은 병렬 버스가 가능하다'
+      - 'die마다 별도 패키지가 필요해 비용이 줄어든다'
+      - '수직 경로가 평면 배선보다 길어 신호 무결성이 좋아진다'
+      - 'TSV는 데이터가 아닌 열만 전달하므로 냉각에만 쓰인다'
+    answer: 0
+    glossary:
+      - '신호 무결성｜｜배선에서 신호 파형이 왜곡 없이 전달되는 정도'
+    explanation: 'TSV 수직 적층은 die 사이 신호 경로를 수십 마이크로미터급으로 짧게 만들어 RC 지연과 구동 전력을 줄이고, 짧고 촘촘한 연결 덕분에 수천 비트의 병렬 버스를 실현한다. 수직 경로는 평면 대비 더 짧으며, TSV는 데이터·전원·접지를 모두 전달한다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: 'MLC(2비트/셀)에서 4개의 V_T 상태(L0~L3)를 두는 이유와 관련해, 동일한 V_T 윈도우를 SLC(2상태) 대신 MLC로 나눌 때 나타나는 직접적 결과로 옳은 것은?'
+    choices:
+      - '각 상태 분포가 더 넓어져도 되고 마진이 늘어난다'
+      - '각 상태 분포가 더 좁아야 하고 인접 분포 간 마진이 줄어든다'
+      - '필요한 읽기 기준전압 수가 SLC보다 줄어든다'
+      - '셀당 저장 비트 수가 SLC보다 줄어든다'
+    answer: 1
+    glossary:
+      - 'V_T 윈도우｜｜소거 상태와 최대 프로그램 상태 사이의 사용 가능한 문턱전압 범위'
+      - 'SLC｜｜한 셀에 1비트(2상태)를 저장하는 방식'
+    explanation: '같은 V_T 윈도우를 2상태(SLC) 대신 4상태(MLC)로 나누면 각 상태에 할당되는 폭이 좁아져 분포를 더 타이트하게 프로그램해야 하고 인접 분포 간 마진이 줄어든다. 그래서 읽기 기준전압도 1개에서 3개로 늘고 셀당 비트는 1→2로 늘어난다(나머지 보기는 반대 서술).'
+    tags: [engineering, semiconductor]

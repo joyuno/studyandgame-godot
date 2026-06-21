@@ -1,0 +1,605 @@
+meta:
+  title: '반도체공학 3'
+  version: '1.0.0'
+  default_time: 45
+  set_time: 1750
+  tags: [engineering, semiconductor, device]
+  source: '대학 학부 전공 표준 범위(공개 강의목차·교재 기반, exa 리서치 + 멀티에이전트 생성). 특정 상용 교재 본문 미복제.'
+
+questions:
+  - type: mcq
+    q: '이상적 Schottky-Mott 모델에서 금속과 n형 반도체를 접합할 때 정류성 쇼트키 장벽(전자 입장)이 형성되는 조건은?'
+    choices:
+      - '금속 일함수 φ_m > 반도체 일함수 φ_s'
+      - '금속 일함수 φ_m < 반도체 일함수 φ_s'
+      - '두 일함수가 정확히 같을 때'
+      - '반도체의 전자친화도가 0일 때'
+    answer: 0
+    glossary:
+      - '일함수｜｜진공준위에서 페르미준위까지의 에너지(전자를 빼내는 데 드는 에너지)'
+      - '전자친화도｜｜진공준위에서 전도대 바닥까지의 에너지(χ)'
+    explanation: 'n형 반도체에서 φ_m > φ_s 이면 접촉 시 반도체에서 금속으로 전자가 빠져나가 표면이 공핍되고 위로 휘어 정류성 쇼트키 장벽이 생긴다. 이상 모델의 장벽 높이는 φ_Bn = φ_m − χ(전자친화도)이다. 반대로 φ_m < φ_s 이면 오믹에 가깝다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: '쇼트키 다이오드(금속-반도체)와 일반 PN 접합 다이오드를 비교할 때 옳은 것은?'
+    choices:
+      - '쇼트키는 소수 캐리어 저장이 커서 역회복이 느리다'
+      - '쇼트키는 소수 캐리어 저장이 거의 없어 스위칭이 빠르고 순방향 전압강하가 낮다'
+      - '쇼트키는 순방향 전압강하가 PN보다 항상 높다'
+      - '쇼트키는 양극성(bipolar) 소자다'
+    answer: 1
+    glossary:
+      - '다수 캐리어 소자｜｜전류가 주로 다수 캐리어로 흐르는 단극성(unipolar) 소자'
+    explanation: '쇼트키 다이오드는 다수 캐리어 소자라 소수 캐리어 주입·저장이 거의 없어 역회복이 빠르고 고속 스위칭에 유리하다. 또한 장벽 높이가 낮아 순방향 전압강하(약 0.2~0.4V)가 PN(약 0.7V)보다 작다. 누설 전류는 PN보다 크다는 단점이 있다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: '금속-반도체 오믹(ohmic) 접촉을 형성하기 위한 실용적인 방법으로 가장 적절한 것은?'
+    choices:
+      - '반도체를 저농도로 도핑하여 공핍층을 넓게 만든다'
+      - '금속 일함수를 일부러 크게 하여 장벽을 높인다'
+      - '반도체 표면을 고농도로 도핑하여 장벽을 얇게 만들어 터널링(전계 방출)을 유도한다'
+      - '접합 면적을 최소화한다'
+    answer: 2
+    glossary:
+      - '전계 방출｜｜얇은 장벽을 캐리어가 터널링으로 통과하는 전도 메커니즘(field emission)'
+      - '오믹 접촉｜｜전압-전류가 선형이고 저항이 낮아 정류성이 없는 금속-반도체 접촉'
+    explanation: '실제 소자에서는 일함수 정합만으로 좋은 오믹 접촉을 얻기 어렵다. 표면을 매우 고농도(n++/p++)로 도핑하면 장벽 폭이 매우 얇아져 캐리어가 터널링(전계 방출, field emission)으로 양방향 통과하여 낮은 저항의 오믹 특성을 얻는다. 저농도·장벽 증가·면적 축소는 모두 저항을 키운다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: '금속-반도체 접촉이 오믹(비정류성)이 되는 경우로 옳은 것은?'
+    choices:
+      - 'n형에서 φ_m > φ_s 인 경우'
+      - '공핍층이 매우 두꺼워 장벽이 넓은 경우'
+      - '장벽 높이가 1eV 이상으로 매우 큰 경우'
+      - 'n형에서 φ_m < φ_s 이거나 표면을 고농도로 도핑한 경우'
+    answer: 3
+    glossary:
+      - '축적｜｜다수 캐리어가 표면에 더 모여 농도가 높아지는 상태'
+    explanation: 'n형 반도체에서 φ_m < φ_s 이면 표면이 축적되어 장벽이 거의 없어 오믹이 된다. 또한 φ_m > φ_s 이더라도 표면을 고농도 도핑하면 장벽이 얇아져 터널링으로 오믹 특성을 얻는다. 두껍고 높은 장벽은 정류성(쇼트키)을 만든다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: 'p형 기판 MOS 커패시터에서 게이트에 큰 음(−)의 전압을 인가하면 반도체 표면은 어떤 상태가 되는가?'
+    choices:
+      - '다수 캐리어(정공)가 표면에 모이는 축적(accumulation) 상태'
+      - '다수 캐리어가 밀려나는 공핍(depletion) 상태'
+      - '소수 캐리어(전자)층이 형성되는 반전(inversion) 상태'
+      - '플랫밴드(flat-band) 상태'
+    answer: 0
+    glossary:
+      - '축적(accumulation)｜｜MOS에서 다수 캐리어가 표면에 모여 농도가 증가한 상태'
+    explanation: 'p형 기판에서 게이트에 음전압을 주면 표면 쪽으로 정공(다수 캐리어)이 끌려와 쌓이는 축적 상태가 된다. 이때 표면 정공 농도가 벌크보다 높고 밴드는 위로 휜다. 양전압을 키울수록 공핍→반전으로 진행한다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: 'p형 기판 MOS 커패시터에서 반전(inversion)이 시작되는 임계(문턱) 조건을 표면 전위 φ_s로 옳게 기술한 것은?'
+    choices:
+      - 'φ_s = 0 (플랫밴드)'
+      - 'φ_s = 2φ_F (벌크 페르미 전위의 2배)'
+      - 'φ_s = φ_F (벌크 페르미 전위)'
+      - 'φ_s = E_g/q (밴드갭 전위)'
+    answer: 1
+    glossary:
+      - 'φ_F｜｜벌크 페르미 전위. 진성 준위와 페르미 준위의 차이를 전위로 나타낸 값'
+      - '강반전｜｜표면 소수 캐리어 농도가 벌크 다수 캐리어 농도에 도달한 상태'
+    explanation: '강반전(strong inversion)은 표면의 소수 캐리어(전자) 농도가 벌크 다수 캐리어 농도와 같아질 때로 정의되며, 이는 표면 밴드 휨이 φ_s = 2φ_F일 때 일어난다. 이 조건이 MOSFET 문턱 전압 V_T 정의의 기준이다. φ_s=φ_F는 표면이 진성이 되는 약반전의 경계다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: 'p형 기판 MOS 커패시터의 고주파 C-V 곡선에서, 게이트 전압을 음에서 양으로 쓸어갈 때 용량의 변화로 옳은 것은?'
+    choices:
+      - '축적에서 최소, 반전에서 최대값(C_ox)을 보인다'
+      - '전 구간에서 일정하다'
+      - '축적에서 C_ox로 최대, 공핍에서 감소, 고주파 반전에서 낮은 값으로 포화한다'
+      - '공핍 영역에서 최대값을 보인다'
+    answer: 2
+    glossary:
+      - 'C_ox｜｜산화막 커패시턴스. ε_ox·A/t_ox 로 주어지는 절연막 용량'
+    explanation: '축적에서는 산화막 용량 C_ox가 그대로 측정되어 최대다. 공핍이 진행되면 직렬 공핍 용량이 더해져 총 용량이 감소한다. 고주파 반전에서는 소수 캐리어가 신호를 따라가지 못해 공핍폭이 최대로 고정되며 낮은 값에서 포화한다(저주파에서는 다시 C_ox로 회복).'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: 'MOS 커패시터의 공핍 영역에서 전체 커패시턴스 C가 게이트 전압에 따라 감소하는 이유로 옳은 것은?'
+    choices:
+      - '산화막 두께가 전압에 따라 늘어나기 때문'
+      - 'C_ox와 C_dep가 병렬이기 때문'
+      - '반전층 전하가 즉시 형성되기 때문'
+      - '산화막 용량 C_ox와 공핍층 용량 C_dep가 직렬로 연결되고 공핍폭이 넓어지기 때문'
+    answer: 3
+    glossary:
+      - '공핍층 용량｜｜공핍 영역을 평행판으로 본 등가 커패시턴스 ε_s/W_dep'
+    explanation: '공핍 영역에서 총 용량은 C_ox와 공핍층 용량 C_dep=ε_s/W_dep의 직렬합 1/C = 1/C_ox + 1/C_dep 로 주어진다. 게이트 전압이 커지면 공핍폭 W_dep가 넓어져 C_dep가 작아지고, 직렬이므로 총 C가 감소한다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: '산화막 전하가 없는 이상적 MOS 구조에서 플랫밴드 전압 V_FB을 옳게 나타낸 것은? (φ_ms = φ_m − φ_s)'
+    choices:
+      - 'V_FB = φ_ms = φ_m − φ_s (금속-반도체 일함수 차이)'
+      - 'V_FB = φ_m + φ_s'
+      - 'V_FB = 2φ_F'
+      - 'V_FB = E_g/q'
+    answer: 0
+    glossary:
+      - 'φ_ms｜｜금속-반도체 일함수 차. 게이트와 기판의 일함수 차이(φ_m − φ_s)'
+    explanation: '산화막 전하가 없으면 반도체 밴드를 평평하게 만드는 데 필요한 게이트 전압 V_FB은 금속과 반도체의 일함수 차이 φ_ms = φ_m − φ_s 와 정확히 같다. 일함수 차가 있으면 0V에서 이미 밴드가 휘어 있어 이를 상쇄하는 전압이 V_FB이다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: 'MOS 커패시터에서 산화막-반도체 계면에 양(+)의 고정 산화막 전하 Q_ox가 있을 때, 플랫밴드 전압 V_FB의 변화로 옳은 것은?'
+    choices:
+      - 'V_FB = φ_ms 로 변화 없다'
+      - 'V_FB = φ_ms − Q_ox/C_ox 로, 양전하는 V_FB를 음의 방향으로 이동시킨다'
+      - 'V_FB = φ_ms + Q_ox/C_ox 로, 양전하는 V_FB를 양의 방향으로 이동시킨다'
+      - 'Q_ox는 V_FB와 무관하다'
+    answer: 1
+    glossary:
+      - '고정 산화막 전하｜｜Si-SiO2 계면 근처에 고정된 (보통 양의) 전하(Q_f)'
+    explanation: '산화막 전하를 포함하면 V_FB = φ_ms − Q_ox/C_ox 이다. 양의 산화막 전하는 반도체에 음전하를 유도하므로 이를 상쇄하려면 더 음의 게이트 전압이 필요해 V_FB가 음의 방향으로 이동(C-V 곡선 좌측 이동)한다. C_ox가 클수록(얇은 산화막) 이동량은 작다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: 'n+ 폴리실리콘 게이트와 p형 기판을 쓰는 MOS에서 φ_ms = φ_m − φ_s 의 부호와 그 결과로 옳은 것은?'
+    choices:
+      - 'φ_ms는 양수이고 V_FB도 양수다'
+      - 'φ_ms는 항상 0이다'
+      - 'φ_ms는 음수이고 (산화막 전하 무시 시) V_FB도 음수다'
+      - 'φ_ms 부호는 기판 도핑과 무관하다'
+    answer: 2
+    glossary:
+      - '폴리실리콘 게이트｜｜고농도 도핑한 다결정 실리콘으로 만든 MOS 게이트 전극'
+    explanation: 'n+ 폴리(φ_m ≈ 전도대 부근, 약 4.05V)는 일함수가 작고, p형 기판은 페르미준위가 가전자대 쪽이라 일함수 φ_s가 크다. 따라서 φ_ms = φ_m − φ_s < 0 이고, 산화막 전하를 무시하면 V_FB ≈ φ_ms < 0 이다. 게이트·기판 도핑이 φ_ms 부호를 결정한다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: 'MOS 커패시터의 게이트 전압 V_G(산화막 전하 무시, V_FB 기준)는 어떻게 분배되는가?'
+    choices:
+      - '전부 산화막에 걸린다'
+      - '전부 공핍층에 걸린다'
+      - 'V_G = φ_s − V_ox 로 두 항의 차로 주어진다'
+      - 'V_G = V_FB + φ_s + V_ox 로, 표면 전위 φ_s(반도체 밴드 휨)와 산화막 전압 V_ox로 나뉜다'
+    answer: 3
+    glossary:
+      - '표면 전위(φ_s)｜｜반도체 표면에서의 밴드 휨 정도를 나타내는 전위'
+      - 'V_ox｜｜산화막 양단에 걸리는 전압강하'
+    explanation: '인가 게이트 전압은 V_G = V_FB + φ_s + V_ox 로 나뉜다. 여기서 φ_s는 반도체 표면 밴드 휨(표면 전위), V_ox = −Q_s/C_ox는 산화막에 걸리는 전압이다. 축적·반전에서는 전압 변화가 대부분 산화막에 걸리고, 공핍에서는 φ_s가 빠르게 변한다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: 'p형 기판 MOS 커패시터에서 ''강반전(strong inversion)의 시작'' 조건으로 가장 정확한 것은? (φF는 페르미 전위, φs는 표면전위)'
+    choices:
+      - '표면전위 φs = 2φF'
+      - '표면전위 φs = φF'
+      - '표면전위 φs = 0 (플랫밴드)'
+      - '표면전위 φs = 3φF'
+    answer: 0
+    glossary:
+      - '페르미 전위(φF)｜｜벌크 페르미 준위와 진성 준위 사이의 전위차, (kT/q)ln(NA/ni)'
+    explanation: '강반전은 표면의 소수캐리어(전자) 농도가 벌크의 다수캐리어(정공) 농도와 같아지는 지점으로 정의하며, 이때 표면이 벌크와 정반대 수준으로 휘어 φs = 2φF가 된다. φs = φF는 표면이 진성(intrinsic) 상태가 되는 약반전 시작점이고, φs = 0은 플랫밴드 조건이다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: 'p형 기판의 페르미 전위 φF = (kT/q)·ln(NA/ni)이다. 기판 도핑 NA를 10배 증가시키면 강반전 표면전위 2φF는 어떻게 변하는가?'
+    choices:
+      - '변하지 않는다'
+      - '2φF가 (2kT/q)·ln10 만큼 증가한다'
+      - '정확히 10배가 된다'
+      - '절반으로 감소한다'
+    answer: 1
+    glossary:
+      - 'ni｜｜진성 캐리어 농도, 실리콘 상온에서 약 1.0×10^10 cm^-3'
+    explanation: 'φF는 NA에 로그적으로 의존하므로 NA를 10배 하면 φF는 (kT/q)ln10 만큼 증가하고, 2φF는 그 2배인 (2kT/q)ln10(상온에서 약 0.12V) 증가한다. 선형(10배)이 아니라 로그 증가이며, 0이나 절반이 아니다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: '단위면적당 게이트 산화막 커패시턴스 Cox에 대한 식으로 옳은 것은? (εox: 산화막 유전율, tox: 산화막 두께)'
+    choices:
+      - 'Cox = εox · tox'
+      - 'Cox = tox / εox'
+      - 'Cox = εox / tox'
+      - 'Cox = εox / tox^2'
+    answer: 2
+    glossary:
+      - 'εox｜｜SiO2의 유전율 ≈ 3.9·ε0 ≈ 3.45×10^-13 F/cm'
+    explanation: '산화막은 두께 tox의 평행판 커패시터로 모델링되어 단위면적당 Cox = εox/tox이다. 두께에 반비례하므로 산화막을 얇게 할수록 Cox가 커진다. 곱이나 역수 형태, 제곱 의존성은 평행판 커패시터 공식에 맞지 않는다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: 'SiO2(εox ≈ 3.45×10^-13 F/cm) 게이트 산화막 두께가 10 nm(=10^-6 cm)일 때 단위면적당 Cox는 약 얼마인가?'
+    choices:
+      - '약 3.45×10^-9 F/cm^2'
+      - '약 3.45×10^-5 F/cm^2'
+      - '약 3.45×10^-13 F/cm^2'
+      - '약 3.45×10^-7 F/cm^2'
+    answer: 3
+    glossary:
+      - 'nm｜｜나노미터, 1 nm = 10^-7 cm'
+    explanation: 'Cox = εox/tox = 3.45×10^-13 / 10^-6 = 3.45×10^-7 F/cm^2 이다. 이는 약 0.345 μF/cm^2에 해당한다. 단위 환산(nm→cm)에서 10 nm = 10^-6 cm임을 정확히 적용해야 한다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: '산화막 두께 tox를 줄여 Cox를 키우는 것이 MOSFET에서 일반적으로 유리한 이유로 가장 적절한 것은?'
+    choices:
+      - '게이트의 채널 전하 제어력(트랜스컨덕턴스 등)이 커지기 때문'
+      - '문턱전압이 무조건 0이 되기 때문'
+      - '산화막 항복전압이 높아지기 때문'
+      - '게이트 누설전류가 항상 감소하기 때문'
+    answer: 0
+    glossary:
+      - 'FN tunneling｜｜Fowler-Nordheim 터널링, 강한 산화막 전계에서 발생하는 게이트 누설 기구'
+    explanation: 'ID ∝ Cox, gm ∝ Cox 이므로 Cox가 크면 동일 전압에서 더 많은 채널 전하를 유도해 구동 전류와 게이트 제어력이 커진다. 그러나 tox를 줄이면 산화막 전계가 강해져 항복전압은 낮아지고 FN/직접 터널링 누설은 오히려 증가하므로 항복·누설 관련 보기는 틀리다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: 'p형 MOS 커패시터의 C-V 측정에서 강반전 영역에 들어갔을 때, 저주파(LF) 곡선과 고주파(HF) 곡선의 거동 차이로 옳은 것은?'
+    choices:
+      - 'HF는 Cox로 회복되고, LF는 Cmin에 머문다'
+      - 'LF는 Cox로 다시 회복되고, HF는 Cmin에 머문다'
+      - '두 곡선 모두 항상 Cox와 같다'
+      - '두 곡선 모두 0으로 떨어진다'
+    answer: 1
+    glossary:
+      - 'C-V 곡선｜｜게이트 전압에 따른 MOS 용량 변화 곡선, 축적-공핍-반전 정보를 담음'
+    explanation: '저주파에서는 반전층 전자가 신호에 따라 생성·소멸을 따라가 게이트 전하 변화에 응답하므로 용량이 Cox까지 회복된다. 고주파에서는 소수캐리어 생성이 신호를 못 따라가 반전층이 응답하지 못해 공핍층 최대폭에 대응하는 Cmin(Cox와 Cd,min의 직렬)에 머문다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: '고주파 C-V 곡선에서 반전 영역의 최소 용량 Cmin이 결정되는 주된 요인은?'
+    choices:
+      - '산화막 두께만으로 결정'
+      - '반전층 전자 농도에만 의존'
+      - '최대 공핍층 폭 Wmax에 대응하는 공핍 용량과 Cox의 직렬 합성'
+      - '게이트 금속의 일함수에만 의존'
+    answer: 2
+    glossary:
+      - 'Wmax｜｜강반전 시작 시 고정되는 최대 공핍층 폭'
+      - 'εs｜｜실리콘 유전율 ≈ 11.8·ε0'
+    explanation: '강반전에서 공핍층은 더 이상 커지지 않고 최대폭 Wmax로 고정되며, 고주파에서는 반전층이 응답하지 않으므로 총 용량은 Cox와 Cd,min = εs/Wmax의 직렬 합성인 Cmin이 된다. 산화막만, 반전층 농도만, 일함수만으로는 Cmin이 정해지지 않는다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: 'p형 MOS 커패시터에 충분한 음의 게이트 전압을 인가한 축적(accumulation) 영역에서, 주파수와 무관하게 측정 용량이 거의 Cox와 같아지는 이유는?'
+    choices:
+      - '공핍층이 무한히 넓어지기 때문'
+      - '반전층 전자가 채널을 채우기 때문'
+      - '계면 트랩이 모든 전하를 흡수하기 때문'
+      - '다수캐리어(정공)가 산화막 계면에 쌓여 빠르게 응답하므로 산화막 용량만 남기 때문'
+    answer: 3
+    glossary:
+      - '축적(accumulation)｜｜다수캐리어가 산화막 계면에 축적되는 영역'
+    explanation: '축적에서는 다수캐리어인 정공이 계면에 모여 마치 평행판의 한쪽 전극처럼 빠르게(다수캐리어 응답시간은 매우 짧음) 응답하므로 반도체 측 직렬 용량이 매우 커져 총 용량은 산화막 용량 Cox로 수렴한다. 공핍층 확장이나 반전층 전자는 축적과 무관하다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: '산화막-반도체 계면 근처에 존재하는 양의 산화막 고정전하 Qf가 증가하면 n채널(p형 기판) MOSFET의 문턱전압 Vt는 어떻게 변하는가?'
+    choices:
+      - 'Vt가 음의 방향으로 이동(감소)한다'
+      - 'Vt가 양의 방향으로 이동(증가)한다'
+      - 'Vt는 변하지 않는다'
+      - 'Vt가 0으로 고정된다'
+    answer: 0
+    glossary:
+      - '고정전하(Qf)｜｜계면 근처 산화막에 고정된 전하, 주로 양성. 플랫밴드 전압을 이동시킴'
+      - '플랫밴드 전압｜｜반도체 밴드가 평평해지는 게이트 전압'
+    explanation: '양의 고정전하 Qf는 플랫밴드 전압을 -Qf/Cox 만큼 음으로 이동시키고, 이는 Vt에도 같은 음의 이동을 준다. 즉 더 작은(음의) 게이트 전압으로도 반전이 일어나 Vt가 감소한다. 변화 없음·증가·0 고정은 부호와 메커니즘 모두 틀리다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: '산화막-실리콘 계면의 계면 트랩 밀도 Dit(interface trap)가 클 때, 저주파 C-V 곡선에 나타나는 대표적 영향은?'
+    choices:
+      - 'Cox 값 자체가 두 배가 된다'
+      - '곡선이 게이트 전압 축을 따라 늘어지거나(stretch-out) 변형된다'
+      - '용량이 항상 음수가 된다'
+      - '주파수 의존성이 완전히 사라진다'
+    answer: 1
+    glossary:
+      - '계면 트랩(Dit)｜｜Si-SiO2 계면의 에너지준위 상태 밀도, 전하를 포획·방출함'
+      - 'stretch-out｜｜C-V 곡선이 전압축으로 늘어나는 변형'
+    explanation: '계면 트랩은 게이트 전압에 따라 충·방전되며 추가 전압을 흡수하므로 C-V 곡선이 전압축 방향으로 늘어지는 stretch-out 변형을 일으킨다(트랩 용량이 병렬로 더해짐). Cox 자체나 부호를 바꾸지는 않으며, 트랩은 오히려 주파수 분산을 더 만든다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: '산화막 고정전하(Qf)와 계면 트랩(Dit)의 가장 본질적인 차이를 옳게 설명한 것은?'
+    choices:
+      - '둘 다 게이트 전압에 따라 점유 상태가 바뀐다'
+      - 'Qf는 전압 의존, Dit는 전압 무관이다'
+      - 'Qf는 게이트 전압에 무관하게 고정, Dit는 표면전위(전압)에 따라 충·방전된다'
+      - '둘 다 C-V에 아무 영향을 주지 않는다'
+    answer: 2
+    explanation: '고정전하 Qf는 전압에 관계없이 일정량이 고정되어 단지 곡선을 평행 이동(shift)시킨다. 반면 계면 트랩 Dit는 표면전위 변화에 따라 페르미 준위를 가로지르며 충·방전되어 곡선을 늘어뜨린다(stretch-out). 따라서 둘의 전압 의존성이 서로 반대다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: 'p형 기판 NMOS에서 게이트에 충분한 양전압을 가했을 때 소스-드레인 사이에 전류 통로(채널)가 형성되는 직접적 원인은?'
+    choices:
+      - '기판의 정공이 채널에 축적되기 때문'
+      - '산화막이 도체로 바뀌기 때문'
+      - '드레인 전압이 채널을 직접 만들기 때문'
+      - '계면에 소수캐리어인 전자가 유도되어 반전층을 이루기 때문'
+    answer: 3
+    glossary:
+      - '반전층｜｜기판과 반대 극성 캐리어가 모인 계면 도전층'
+    explanation: '양의 게이트 전압은 표면 밴드를 휘게 해 정공을 밀어내고(공핍) 전자를 끌어당겨, 강반전에서 계면에 전자 반전층을 형성한다. 이 전자층이 n형 소스-드레인을 잇는 도전 채널이 된다. 정공 축적은 PMOS/축적 거동이고, 산화막은 절연체를 유지하며 채널을 만드는 1차 요인은 게이트(VGS)이다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: '강반전 이후(Vt 초과) 단위면적당 반전층 전하 Qn의 크기를 1차 근사로 옳게 나타낸 것은?'
+    choices:
+      - 'Qn = Cox · (VGS − Vt)'
+      - 'Qn = Cox / (VGS − Vt)'
+      - 'Qn = Cox · VGS^2'
+      - 'Qn = Cox · Vt'
+    answer: 0
+    glossary:
+      - 'charge-sheet 근사｜｜반전층을 두께 0의 전하판으로 보는 근사'
+    explanation: '1차(charge-sheet) 근사에서 Vt를 넘는 초과 게이트 전압 (VGS−Vt)에 비례해 반전층 전하가 유도되어 |Qn| = Cox(VGS−Vt)이다. Vt 이하에서는 반전층 전하를 0으로 둔다. 역수·제곱·상수 형태는 선형 비례 가정에 맞지 않는다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: '이상적 가정을 완화한 NMOS 문턱전압의 일반적 표현은 Vt = VFB + 2φF + Qdep/Cox 이다. 여기서 마지막 항 Qdep/Cox가 의미하는 것은?'
+    choices:
+      - '반전층 전하를 만들기 위한 전압'
+      - '최대 공핍층의 고정 이온 전하를 지지하기 위해 산화막에 걸리는 전압'
+      - '게이트 금속의 일함수 차이'
+      - '계면 트랩을 채우는 전압'
+    answer: 1
+    glossary:
+      - 'VFB｜｜플랫밴드 전압'
+      - 'Qdep｜｜강반전 시 최대 공핍층의 단위면적당 공간전하'
+    explanation: 'Qdep는 강반전 시점 최대 공핍층의 이온화된 억셉터 전하이고, 이를 지지하기 위해 산화막에 걸리는 전압이 Qdep/Cox이다. VFB는 일함수차·산화막전하 효과, 2φF는 표면을 강반전까지 휘게 하는 표면전위 항이다. Qdep/Cox는 반전층 형성용도, 일함수차, 트랩 항이 아니다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: '다른 조건이 동일할 때 NMOS의 기판 도핑 농도 NA를 높이면 문턱전압 Vt는 일반적으로 어떻게 되는가?'
+    choices:
+      - '감소한다'
+      - '변하지 않는다'
+      - '증가한다'
+      - '항상 음수가 된다'
+    answer: 2
+    explanation: 'NA가 커지면 2φF가 (로그적으로) 증가하고, 공핍 전하 Qdep = √(2εs·q·NA·2φF)도 증가하여 Qdep/Cox 항이 커지므로 Vt가 증가한다. 이 때문에 채널 도핑(또는 이온주입)으로 Vt를 조절한다. 감소·불변·항상 음수는 의존성과 반대다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: '실제 MOS의 플랫밴드 전압 VFB = φMS − Qf/Cox 로 근사할 때, 각 항에 대한 설명으로 옳은 것은?'
+    choices:
+      - 'φMS는 산화막 두께, Qf/Cox는 반전층 전하 항'
+      - '두 항 모두 도핑과 무관하다'
+      - 'φMS는 항상 0이다'
+      - 'φMS는 금속-반도체 일함수차, Qf/Cox는 산화막 전하에 의한 전압 이동'
+    answer: 3
+    glossary:
+      - 'φMS｜｜금속(게이트)과 반도체의 일함수 차이'
+    explanation: 'VFB는 밴드를 평평하게 만드는 데 필요한 게이트 전압으로, 금속-반도체 일함수 차이 φMS와 산화막/계면 전하에 의한 이동 −Qf/Cox로 구성된다. φMS는 게이트 재료와 기판 도핑(반도체 일함수)에 의존하므로 0이거나 도핑 무관이라는 보기는 틀리다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: 'MOSFET I-V 모델 유도에 쓰이는 점진채널근사(gradual channel approximation)의 핵심 가정은?'
+    choices:
+      - '채널에 수직인(게이트→기판) 전계가 채널 방향 전계보다 훨씬 크다'
+      - '채널 방향(x) 전계가 채널에 수직(y) 전계보다 훨씬 크다'
+      - '전계가 채널 전체에서 0이다'
+      - '반전층 전하가 위치에 무관하게 일정하다'
+    answer: 0
+    glossary:
+      - 'GCA｜｜gradual channel approximation, 수직 전계 지배 가정으로 채널을 국소 1차원으로 다룸'
+    explanation: 'GCA는 게이트가 만드는 수직 전계(Ey)가 소스-드레인 방향의 수평 전계(Ex)보다 훨씬 크다고 가정하여, 각 단면에서 1차원 MOS 정전기(전하-전압 관계)를 국소적으로 적용할 수 있게 한다. 이 가정은 채널이 길고 VDS가 과도하지 않을 때 유효하며, 단채널에서 깨진다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: 'NMOS의 선형(트라이오드) 영역 드레인 전류 식으로 옳은 것은? (k'' = μn·Cox)'
+    choices:
+      - 'ID = (1/2)k''(W/L)(VGS − Vt)^2'
+      - 'ID = k''(W/L)[(VGS − Vt)VDS − VDS^2/2]'
+      - 'ID = k''(W/L)(VGS − Vt)'
+      - 'ID = k''(W/L)·VDS^2'
+    answer: 1
+    glossary:
+      - '트라이오드(triode)｜｜선형 영역, 채널이 소스-드레인 전 구간에 형성된 상태'
+      - 'k''｜｜공정 트랜스컨덕턴스 파라미터 μn·Cox'
+    explanation: '트라이오드 영역에서는 ID = μnCox(W/L)[(VGS−Vt)VDS − VDS^2/2]로, VDS에 대해 포물선 형태다. 보기 1은 포화 전류, 보기 2는 차원이 맞지 않으며, 보기 4는 (VGS−Vt) 의존을 빠뜨려 틀리다. VDS가 작을 때 VDS^2 항을 무시하면 전압제어 저항처럼 동작한다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: 'NMOS 트라이오드 전류 식이 VDS에 대해 최대가 되는 지점(전류가 더 이상 증가하지 않는 경계)인 VDS,sat 값은?'
+    choices:
+      - 'VDS,sat = VGS'
+      - 'VDS,sat = Vt'
+      - 'VDS,sat = VGS − Vt'
+      - 'VDS,sat = VGS + Vt'
+    answer: 2
+    glossary:
+      - 'overdrive 전압｜｜VGS − Vt, 과구동 전압'
+    explanation: 'ID = k''(W/L)[(VGS−Vt)VDS − VDS^2/2]를 VDS로 미분해 0으로 두면 VDS = VGS−Vt에서 극대가 되며, 이때 드레인 단 반전층 전하가 0(핀치오프)이 된다. 이 경계 전압이 VDS,sat = VGS−Vt = 과구동전압(overdrive)이다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: '드레인 전압이 VDS = VGS − Vt에 도달했을 때 드레인 단에서 일어나는 현상으로 옳은 것은?'
+    choices:
+      - '소스 단 반전층이 사라진다'
+      - '산화막이 항복한다'
+      - '채널 전체가 균일하게 두꺼워진다'
+      - '드레인 단 반전층 전하가 0이 되어 채널이 핀치오프된다'
+    answer: 3
+    glossary:
+      - 'VGD｜｜게이트-드레인 전압, 드레인 단 국소 과구동을 결정'
+    explanation: '드레인 단의 국소 게이트-채널 전압이 VGD = VGS−VDS = Vt가 되면 그 지점 반전층 전하 Qn ∝ (VGD−Vt) = 0이 되어 채널이 드레인 쪽에서 핀치오프된다. 소스 단은 여전히 반전 상태이고, 산화막 항복이나 균일 두꺼워짐과는 무관하다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: '이상적(채널길이변조 무시) 장채널 NMOS의 포화 영역에서 드레인 전류 ID는 VDS에 대해 어떻게 거동하는가?'
+    choices:
+      - 'VDS와 거의 무관하게 일정하다(전류원처럼 동작)'
+      - 'VDS에 비례해 계속 증가한다'
+      - 'VDS^2에 비례한다'
+      - 'VDS가 커지면 감소한다'
+    answer: 0
+    glossary:
+      - '포화 영역｜｜VDS ≥ VGS−Vt에서 전류가 거의 일정해지는 영역'
+    explanation: '핀치오프 이후 추가 VDS는 핀치오프점-드레인 사이 공핍 영역에 대부분 걸리고 채널 전압 강하는 거의 VDS,sat로 고정되어, 이상적으로는 ID가 VDS에 무관한 일정 전류(전류원)로 포화한다. 실제로는 채널길이변조로 약하게 증가하지만 비례·제곱·감소는 아니다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: '실제 포화 영역에서 ID가 VDS에 따라 미세하게 증가하는 현상을 ID = (1/2)k''(W/L)(VGS−Vt)^2·(1+λVDS)로 모델링한다. 여기서 λ가 반영하는 효과는?'
+    choices:
+      - '산화막 고정전하'
+      - '유효 채널길이가 VDS 증가에 따라 줄어드는 채널길이변조'
+      - '계면 트랩 충전'
+      - '게이트 누설전류'
+    answer: 1
+    glossary:
+      - '채널길이변조｜｜VDS 증가로 유효 채널길이가 단축되는 효과'
+      - 'λ｜｜채널길이변조 계수'
+    explanation: 'VDS가 커지면 핀치오프점이 소스 쪽으로 이동해 유효 채널길이 L이 줄고, ID ∝ 1/L 이므로 전류가 약간 증가한다. λ는 이 채널길이변조를 나타내며 출력 컨덕턴스/얼리 전압과 연결된다. 고정전하·트랩·게이트 누설은 별개의 메커니즘이다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: '장채널 NMOS 포화전류가 ID = (1/2)k(W/L)(VGS − Vt)^2 (k = μnCox)일 때, 다른 조건이 동일하고 과구동전압(VGS−Vt)을 2배로 하면 ID는 몇 배가 되는가?'
+    choices:
+      - '2배'
+      - '1/2배'
+      - '4배'
+      - '변화 없음'
+    answer: 2
+    explanation: '포화전류는 (VGS−Vt)^2 의 제곱 법칙을 따르므로 과구동을 2배 하면 ID는 4배가 된다. 이 제곱 의존성이 MOSFET 포화 영역의 비선형성과 gm의 (VGS−Vt) 비례를 만든다. 2배·1/2배·불변은 선형 또는 무의존 가정으로 틀리다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: '포화전류 ID = (1/2)μnCox(W/L)(VGS−Vt)^2 에서 채널폭 W를 2배, 채널길이 L을 2배로 동시에 바꾸면 ID는?'
+    choices:
+      - '4배가 된다'
+      - '1/4배가 된다'
+      - '2배가 된다'
+      - '변하지 않는다'
+    answer: 3
+    glossary:
+      - 'W/L｜｜채널 폭 대 길이 비(종횡비, aspect ratio)'
+    explanation: 'ID는 종횡비 W/L에 비례하는데 W와 L을 모두 2배로 하면 W/L = (2W)/(2L)이 원래와 같아 ID는 변하지 않는다. W만 키우면 증가, L만 키우면 감소한다. 절대 치수가 아니라 비율이 전류를 결정한다는 점이 핵심이다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: 'MOSFET의 트랜스컨덕턴스 gm을 가장 정확히 정의한 것은?'
+    choices:
+      - 'gm = ∂ID/∂VGS (VDS 고정)'
+      - 'gm = ∂ID/∂VDS (VGS 고정)'
+      - 'gm = ∂VGS/∂ID'
+      - 'gm = ID/VGS'
+    answer: 0
+    glossary:
+      - 'gm｜｜트랜스컨덕턴스, 게이트 전압→드레인 전류 변환 이득 [S]'
+    explanation: 'gm은 동작점에서 VDS를 고정한 채 게이트 전압 변화에 대한 드레인 전류의 변화율 ∂ID/∂VGS로 정의되는 소신호 파라미터다. ∂ID/∂VDS는 출력 컨덕턴스 go, 단순 비 ID/VGS는 소신호 미분이 아니므로 모두 gm 정의가 아니다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: '포화전류 ID = (1/2)μnCox(W/L)(VGS−Vt)^2 를 VGS로 미분해 얻는 포화 영역 gm은? (채널길이변조 무시)'
+    choices:
+      - 'gm = (1/2)μnCox(W/L)(VGS − Vt)^2'
+      - 'gm = μnCox(W/L)(VGS − Vt)'
+      - 'gm = μnCox(W/L)·Vt'
+      - 'gm = μnCox(W/L)·VDS'
+    answer: 1
+    explanation: 'ID를 VGS로 미분하면 gm = ∂ID/∂VGS = μnCox(W/L)(VGS−Vt)로, 과구동전압에 선형 비례한다. 이는 ID = (1/2)k(W/L)(VGS−Vt)^2의 직접 미분 결과다. 보기 1은 ID 자체, 나머지는 미분 결과가 아니다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: '포화 영역에서 gm = μnCox(W/L)(VGS−Vt)이고 ID = (1/2)μnCox(W/L)(VGS−Vt)^2 이다. gm을 ID로 표현하면?'
+    choices:
+      - 'gm = 2·ID/(VGS+Vt)'
+      - 'gm = ID^2 · μnCox'
+      - 'gm = √(2·μnCox·(W/L)·ID)'
+      - 'gm = ID/(2·VDS)'
+    answer: 2
+    explanation: '두 식에서 (VGS−Vt)를 소거하면 gm = √(2μnCox(W/L)ID) = 2ID/(VGS−Vt)가 된다. 즉 포화에서 gm은 √ID에 비례한다(전류를 4배 하면 gm은 2배). 보기 1은 분모가 (VGS−Vt)가 아니라 틀리고, 나머지도 유도 결과와 다르다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: '트라이오드(선형) 영역 ID = μnCox(W/L)[(VGS−Vt)VDS − VDS^2/2]에서 gm = ∂ID/∂VGS는?'
+    choices:
+      - 'gm = μnCox(W/L)(VGS − Vt)'
+      - 'gm = (1/2)μnCox(W/L)·VDS^2'
+      - 'gm = 0'
+      - 'gm = μnCox(W/L)·VDS'
+    answer: 3
+    explanation: '트라이오드 식을 VGS로 미분하면 (VGS−Vt)VDS 항만 남아 gm = μnCox(W/L)·VDS가 된다. 즉 선형 영역의 gm은 VDS에 비례하며 작은 값이다. 포화 영역과 달리 (VGS−Vt)가 아니라 VDS에 의존하는 것이 핵심 차이다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: '포화영역 MOSFET에서 채널길이변조계수 λ가 출력저항 ro에 미치는 영향으로 옳은 것은? (드레인 전류 ID는 일정하다고 가정)'
+    choices:
+      - 'ro = 1/(λ·ID) 이므로 λ가 클수록 ro가 작아진다'
+      - 'ro = λ·ID 이므로 λ가 클수록 ro가 커진다'
+      - 'ro = 1/(λ·ID) 이므로 λ가 클수록 ro가 커진다'
+      - 'ro는 λ와 무관하고 gm에만 의존한다'
+    answer: 0
+    glossary:
+      - '채널길이변조｜｜드레인 전압이 커지면 포화영역에서도 유효 채널길이가 약간 줄어 ID가 VDS에 따라 완만히 증가하는 현상'
+    explanation: '채널길이변조를 포함하면 ID ≈ (1/2)k''(W/L)(VGS−Vt)²(1+λ·VDS)가 되고, 소신호 출력저항은 ro = 1/(∂ID/∂VDS) ≈ 1/(λ·ID)이다. 따라서 λ가 클수록 ro는 작아진다. λ·ID 형태(보기2)는 차원이 컨덕턴스라 틀리고, ro는 λ에 의존하므로 보기4도 틀리다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: '동일 공정에서 채널길이 L만 길게 만든 MOSFET의 채널길이변조 효과에 대한 설명으로 옳은 것은?'
+    choices:
+      - 'L이 길수록 λ가 커져 출력저항 ro가 작아진다'
+      - 'L이 길수록 λ가 작아져 출력저항 ro가 커진다'
+      - 'λ는 L과 무관하므로 ro도 변하지 않는다'
+      - 'L이 길수록 ID가 커져 ro가 커진다'
+    answer: 1
+    glossary:
+      - '출력저항 ro｜｜드레인 전압 변화에 대한 드레인 전류 변화의 역수로, 포화영역 전류-전압 곡선의 기울기 역수'
+    explanation: '채널길이변조는 드레인 부근 공핍영역에 의한 채널길이 축소량 ΔL이 전체 L에서 차지하는 비율(ΔL/L)로 나타나며 λ ∝ 1/L 경향을 가진다. 따라서 L이 길면 λ가 작아지고 ro = 1/(λ·ID)는 커진다. 그래서 아날로그 회로에서 큰 출력저항이 필요할 때 긴 채널을 쓴다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: 'MOSFET의 Early 전압 VA와 채널길이변조계수 λ의 관계 및 출력저항 표현으로 옳은 것은?'
+    choices:
+      - 'VA = λ, ro = λ/ID'
+      - 'VA = λ·ID, ro = 1/VA'
+      - 'VA = 1/λ, ro = VA/ID'
+      - 'VA = 1/λ, ro = ID/VA'
+    answer: 2
+    glossary:
+      - 'Early 전압｜｜포화영역 출력특성 직선들을 연장했을 때 전압축에서 만나는 점의 크기로, BJT의 Early 효과에서 유래한 명칭'
+    explanation: '포화영역 ID-VDS 곡선을 외삽하면 전압축의 음의 절편이 −VA이며 VA = 1/λ로 정의된다. 출력저항은 ro = VA/ID = 1/(λ·ID)로 표현된다. 따라서 VA = 1/λ이고 ro = VA/ID가 맞다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: 'MOSFET 바디효과계수 γ에 대한 설명으로 가장 옳은 것은? (NA: 기판 도핑농도, Cox: 단위면적 산화막 커패시턴스)'
+    choices:
+      - 'γ = √(2·q·εs·NA)·Cox 이며, 산화막이 두꺼울수록 작아진다'
+      - 'γ = Cox/√(2·q·εs·NA) 이며, 도핑과 무관하다'
+      - 'γ = 2·q·NA/(εs·Cox) 이며, 도핑에 비례한다'
+      - 'γ = √(2·q·εs·NA)/Cox 이며, 기판 도핑이 높을수록 커진다'
+    answer: 3
+    glossary:
+      - '바디효과계수 γ｜｜소스-바디 역바이어스가 문턱전압을 얼마나 끌어올리는지 결정하는 비례상수, 단위는 √V'
+    explanation: '바디효과계수는 γ = √(2·q·εs·NA)/Cox로 정의되며 단위는 √V이다. 기판 도핑 NA가 높을수록 γ가 커지고, Cox가 작을(산화막이 두꺼울)수록 γ가 커진다. 보기2는 Cox가 분자에 있어 두꺼운 산화막에서 γ가 작아진다는 결론이 틀리다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: 'MOSFET에서 바디효과(body effect)가 발생하는 근본 원인으로 가장 옳은 것은?'
+    choices:
+      - '소스-바디 역바이어스 VSB가 커지면 공핍영역 전하가 늘어 반전에 필요한 게이트 전압이 증가하기 때문'
+      - '게이트 산화막 두께가 온도에 따라 변하기 때문'
+      - '드레인 전압이 채널길이를 줄이기 때문'
+      - '게이트 누설전류가 산화막을 통해 흐르기 때문'
+    answer: 0
+    glossary:
+      - '공핍전하 QB｜｜채널 아래 공핍영역에 존재하는 이온화된 억셉터/도너에 의한 고정 전하'
+    explanation: '소스-바디 간 역바이어스 VSB가 인가되면 채널 아래 공핍영역이 넓어지고 그 안의 고정 공핍전하(QB)가 증가한다. 이 추가 전하를 보상하려면 더 큰 게이트 전압이 필요하므로 문턱전압 Vt가 상승한다. 이것이 바디효과의 핵심 원인이며, 보기3(채널길이변조)·보기4(터널링)와는 다른 현상이다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: 'n채널 MOSFET에서 Vt = Vt0 + γ(√(2φF+VSB) − √(2φF))로 주어진다. γ=0.5 √V, 2φF=0.8 V, Vt0=0.6 V일 때, VSB=1.0 V에서의 문턱전압 Vt는 약 얼마인가? (√0.8≈0.894, √1.8≈1.342)'
+    choices:
+      - '약 0.42 V'
+      - '약 0.82 V'
+      - '약 0.60 V'
+      - '약 1.34 V'
+    answer: 1
+    glossary:
+      - 'φF｜｜페르미 전위, 기판의 진성 페르미준위와 실제 페르미준위 사이의 전위차'
+    explanation: 'ΔVt = γ(√(2φF+VSB) − √(2φF)) = 0.5×(√1.8 − √0.8) = 0.5×(1.342 − 0.894) = 0.5×0.448 ≈ 0.224 V. 따라서 Vt = 0.6 + 0.224 ≈ 0.82 V. VSB가 양(+)이면 Vt는 항상 증가하므로 Vt0보다 작아지는 보기1은 불가능하다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: 'n채널 enhancement MOSFET에서 소스-바디 역바이어스 VSB를 0에서 점점 증가시킬 때 문턱전압 Vt의 변화 경향으로 옳은 것은?'
+    choices:
+      - 'VSB에 선형으로 비례하여 증가한다'
+      - 'VSB가 커질수록 Vt가 감소한다'
+      - '√(2φF+VSB) 형태로 증가하되 증가율(기울기)은 점점 완만해진다'
+      - 'VSB와 무관하게 일정하다'
+    answer: 2
+    explanation: 'Vt = Vt0 + γ(√(2φF+VSB) − √(2φF))에서 Vt는 √(2φF+VSB)에 비례해 증가한다. 제곱근 함수이므로 VSB가 커질수록 dVt/dVSB = γ/(2√(2φF+VSB))는 작아져 증가율이 완만해진다. 선형 증가(보기1)나 감소(보기3)가 아니다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: 'n채널 MOSFET의 바디효과에서 일반적으로 ''VSB > 0''(소스가 바디보다 높음)인 조건이 의미하는 바와 그 결과로 옳은 것은?'
+    choices:
+      - '바디-소스 접합이 순바이어스되어 Vt가 감소한다'
+      - 'VSB>0이면 채널이 즉시 차단되어 ID=0이 된다'
+      - 'VSB는 Vt에 영향을 주지 않고 gm만 변화시킨다'
+      - '바디-소스 접합이 역바이어스되어 Vt가 증가한다'
+    answer: 3
+    glossary:
+      - 'VSB｜｜소스 기준 바디 전압이 아니라 바디 기준 소스 전압(VS−VB)으로, n채널에서 양(+)이면 역바이어스'
+    explanation: 'n채널에서 바디(p형)는 보통 소스보다 낮거나 같게 둔다. VSB>0이면 p바디-n소스 접합이 역바이어스되어 공핍영역과 공핍전하가 늘고, 그 결과 Vt가 상승한다. 순바이어스(보기1)는 접합 누설을 유발하므로 정상 동작에서 피한다.'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: 'MOSFET 공정 천이컨덕턴스 파라미터 k'' = μ·Cox 에 대한 설명으로 옳은 것은?'
+    choices:
+      - 'k''은 이동도 μ와 단위면적 산화막 커패시턴스 Cox의 곱으로, 공정으로 결정되는 파라미터이다'
+      - 'k''은 채널폭 W와 길이 L에 의존하는 소자 치수 파라미터이다'
+      - 'k''은 단위가 [V]이며 문턱전압과 같은 차원을 갖는다'
+      - 'k''은 드레인 전류와 같은 차원([A])을 갖는다'
+    answer: 0
+    glossary:
+      - '천이컨덕턴스 파라미터｜｜드레인 전류 식의 비례상수로, MOSFET의 전류 구동능력을 나타내는 척도'
+    explanation: 'k'' = μ·Cox는 캐리어 이동도와 단위면적 게이트 커패시턴스의 곱으로, W·L 같은 레이아웃 치수와 무관하게 공정이 정하는 파라미터다(단위 A/V²). 소자별 전류능력은 k''에 (W/L)을 곱한 k = k''(W/L)로 표현되므로, k''은 치수에 무관하다(보기1 오류).'
+    tags: [engineering, semiconductor]
+  - type: mcq
+    q: '동일 공정의 NMOS와 PMOS에서 k''n = μn·Cox, k''p = μp·Cox를 비교할 때 일반적으로 옳은 것은?'
+    choices:
+      - '정공 이동도가 더 커서 k''p > k''n 이다'
+      - '전자 이동도 μn > 정공 이동도 μp 이므로 k''n > k''p 이다'
+      - 'Cox가 다르기 때문에 항상 k''n = k''p 이다'
+      - 'k''은 이동도와 무관하므로 NMOS·PMOS가 같다'
+    answer: 1
+    glossary:
+      - '이동도 μ｜｜단위 전기장당 캐리어의 평균 드리프트 속도, 단위 cm²/(V·s)'
+    explanation: '실리콘에서 전자 이동도(μn)는 정공 이동도(μp)보다 약 2~3배 크다. 동일 공정이면 Cox는 같으므로 k''n = μn·Cox > k''p = μp·Cox가 된다. 그래서 같은 전류를 내려면 PMOS의 W/L을 더 크게 설계한다.'
+    tags: [engineering, semiconductor]

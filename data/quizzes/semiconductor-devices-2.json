@@ -1,0 +1,974 @@
+{
+  "meta": {
+    "title": "반도체소자(심화) 2",
+    "version": "1.0.0",
+    "default_time": 45,
+    "set_time": 1750,
+    "tags": [
+      "engineering",
+      "semiconductor",
+      "device-advanced"
+    ],
+    "source": "대학 학부 전공 표준 범위(공개 강의목차·교재 기반, exa 리서치 + 멀티에이전트 생성). 특정 상용 교재 본문 미복제."
+  },
+  "questions": [
+    {
+      "type": "mcq",
+      "q": "초박막 SiO₂ 게이트 산화막에서 direct tunneling에 의한 게이트 누설 전류 밀도 J_g의 산화막 두께 t_ox 의존성으로 가장 옳은 것은?",
+      "choices": [
+        "t_ox에 선형 비례하여 증가한다",
+        "t_ox의 제곱에 반비례한다",
+        "t_ox가 줄면 대략 지수적으로(exp(-t_ox)에 비례) 급격히 증가한다",
+        "t_ox와 무관하고 게이트 전압에만 의존한다"
+      ],
+      "answer": 2,
+      "glossary": [
+        "direct tunneling｜｜충분히 얇은 장벽을 전자가 그대로 통과하는 양자 터널링"
+      ],
+      "explanation": "직접 터널링 확률은 장벽을 통과하는 전자파의 감쇠로 결정되며, 투과율이 exp(-2κ·t_ox) 형태로 산화막 두께에 지수적으로 의존한다. 따라서 t_ox를 줄이면 J_g가 지수적으로 폭증한다. 선형·제곱 의존이나 두께 무관 보기는 터널링의 본질을 놓친 오답이다.",
+      "tags": [
+        "engineering",
+        "semiconductor"
+      ]
+    },
+    {
+      "type": "mcq",
+      "q": "게이트 산화막을 계속 얇게 만들 때 칩 설계에서 직접적으로 한계로 작용하는 현상은?",
+      "choices": [
+        "채널 이동도 증가로 인한 동작 속도 포화",
+        "소스/드레인 직렬저항의 급격한 감소",
+        "게이트 커패시턴스 감소로 인한 구동전류 저하",
+        "게이트 누설 전류 증가로 인한 standby(정적) power 증가"
+      ],
+      "answer": 3,
+      "glossary": [
+        "standby power｜｜회로가 스위칭하지 않고 정지 상태일 때 누설로 소비되는 전력"
+      ],
+      "explanation": "산화막이 얇아지면 터널링 게이트 누설이 지수적으로 늘어 트랜지스터가 꺼져 있어도 흐르는 정적(standby) 전력이 급증해 전체 power budget을 잠식한다. 이 때문에 ~1.2 nm 이하에서 SiO₂를 high-k(HfO₂)로 대체하게 되었다. 이동도·직렬저항·구동전류 보기는 게이트 누설 power 한계와 직접 관련이 없다.",
+      "tags": [
+        "engineering",
+        "semiconductor"
+      ]
+    },
+    {
+      "type": "mcq",
+      "q": "동일한 게이트 정전용량(C_ox)을 유지하면서 게이트 누설을 줄이기 위해 SiO₂ 대신 HfO₂ 같은 high-k 유전체를 쓰는 핵심 이유는?",
+      "choices": [
+        "유전상수가 커서 같은 EOT를 더 두꺼운 물리적 두께로 구현해 터널링을 억제",
+        "유전상수가 작아 전기적 두께를 늘릴 수 있어서",
+        "밴드갭이 SiO₂보다 커서 누설이 줄기 때문",
+        "열전도도가 높아 self-heating을 줄이기 때문"
+      ],
+      "answer": 0,
+      "glossary": [
+        "EOT｜｜high-k 막을 같은 정전용량의 SiO₂ 두께로 환산한 전기적 등가 산화막 두께",
+        "high-k｜｜SiO₂보다 유전상수가 높은 게이트 절연막 물질"
+      ],
+      "explanation": "C_ox = ε/t에서 유전상수 ε이 크면 같은 정전용량(같은 EOT)을 더 두꺼운 물리 두께로 얻을 수 있고, 물리 두께가 두꺼워지면 터널링 누설이 지수적으로 감소한다. high-k는 오히려 밴드갭이 SiO₂보다 작은 경우가 많으므로 밴드갭 보기는 틀리고, 도입 동기는 열전도가 아니라 정전용량 대비 두께 확보다.",
+      "tags": [
+        "engineering",
+        "semiconductor"
+      ]
+    },
+    {
+      "type": "mcq",
+      "q": "고농도로 도핑된 p-n 접합에 역방향 전압을 인가했을 때, 좁고 강한 전계에서 가전자대 전자가 전도대로 직접 터널링하여 발생하는 누설 성분은?",
+      "choices": [
+        "diffusion 누설",
+        "band-to-band tunneling(BTBT) 누설",
+        "thermionic emission 누설",
+        "avalanche 항복에 의한 누설"
+      ],
+      "answer": 1,
+      "glossary": [
+        "band-to-band tunneling｜｜강한 전계에서 가전자대 전자가 밴드갭을 직접 터널링해 전도대로 넘어가는 현상"
+      ],
+      "explanation": "역방향 강한 전계에서 공핍층이 매우 얇아지면 가전자대 전자가 밴드갭을 가로질러 전도대로 직접 양자 터널링하는 BTBT가 일어난다. diffusion·thermionic은 열적 과정이고, avalanche는 충돌 이온화로 인한 별개 항복 기구이므로 직접 터널링 누설과 구분된다.",
+      "tags": [
+        "engineering",
+        "semiconductor"
+      ]
+    },
+    {
+      "type": "mcq",
+      "q": "접합 공핍영역 내 깊은 준위(deep-level) 결함이 매개가 되어 누설 전류를 높이는 trap-assisted tunneling(TAT)에 대한 설명으로 옳은 것은?",
+      "choices": [
+        "결함이 많을수록 누설이 줄어든다",
+        "전계 세기와 무관하게 일정하다",
+        "결함 준위를 디딤돌 삼아 2단계 터널링이 일어나 유효 터널링 장벽이 낮아진다",
+        "오직 순방향 바이어스에서만 나타난다"
+      ],
+      "answer": 2,
+      "glossary": [
+        "trap-assisted tunneling｜｜밴드갭 내 결함 준위를 경유해 2단계로 일어나는 터널링",
+        "deep-level｜｜밴드갭 중앙 부근에 위치한 결함 에너지 준위"
+      ],
+      "explanation": "TAT는 밴드갭 내 trap 준위를 중간 발판으로 삼아 전자가 두 번에 나눠 터널링하므로, 직접 BTBT보다 유효 장벽 높이/폭이 줄어 같은 전계에서 누설이 커진다. 결함이 많을수록 누설은 늘고, 전계 의존성이 있으며, 역방향 접합 누설의 주요 성분이므로 나머지 보기는 틀리다.",
+      "tags": [
+        "engineering",
+        "semiconductor"
+      ]
+    },
+    {
+      "type": "mcq",
+      "q": "MOSFET에서 게이트와 드레인이 겹치는 영역의 강한 전계로 인해 드레인 접합에서 BTBT 누설이 일어나는 현상을 무엇이라 하는가?",
+      "choices": [
+        "DIBL",
+        "punchthrough",
+        "latch-up",
+        "GIDL(Gate-Induced Drain Leakage)"
+      ],
+      "answer": 3,
+      "glossary": [
+        "GIDL｜｜게이트가 유발하는 드레인 접합의 터널링 누설 전류"
+      ],
+      "explanation": "게이트가 드레인을 음(off)으로 바이어스할 때 게이트-드레인 중첩부 표면 전계가 강해져 드레인 접합에서 band-to-band tunneling 누설이 발생하는 것이 GIDL이다. DIBL은 문턱전압 저하 현상, punchthrough는 공핍층 관통, latch-up은 기생 SCR 도통으로 별개 현상이다.",
+      "tags": [
+        "engineering",
+        "semiconductor"
+      ]
+    },
+    {
+      "type": "mcq",
+      "q": "Dennard의 constant-field scaling에서 모든 치수를 1/k로 줄일 때, 전원전압 V와 기판 도핑 N_A는 각각 어떻게 변하는가?",
+      "choices": [
+        "V → V/k, N_A → N_A·k",
+        "V → V·k, N_A → N_A/k",
+        "V → V/k, N_A → N_A/k",
+        "V와 N_A 모두 변하지 않는다"
+      ],
+      "answer": 0,
+      "glossary": [
+        "constant-field scaling｜｜내부 전계를 일정하게 유지하며 모든 치수·전압을 같은 비율로 줄이는 Dennard 스케일링"
+      ],
+      "explanation": "전계를 일정하게 유지하려면 V는 치수와 같은 비율 1/k로 줄이고, 공핍층도 함께 축소시키기 위해 도핑 N_A는 k배로 키운다(V/k, N_A·k). 그래야 E=V/L이 보존된다. 전압을 키우거나 도핑을 줄이면 전계가 유지되지 않으므로 나머지 보기는 틀리다.",
+      "tags": [
+        "engineering",
+        "semiconductor"
+      ]
+    },
+    {
+      "type": "mcq",
+      "q": "이상적인 Dennard constant-field scaling(치수·전압 1/k)에서 단위면적당 소비전력(power density)은 어떻게 변하는가?",
+      "choices": [
+        "k²배 증가한다",
+        "거의 일정하게 유지된다",
+        "1/k²로 감소한다",
+        "k배 증가한다"
+      ],
+      "answer": 1,
+      "glossary": [
+        "power density｜｜단위 칩 면적당 소비 전력"
+      ],
+      "explanation": "전력은 면적과 함께 1/k²로 줄고 면적도 1/k²로 줄어, 단위면적당 전력(power density)은 일정하게 유지되는 것이 Dennard scaling의 핵심 이점이다. 전압이 안 줄어드는 fixed-voltage 영역에서야 power density가 폭증하므로, 이상적 스케일링에서 power density 일정이 정답이다.",
+      "tags": [
+        "engineering",
+        "semiconductor"
+      ]
+    },
+    {
+      "type": "mcq",
+      "q": "Dennard constant-field scaling에서 치수를 1/k로 줄였을 때 게이트 지연시간(τ ∝ CV/I)은 대략 어떻게 변하는가?",
+      "choices": [
+        "k배 늘어 속도가 느려진다",
+        "변하지 않는다",
+        "1/k로 줄어 회로 속도가 k배 빨라진다",
+        "1/k²로 줄어든다"
+      ],
+      "answer": 2,
+      "explanation": "이상적 스케일링에서 게이트 커패시턴스 C는 1/k, 전압 V는 1/k, 구동전류 I는 거의 일정하므로 τ ∝ CV/I ∝ 1/k로 줄어 회로 속도가 k배 향상된다. 이것이 미세화가 속도 이득을 주는 근거이며, 나머지 보기는 스케일링 관계를 잘못 적용했다.",
+      "tags": [
+        "engineering",
+        "semiconductor"
+      ]
+    },
+    {
+      "type": "mcq",
+      "q": "전압을 치수만큼 줄이지 못하는 상황에서 사용하는 generalized scaling의 특징으로 옳은 것은?",
+      "choices": [
+        "치수와 전압을 모두 동일 비율로 줄여 전계를 일정하게 유지한다",
+        "전압만 줄이고 치수는 그대로 둔다",
+        "도핑을 줄여 공핍층을 넓힌다",
+        "치수는 1/k, 전압은 1/k보다 덜 줄여 내부 전계가 의도적으로 증가하는 것을 허용한다"
+      ],
+      "answer": 3,
+      "glossary": [
+        "generalized scaling｜｜전계를 독립 변수로 두어 전압을 치수만큼 못 줄일 때 전계 증가를 허용하는 일반화 스케일링"
+      ],
+      "explanation": "generalized scaling은 전원전압을 치수만큼 비례 축소하지 못하는 현실에서, 치수는 1/k로 줄이되 전압은 그보다 덜 줄여 전계가 인자 만큼 커지는 것을 허용한다(E = κ·E₀). 전계 일정은 constant-field이고, 도핑을 줄이는 것은 전계 보존에 역행하므로 오답이다.",
+      "tags": [
+        "engineering",
+        "semiconductor"
+      ]
+    },
+    {
+      "type": "mcq",
+      "q": "generalized scaling으로 내부 전계가 증가할 때 함께 악화되는 nonscaling 부작용으로 보기 어려운 것은?",
+      "choices": [
+        "subthreshold swing의 이론적 하한이 60 mV/dec보다 낮아짐",
+        "hot-carrier 열화 증가",
+        "산화막 신뢰성(TDDB) 저하",
+        "동적 power density 증가"
+      ],
+      "answer": 0,
+      "glossary": [
+        "TDDB｜｜시간 의존 절연 파괴, 산화막이 전계 스트레스로 점차 파괴되는 신뢰성 문제",
+        "subthreshold swing｜｜게이트 전압 변화당 드레인 전류가 10배 변하는 데 필요한 전압(mV/dec)"
+      ],
+      "explanation": "전계가 커지면 hot-carrier 손상, 게이트 산화막 TDDB 신뢰성 저하, power density 증가 등 nonscaling 부작용이 심해진다. 반면 subthreshold swing의 상온 이론 하한 ~60 mV/dec(kT/q·ln10)는 열적 한계로 전계 증가로 더 낮아지지 않으므로 이 보기가 옳지 않은 설명이다.",
+      "tags": [
+        "engineering",
+        "semiconductor"
+      ]
+    },
+    {
+      "type": "mcq",
+      "q": "전원전압을 낮추기 위해 문턱전압 V_T를 함께 낮출 때 발생하는 가장 큰 부작용은?",
+      "choices": [
+        "구동전류가 감소하여 속도가 느려진다",
+        "subthreshold 누설(off 전류)이 지수적으로 증가하여 standby power가 커진다",
+        "게이트 산화막 두께가 자동으로 증가한다",
+        "DIBL이 완전히 사라진다"
+      ],
+      "answer": 1,
+      "glossary": [
+        "subthreshold 누설｜｜문턱전압 이하에서 트랜지스터가 off일 때 흐르는 전류"
+      ],
+      "explanation": "off 전류는 exp(-V_T/(S/ln10))처럼 V_T에 지수적으로 의존하므로, V_T를 낮추면 subthreshold 누설이 급증해 정적(standby) power가 커진다. 이 때문에 V_DD와 V_T 비례 축소에는 한계가 있다. V_T 인하는 오히려 구동전류를 늘리고 산화막·DIBL과는 직접 인과가 다르다.",
+      "tags": [
+        "engineering",
+        "semiconductor"
+      ]
+    },
+    {
+      "type": "mcq",
+      "q": "전원전압 V_DD를 낮출 때 동적(active)·정적(standby) power 사이의 trade-off로 옳은 것은?",
+      "choices": [
+        "V_DD를 낮추면 동적·정적 power가 모두 단조 증가한다",
+        "V_DD는 동적 power와 무관하다",
+        "V_DD를 낮추면 동적 power(∝CV²f)는 줄지만, 함께 V_T를 낮추면 정적 누설 power가 늘어난다",
+        "정적 power는 V_T와 무관하다"
+      ],
+      "answer": 2,
+      "explanation": "동적 power는 CV_DD²f이므로 V_DD를 낮추면 크게 줄지만, 속도를 유지하려고 V_T까지 낮추면 subthreshold 누설(정적 power)이 지수적으로 늘어난다. 이 둘 사이의 절충이 저전력 설계의 핵심이며, 동적 power가 V_DD²에 의존하고 정적 power가 V_T에 강하게 의존한다는 점에서 나머지는 틀리다.",
+      "tags": [
+        "engineering",
+        "semiconductor"
+      ]
+    },
+    {
+      "type": "mcq",
+      "q": "polysilicon 게이트 MOSFET에서 실제 유효 게이트 정전용량이 설계값보다 작아져 EOT가 증가하는 poly-depletion 효과의 원인은?",
+      "choices": [
+        "산화막이 결정화되어 유전상수가 커진다",
+        "채널 도핑이 사라지기 때문",
+        "게이트 금속의 일함수가 변하기 때문",
+        "게이트 다결정 실리콘 표면에 공핍층이 형성되어 직렬 커패시턴스가 추가된다"
+      ],
+      "answer": 3,
+      "glossary": [
+        "poly-depletion｜｜폴리실리콘 게이트 내부에 공핍층이 생겨 유효 게이트 용량이 감소하는 효과"
+      ],
+      "explanation": "poly 게이트는 도체가 아닌 반도체이므로 반전 동작 시 게이트 측에도 얇은 공핍층이 생겨, 이 공핍 커패시턴스가 산화막 커패시턴스와 직렬로 더해져 유효 C_ox가 줄고 EOT가 커진다. 그래서 metal gate로 대체한다. 산화막 결정화·채널 도핑 소멸·일함수 변화는 poly-depletion의 본질이 아니다.",
+      "tags": [
+        "engineering",
+        "semiconductor"
+      ]
+    },
+    {
+      "type": "mcq",
+      "q": "반전층 전하의 양자역학적 양자화(quantum confinement)가 EOT 산정에 영향을 주는 이유는?",
+      "choices": [
+        "반전 전하 중심이 계면에서 약간 떨어져 분포해 유효 산화막 두께가 증가하는 효과를 준다",
+        "전자 유효질량이 0이 되기 때문",
+        "산화막 두께가 물리적으로 두꺼워지기 때문",
+        "도핑 농도가 무한대가 되기 때문"
+      ],
+      "answer": 0,
+      "glossary": [
+        "quantum confinement｜｜얇은 반전층에서 전자 에너지가 이산화되어 전하 분포가 계면에서 떨어지는 양자효과"
+      ],
+      "explanation": "양자화로 인해 반전층 전자의 분포 중심이 Si/SiO₂ 계면에서 약간 안쪽으로 들어가, 그 거리만큼 추가적인 유전체 두께처럼 작용해 유효 EOT가 커진다(보통 0.3~0.4 nm 수준). 유효질량 소멸·물리 두께 변화·도핑 무한대는 사실과 다르다.",
+      "tags": [
+        "engineering",
+        "semiconductor"
+      ]
+    },
+    {
+      "type": "mcq",
+      "q": "partially-depleted(PD) SOI와 fully-depleted(FD) SOI의 body 전위 차이를 가장 잘 설명한 것은?",
+      "choices": [
+        "FD-SOI만 floating body가 있고 PD-SOI는 없다",
+        "PD-SOI는 공핍되지 않은 중성 body가 남아 floating body 전위가 떠돌고, FD-SOI는 박막 body가 완전 공핍되어 body 전위 변동이 거의 없다",
+        "둘 다 body가 항상 접지된다",
+        "PD-SOI의 body가 FD-SOI보다 더 얇다"
+      ],
+      "answer": 1,
+      "glossary": [
+        "partially-depleted SOI｜｜실리콘 막이 두꺼워 일부만 공핍되고 중성 body가 남는 SOI",
+        "fully-depleted SOI｜｜얇은 실리콘 막 전체가 공핍되는 SOI"
+      ],
+      "explanation": "PD-SOI는 실리콘 막이 두꺼워 공핍층이 막 전체를 덮지 못해 중성 body가 남고, 이 floating body 전위가 떠다니며 kink 등 불안정을 유발한다. FD-SOI는 막이 얇아 완전 공핍되어 body 전위가 거의 고정된다. body가 더 얇은 쪽은 FD이고, floating body 문제는 PD에서 두드러진다.",
+      "tags": [
+        "engineering",
+        "semiconductor"
+      ]
+    },
+    {
+      "type": "mcq",
+      "q": "PD-SOI MOSFET의 출력특성(I_D-V_DS)에 나타나는 kink 효과의 발생 메커니즘은?",
+      "choices": [
+        "게이트 산화막이 파괴되어 전류가 튀기 때문",
+        "BOX 산화막이 자가 치유되기 때문",
+        "충돌 이온화로 생성된 정공이 floating body에 축적되어 body 전위를 올리고 문턱전압을 낮춰 전류가 갑자기 증가",
+        "채널 이동도가 갑자기 0이 되기 때문"
+      ],
+      "answer": 2,
+      "glossary": [
+        "kink 효과｜｜floating body 전위 상승으로 출력특성에 전류가 꺾여 증가하는 현상"
+      ],
+      "explanation": "높은 V_DS에서 충돌 이온화로 생긴 정공이 빠져나갈 body contact가 없어 floating body에 쌓이면 body 전위가 상승하고, 이는 V_T를 낮춰 I_D가 갑자기 꺾여 올라가는 kink를 만든다. 산화막 파괴·BOX 치유·이동도 소멸은 kink의 원인이 아니다.",
+      "tags": [
+        "engineering",
+        "semiconductor"
+      ]
+    },
+    {
+      "type": "mcq",
+      "q": "SOI 소자가 bulk 소자보다 self-heating(자기발열) 문제가 심한 근본 원인은?",
+      "choices": [
+        "SOI 채널의 전류 밀도가 항상 0이기 때문",
+        "BOX가 금속이라 열을 모으기 때문",
+        "SOI는 동작 전압이 bulk보다 훨씬 높기 때문",
+        "매몰 산화막(BOX)의 낮은 열전도도가 채널에서 발생한 열의 방출을 막기 때문"
+      ],
+      "answer": 3,
+      "glossary": [
+        "self-heating｜｜소자 동작 중 발생한 열이 잘 방출되지 못해 채널 온도가 오르는 현상",
+        "BOX｜｜SOI 구조에서 실리콘 박막 아래의 매몰 산화막(buried oxide)"
+      ],
+      "explanation": "BOX(SiO₂)의 열전도도는 Si보다 약 100배 낮아, 채널에서 발생한 열이 기판으로 잘 빠지지 못하고 갇혀 채널 온도가 상승하는 self-heating이 심하다. 이는 이동도 저하와 신뢰성 문제를 부른다. BOX는 절연체이지 금속이 아니며, SOI가 본질적으로 더 높은 전압을 쓰는 것도 아니다.",
+      "tags": [
+        "engineering",
+        "semiconductor"
+      ]
+    },
+    {
+      "type": "mcq",
+      "q": "FD-SOI가 bulk planar MOSFET보다 우수한 subthreshold swing(SS)과 DIBL 억제를 보이는 이유로 옳은 것은?",
+      "choices": [
+        "얇은 완전 공핍 body로 게이트의 채널 정전 제어가 강해지고 공핍 커패시턴스가 작아 body factor가 1에 가까워진다",
+        "채널 도핑을 매우 높여 누설을 막기 때문",
+        "BOX가 두꺼워 게이트 전계를 차단하기 때문",
+        "드레인 전압을 항상 0으로 유지하기 때문"
+      ],
+      "answer": 0,
+      "glossary": [
+        "body factor｜｜SS 식에서 1+C_dep/C_ox에 해당하는 게이트-채널 결합 정도 계수",
+        "DIBL｜｜드레인 전압이 문턱전압을 낮추는 단채널 효과"
+      ],
+      "explanation": "SS = (kT/q)·ln10·(1+C_dep/C_ox)에서 FD-SOI는 얇은 완전 공핍 막으로 유효 C_dep가 작아 body factor(1+C_dep/C_ox)가 1에 근접해 SS가 ~60 mV/dec에 가까워지고, 강한 게이트 제어로 드레인 전계 침투(DIBL)도 억제된다. FD-SOI는 오히려 채널을 거의 도핑하지 않으므로 고도핑 보기는 틀리다.",
+      "tags": [
+        "engineering",
+        "semiconductor"
+      ]
+    },
+    {
+      "type": "mcq",
+      "q": "FD-SOI에서 기판(back-gate)에 바이어스를 인가하는 back-biasing의 효과로 옳은 것은?",
+      "choices": [
+        "back-gate는 V_T에 전혀 영향을 주지 못한다",
+        "얇은 BOX를 통해 채널 전위를 조절하여 문턱전압 V_T를 동적으로 조정(성능/누설 트레이드오프 튜닝)할 수 있다",
+        "back-gate 전압은 게이트 산화막을 물리적으로 두껍게 만든다",
+        "back-bias는 오직 bulk 소자에서만 가능하다"
+      ],
+      "answer": 1,
+      "glossary": [
+        "back-gate/back-bias｜｜SOI 기판에 전압을 걸어 BOX를 통해 채널 문턱전압을 조절하는 기법"
+      ],
+      "explanation": "FD-SOI는 BOX가 얇아 back-gate(기판) 바이어스가 BOX를 통해 채널 전위에 강하게 결합하므로, forward/reverse back-bias로 V_T를 실시간 낮추거나 높여 성능과 누설을 조절할 수 있다. 이는 FD-SOI의 대표 장점이며, back-gate가 V_T에 무영향이라거나 bulk 전용이라는 보기는 틀리다.",
+      "tags": [
+        "engineering",
+        "semiconductor"
+      ]
+    },
+    {
+      "type": "mcq",
+      "q": "FinFET이 planar MOSFET 대비 short-channel effect(SCE)를 효과적으로 억제하는 근본 원리는?",
+      "choices": [
+        "채널 길이를 인위적으로 길게 만들기 때문",
+        "드레인 도핑을 낮춰 전류를 줄이기 때문",
+        "게이트가 채널(fin)을 3면에서 감싸 정전 제어가 강화되어 드레인 전계의 채널 침투를 억제하기 때문",
+        "게이트 산화막을 두껍게 하기 때문"
+      ],
+      "answer": 2,
+      "glossary": [
+        "short-channel effect｜｜채널이 짧아질 때 드레인 전계가 채널을 지배해 생기는 V_T 저하 등 부작용",
+        "fin｜｜FinFET에서 게이트가 감싸는 얇은 수직 실리콘 채널 지느러미"
+      ],
+      "explanation": "FinFET은 게이트가 얇은 지느러미(fin) 채널을 양 측면과 상부(3면)에서 감싸 게이트-채널 결합이 강해지고, 그 결과 드레인 전계가 채널 중심으로 침투해 일으키는 DIBL·punchthrough 같은 SCE가 억제된다. 채널 길이 연장·드레인 도핑·산화막 두께와는 무관한 정전 제어 효과다.",
+      "tags": [
+        "engineering",
+        "semiconductor"
+      ]
+    },
+    {
+      "type": "mcq",
+      "q": "FinFET에서 fin 높이 H_fin, fin 폭 W_fin인 단일 fin의 유효 채널폭 W_eff(double-gate, 측면 두 면 기준)는 근사적으로 얼마인가?",
+      "choices": [
+        "W_eff ≈ W_fin",
+        "W_eff ≈ H_fin / 2",
+        "W_eff ≈ W_fin × H_fin",
+        "W_eff ≈ 2·H_fin (+ W_fin)"
+      ],
+      "answer": 3,
+      "glossary": [
+        "유효 채널폭｜｜전류가 흐르는 채널 둘레 길이, FinFET에서는 fin 표면 둘레로 결정"
+      ],
+      "explanation": "전류는 fin의 양 측벽을 따라 흐르므로 유효 채널폭은 대략 2·H_fin(top gate까지 더하면 2H_fin+W_fin)이 된다. 그래서 fin을 높이면 폭당 구동전류가 늘고, 채널폭은 fin 개수×2H_fin로 양자화된다. W_fin이나 면적(W_fin×H_fin)으로 보는 보기는 채널폭 정의를 잘못 적용했다.",
+      "tags": [
+        "engineering",
+        "semiconductor"
+      ]
+    },
+    {
+      "type": "mcq",
+      "q": "FinFET 설계에서 fin 폭을 매우 좁게 만들고 채널을 거의 도핑하지 않는(undoped) 이유로 옳은 것은?",
+      "choices": [
+        "좁은 undoped 채널은 RDF(랜덤 도펀트 변동)에 의한 V_T 산포를 줄이고, 정전 제어로 V_T를 조절하므로 고도핑이 불필요하기 때문",
+        "도핑을 높여야 fin 폭을 좁힐 수 있기 때문",
+        "undoped 채널은 이동도가 0이 되어 누설을 막기 때문",
+        "fin 폭이 좁으면 양자화가 사라지기 때문"
+      ],
+      "answer": 0,
+      "glossary": [
+        "RDF/random dopant fluctuation｜｜소수의 도펀트 위치·개수 변동으로 V_T가 소자마다 산포되는 현상",
+        "undoped channel｜｜채널을 의도적으로 도핑하지 않아 변동성을 줄인 설계"
+      ],
+      "explanation": "FinFET은 좁은 fin으로 게이트가 채널을 강하게 제어하므로 V_T 조절을 위한 채널 고도핑이 필요 없고, 도핑을 빼면 random dopant fluctuation에 의한 V_T 변동과 이동도 저하를 줄일 수 있다. 또 fin이 좁아지면 양자화는 오히려 강해지고 이동도가 0이 되지도 않으므로 나머지 보기는 틀리다.",
+      "tags": [
+        "engineering",
+        "semiconductor"
+      ]
+    },
+    {
+      "type": "mcq",
+      "q": "gate-all-around(GAA) nanosheet/nanowire FET이 FinFET보다 정전 제어 면에서 우월한 이유는?",
+      "choices": [
+        "게이트가 채널의 한 면만 덮기 때문",
+        "게이트가 채널을 4면(전 둘레)에서 완전히 감싸 채널에 대한 정전 제어가 가장 강해 SCE를 더 효과적으로 억제하기 때문",
+        "채널 도핑을 극대화하기 때문",
+        "게이트 산화막을 제거했기 때문"
+      ],
+      "answer": 1,
+      "glossary": [
+        "gate-all-around｜｜게이트가 채널 둘레를 완전히 감싸는 구조",
+        "nanosheet｜｜GAA에서 수평으로 적층되는 얇은 판형 채널"
+      ],
+      "explanation": "GAA는 게이트가 nanosheet/nanowire 채널을 전 둘레(4면)에서 감싸 planar(1면)·FinFET(3면)보다 게이트-채널 정전 결합이 가장 강하므로 동일 게이트 길이에서 SS·DIBL 등 단채널 효과를 가장 잘 억제한다. 또 nanosheet는 폭을 조절해 FinFET의 fin 양자화 제약을 완화한다. 한 면만 덮거나 산화막 제거 보기는 사실과 반대다.",
+      "tags": [
+        "engineering",
+        "semiconductor"
+      ]
+    },
+    {
+      "type": "mcq",
+      "q": "상온(T≈300 K)에서 통상적인 열전자 방출 기반 MOSFET의 subthreshold swing(SS) 이론적 하한값에 가장 가까운 것은?",
+      "choices": [
+        "약 26 mV/dec",
+        "약 100 mV/dec",
+        "약 60 mV/dec",
+        "약 300 mV/dec"
+      ],
+      "answer": 2,
+      "glossary": [
+        "subthreshold swing｜｜드레인 전류를 10배 늘리는 데 필요한 게이트 전압 증가량(mV/decade)"
+      ],
+      "explanation": "SS = (kT/q)·ln10·(1+C_dep/C_ox)에서 게이트 제어가 완벽(C_dep/C_ox→0)해도 (kT/q)·ln10 ≈ 0.0259×2.303 ≈ 60 mV/dec가 상온 하한이다. 26 mV는 kT/q 자체(ln10 미곱)라 틀리고, FD-SOI·FinFET·GAA가 추구하는 것은 이 60 mV/dec에 최대한 근접하는 것이다.",
+      "tags": [
+        "engineering",
+        "semiconductor"
+      ]
+    },
+    {
+      "type": "mcq",
+      "q": "초박막 채널 double-gate MOSFET에서 나타나는 volume inversion(체적 반전)에 대한 설명으로 가장 옳은 것은?",
+      "choices": [
+        "드레인 전압이 높을 때 채널이 핀치오프되어 공핍층이 두꺼워지는 현상",
+        "게이트 산화막 내부에 트랩된 전하가 채널 전위를 변조하는 현상",
+        "소스/드레인 접합의 공핍층이 채널 중앙에서 서로 맞닿는 펀치스루 현상",
+        "두 게이트가 만드는 반전층이 채널 표면에만 국한되지 않고 실리콘 막 전체(중심부 포함)에 캐리어가 분포하는 현상"
+      ],
+      "answer": 3,
+      "glossary": [
+        "double-gate MOSFET｜｜채널 양쪽에 게이트를 두어 채널 정전제어를 강화한 구조"
+      ],
+      "explanation": "volume inversion은 실리콘 막이 충분히 얇을 때 두 게이트의 영향이 겹쳐 표면이 아닌 막 전체 체적에 캐리어가 분포하는 현상으로, 표면 산란이 줄어 이동도가 향상된다. 나머지는 각각 핀치오프, 산화막 트랩, 펀치스루로 별개 현상이다.",
+      "tags": [
+        "engineering",
+        "semiconductor"
+      ]
+    },
+    {
+      "type": "mcq",
+      "q": "박막 채널 소자의 natural length(특성 길이, λ)는 단채널효과(SCE) 억제 설계의 핵심 척도이다. SCE를 충분히 억제하려면 채널 길이 L과 λ 사이에 일반적으로 권장되는 조건은?",
+      "choices": [
+        "L ≥ 약 5λ~6λ 정도여야 SCE가 잘 억제된다",
+        "L ≈ λ 이면 충분하다",
+        "L ≤ λ/2 이어야 한다",
+        "L과 λ는 무관하며 산화막 두께만으로 결정된다"
+      ],
+      "answer": 0,
+      "glossary": [
+        "natural length｜｜채널 내 2D 전위 침투가 감쇠하는 특성 길이 스케일, 작을수록 SCE에 강함"
+      ],
+      "explanation": "채널 전위의 2D 영향(드레인 침투)은 길이 스케일 λ로 지수적으로 감쇠하므로, 게이트 길이가 λ의 약 5~6배 이상이면 드레인의 정전 침투가 작아져 SCE가 억제된다. 즉 작은 λ가 더 짧은 채널까지 스케일링을 허용한다.",
+      "tags": [
+        "engineering",
+        "semiconductor"
+      ]
+    },
+    {
+      "type": "mcq",
+      "q": "single-gate(벌크형) MOSFET에서 natural length λ는 대략 λ = sqrt((ε_si/ε_ox)·t_si·t_ox) 형태로 주어진다. 이 식에 따라 λ를 작게 하여 SCE 내성을 높이는 방법으로 옳지 않은 것은?",
+      "choices": [
+        "실리콘 채널(body) 두께 t_si를 줄인다",
+        "산화막을 더 두껍게 하여 게이트 정전용량을 낮춘다",
+        "게이트 산화막 두께 t_ox를 줄인다",
+        "double-gate/GAA 구조로 게이트 수를 늘려 유효 λ를 줄인다"
+      ],
+      "answer": 1,
+      "glossary": [
+        "GAA｜｜Gate-All-Around, 채널을 게이트가 둘러싼 구조로 정전제어 최강"
+      ],
+      "explanation": "λ는 t_si, t_ox에 대체로 비례하므로 둘을 줄이면 λ가 작아져 SCE에 강해진다. 게이트 수를 늘리면(DG, GAA) 정전제어가 강해져 유효 λ가 더 작아진다. 산화막을 두껍게 하면 t_ox가 커져 λ가 오히려 커지므로 SCE 내성이 나빠진다.",
+      "tags": [
+        "engineering",
+        "semiconductor"
+      ]
+    },
+    {
+      "type": "mcq",
+      "q": "(100) 실리콘 채널에 인장(tensile) 변형을 가했을 때 전자 이동도가 향상되는 1차적 원리로 가장 적절한 것은?",
+      "choices": [
+        "6개 전도대 valley가 모두 동일하게 위로 이동하여 상태밀도가 증가한다",
+        "밴드갭이 넓어져 진성 캐리어 농도가 증가한다",
+        "2-fold valley(Δ2)가 4-fold valley(Δ4)보다 낮아져 전자가 면내 수송질량이 작은 Δ2에 우선 점유되고 intervalley 산란이 감소한다",
+        "정공의 light/heavy hole 축퇴가 풀려 전자 이동도가 올라간다"
+      ],
+      "answer": 2,
+      "glossary": [
+        "intervalley scattering｜｜서로 다른 전도대 valley 사이의 산란, 이동도를 떨어뜨림"
+      ],
+      "explanation": "인장 변형은 전도대 6중 축퇴를 깨서 면내 수송 유효질량이 작은 2-fold(Δ2) valley를 에너지적으로 낮춰 전자를 그쪽에 우선 채우고, valley 간 phonon 산란(intervalley scattering)을 줄여 전자 이동도를 높인다. 정공 밴드 분리는 정공에 관한 것이다.",
+      "tags": [
+        "engineering",
+        "semiconductor"
+      ]
+    },
+    {
+      "type": "mcq",
+      "q": "(001) 기판 [110] 채널 방향의 CMOS에서 NMOS와 PMOS의 채널 이동도를 동시에 최적화하기 위한 응력 설계로 가장 적절한 것은?",
+      "choices": [
+        "NMOS에는 채널 방향 압축, PMOS에는 인장 응력을 가한다",
+        "NMOS·PMOS 모두 인장 응력을 가한다",
+        "NMOS·PMOS 모두 압축 응력을 가한다",
+        "NMOS에는 채널 방향 인장, PMOS에는 압축 응력을 가한다(예: NMOS 인장 라이너, PMOS embedded SiGe)"
+      ],
+      "answer": 3,
+      "glossary": [
+        "embedded SiGe｜｜PMOS 소스/드레인에 SiGe를 성장시켜 채널에 압축 응력을 주는 기법"
+      ],
+      "explanation": "[110]/[001]에서 채널 방향 인장 응력은 전자 이동도를 높이지만 정공 이동도는 떨어뜨린다. 따라서 NMOS는 인장(인장 질화막 라이너 등), PMOS는 압축(embedded SiGe 소스/드레인)으로 부호를 다르게 적용하는 dual-stress 전략을 쓴다.",
+      "tags": [
+        "engineering",
+        "semiconductor"
+      ]
+    },
+    {
+      "type": "mcq",
+      "q": "high-k 유전체를 도입했을 때 등가산화막두께(EOT)에 대한 설명으로 옳은 것은? (k_ox는 SiO2의 유전율)",
+      "choices": [
+        "EOT = t_highk × (k_ox / k_highk) 이므로 물리적 두께가 두꺼워도 EOT는 작게 유지할 수 있다",
+        "EOT = t_highk × (k_highk / k_ox) 이므로 high-k일수록 EOT가 커진다",
+        "EOT는 물리적 두께와 무관하게 항상 1 nm로 고정된다",
+        "EOT는 게이트 금속 일함수에만 의존한다"
+      ],
+      "answer": 0,
+      "glossary": [
+        "EOT｜｜Equivalent Oxide Thickness, 동일 정전용량을 내는 SiO2 환산 두께"
+      ],
+      "explanation": "EOT = t_phys × (k_SiO2 / k_highk)로, k가 큰 유전체는 같은 정전용량을 더 두꺼운 물리적 막으로 구현한다. 따라서 물리적 두께를 키워 직접 터널링 누설을 줄이면서도 EOT(정전적 등가두께)는 작게 유지할 수 있다.",
+      "tags": [
+        "engineering",
+        "semiconductor"
+      ]
+    },
+    {
+      "type": "mcq",
+      "q": "동일한 게이트 정전용량(동일 EOT)을 SiO2 대신 HfO2 같은 high-k로 구현하면 게이트 누설 전류가 줄어드는 근본 이유는?",
+      "choices": [
+        "high-k 막의 밴드갭이 항상 SiO2보다 훨씬 크기 때문",
+        "같은 EOT라도 high-k의 물리적 두께가 더 두꺼워 직접 터널링(FN/direct tunneling) 확률이 지수적으로 감소하기 때문",
+        "high-k 막은 캐리어를 전혀 통과시키지 않는 완전 절연체이기 때문",
+        "high-k 도입으로 게이트 일함수가 자동으로 최적화되기 때문"
+      ],
+      "answer": 1,
+      "glossary": [
+        "FN tunneling｜｜Fowler-Nordheim 터널링, 높은 전계에서 삼각 장벽을 통한 터널 누설"
+      ],
+      "explanation": "직접/FN 터널링 확률은 막 두께에 지수적으로 의존한다. high-k는 같은 EOT를 더 두꺼운 물리적 막으로 구현하므로 터널링 누설이 크게 감소한다. high-k는 보통 SiO2보다 밴드갭이 오히려 작아 (a)는 틀리며 완전 절연체도 아니다.",
+      "tags": [
+        "engineering",
+        "semiconductor"
+      ]
+    },
+    {
+      "type": "mcq",
+      "q": "기존 poly-Si 게이트를 metal gate로 대체했을 때 얻는 직접적 이점으로 옳은 것은?",
+      "choices": [
+        "채널 이동도가 변형 없이 2배로 증가한다",
+        "드레인 누설(GIDL)이 원리적으로 0이 된다",
+        "게이트 전극 측 공핍(poly-depletion)이 사라져 인버전 시 유효 EOT 증가분이 제거되고 게이트 정전용량이 회복된다",
+        "산화막 신뢰성(TDDB)이 일함수와 무관하게 항상 향상된다"
+      ],
+      "answer": 2,
+      "glossary": [
+        "poly-depletion｜｜poly-Si 게이트 표면이 반전 동작 시 공핍되어 정전용량을 떨어뜨리는 현상"
+      ],
+      "explanation": "고농도로 도핑해도 poly-Si 게이트는 인버전 동작 시 전극 표면이 공핍되어(poly-depletion) 직렬 정전용량이 추가돼 유효 EOT가 수 Å 늘어난다. 금속 게이트는 자유전자가 많아 공핍이 없어 이 손실을 제거한다. 나머지는 직접적 효과가 아니다.",
+      "tags": [
+        "engineering",
+        "semiconductor"
+      ]
+    },
+    {
+      "type": "mcq",
+      "q": "HKMG에서 NMOS와 PMOS에 서로 다른 금속 게이트(dual metal gate)를 쓰는 가장 본질적인 이유는?",
+      "choices": [
+        "두 트랜지스터의 게이트 누설을 다르게 만들기 위해",
+        "금속 두께를 다르게 해서 응력을 조절하기 위해",
+        "한 종류 금속은 high-k와 화학반응을 일으키지 못하기 때문",
+        "각각의 적절한 문턱전압(Vth)을 얻으려면 NMOS는 n형(밴드 하단 근처), PMOS는 p형(밴드 상단 근처) 일함수가 필요하기 때문"
+      ],
+      "answer": 3,
+      "glossary": [
+        "work-function｜｜금속의 일함수, 게이트 전극의 페르미 준위를 결정하여 Vth에 직접 영향"
+      ],
+      "explanation": "Vth는 게이트 일함수에 직접 의존한다. 대칭적인 저Vth CMOS를 얻으려면 NMOS는 Si 전도대 근처(낮은 일함수), PMOS는 가전자대 근처(높은 일함수) 일함수의 금속이 필요하므로 dual metal gate를 쓴다.",
+      "tags": [
+        "engineering",
+        "semiconductor"
+      ]
+    },
+    {
+      "type": "mcq",
+      "q": "high-k/metal gate 스택에서 나타나는 Fermi-level pinning과 remote phonon scattering에 대한 설명으로 옳은 것은?",
+      "choices": [
+        "Fermi-level pinning은 high-k/게이트 계면 결함이 금속의 유효 일함수를 특정 값에 고정시켜 Vth 조절을 방해하고, remote phonon scattering은 high-k의 저에너지 광학포논이 채널 캐리어를 산란시켜 이동도를 떨어뜨린다",
+        "둘 다 게이트 누설을 줄여 신뢰성을 향상시키는 긍정적 효과다",
+        "Fermi-level pinning은 채널 이동도를 높이고, remote phonon scattering은 EOT를 줄인다",
+        "두 현상 모두 poly-Si 게이트에서만 발생하고 metal gate에서는 없다"
+      ],
+      "answer": 0,
+      "glossary": [
+        "remote phonon scattering｜｜high-k 유전체의 광학 포논이 채널 캐리어를 원거리에서 산란시키는 이동도 저하 기구"
+      ],
+      "explanation": "Fermi-level pinning은 계면 상태/결합쌍극자에 의해 게이트 유효 일함수가 고정돼 원하는 Vth를 얻기 어렵게 만든다. remote phonon scattering은 high-k 막의 약하게 속박된(soft) 광학 포논이 원격으로 채널 전자를 산란시켜 이동도를 저하시킨다. 둘 다 HKMG의 부작용이다.",
+      "tags": [
+        "engineering",
+        "semiconductor"
+      ]
+    },
+    {
+      "type": "mcq",
+      "q": "BTI(Bias Temperature Instability) 열화에서 NBTI와 PBTI를 가장 정확히 구분한 것은?",
+      "choices": [
+        "NBTI는 NMOS에서, PBTI는 PMOS에서 주로 문제된다",
+        "NBTI는 음의 게이트 바이어스를 받는 PMOS에서, PBTI는 양의 게이트 바이어스를 받는 NMOS(특히 high-k)에서 Vth가 열화된다",
+        "NBTI·PBTI 모두 게이트 전압 부호와 무관하다",
+        "PBTI는 상온에서만, NBTI는 저온에서만 발생한다"
+      ],
+      "answer": 1,
+      "glossary": [
+        "BTI｜｜Bias Temperature Instability, 게이트 바이어스+고온으로 Vth가 시간에 따라 열화되는 현상"
+      ],
+      "explanation": "관례적으로 NBTI는 음(negative) 게이트 바이어스를 받는 PMOS에서 |Vth| 증가로 나타나고, PBTI는 양(positive) 바이어스의 NMOS에서 두드러지며 특히 HfO2 같은 high-k 막의 전자 트래핑과 관련된다. 온도가 높을수록 가속된다.",
+      "tags": [
+        "engineering",
+        "semiconductor"
+      ]
+    },
+    {
+      "type": "mcq",
+      "q": "NBTI 응력 후 게이트 스트레스를 제거했을 때 관찰되는 recovery(회복) 거동에 대한 설명으로 옳은 것은?",
+      "choices": [
+        "응력 제거 후 Vth 변화는 영구적이며 전혀 회복되지 않는다",
+        "회복은 응력 전압이 높을수록, 온도가 높을수록 더 빠르고 완전하게 일어난다",
+        "Vth 열화는 회복 가능한 성분(트랩 전하 탈포획 등)과 영구 성분(계면 상태 등)으로 나뉘며, 스트레스 제거 직후 빠른 부분 회복이 일어난다",
+        "회복은 측정 지연시간(measurement delay)과 무관하므로 어떤 측정법으로도 동일한 Vth 열화량을 얻는다"
+      ],
+      "answer": 2,
+      "glossary": [
+        "recovery｜｜스트레스 제거 후 트랩 전하가 풀리며 Vth 열화의 일부가 되돌아가는 현상"
+      ],
+      "explanation": "NBTI 열화는 회복성(주로 트랩된 정공의 탈포획)과 영구성(계면 결함 생성) 성분으로 구성되며, 스트레스를 풀면 빠른 부분 회복이 진행된다. 이 때문에 측정 지연이 짧을수록 더 큰 열화가 측정되어 측정법에 민감하다(measurement delay 의존).",
+      "tags": [
+        "engineering",
+        "semiconductor"
+      ]
+    },
+    {
+      "type": "mcq",
+      "q": "게이트 산화막의 TDDB(Time-Dependent Dielectric Breakdown)와 percolation(침투) 모델에 대한 설명으로 옳은 것은?",
+      "choices": [
+        "TDDB는 인가 즉시 발생하는 순간 절연파괴로 시간 의존성이 없다",
+        "TDDB는 결함 생성과 무관하며 전적으로 온도만의 함수다",
+        "percolation 모델은 두꺼운 산화막일수록 β가 작아진다고 예측한다",
+        "응력 중 산화막 내부에 무작위로 결함(트랩)이 누적되어 양 계면을 잇는 전도 경로가 형성되면 절연파괴가 일어나며, 박막일수록 임계 결함 수가 적어 Weibull 기울기 β가 작아진다"
+      ],
+      "answer": 3,
+      "glossary": [
+        "TDDB｜｜시간 의존 절연파괴, 응력 누적으로 산화막이 일정 시간 후 파괴되는 현상",
+        "Weibull β｜｜고장 분포의 형상모수, 작을수록 조기 고장 산포가 큼"
+      ],
+      "explanation": "TDDB는 전계 응력으로 산화막에 결함이 점진적으로 쌓여 두 계면을 연결하는 침투 경로가 완성될 때 파괴된다. 박막일수록 경로 완성에 필요한 임계 결함 수가 적어 통계적 산포(Weibull β)가 작아지고 신뢰성 마진이 줄어든다.",
+      "tags": [
+        "engineering",
+        "semiconductor"
+      ]
+    },
+    {
+      "type": "mcq",
+      "q": "박막(≲2 nm) 게이트 산화막의 TDDB 수명 전압 의존성을 기술하는 데 최근 가장 널리 쓰이며, 수소 탈리(hydrogen release) 기구와 연관되는 모델은?",
+      "choices": [
+        "power-law model(t_BD ∝ V^(-n))로, 초박막 산화막에서 수십 차수의 시간 범위에서 검증되었다",
+        "E-model(상수 전계 가속, t_BD ∝ exp(-γE))만이 박막에 유효하다",
+        "Arrhenius 온도 모델만으로 전압 의존성을 모두 설명한다",
+        "1/E-model이 박막에서 power-law를 대체하여 표준이 되었다"
+      ],
+      "answer": 0,
+      "glossary": [
+        "power-law model｜｜초박막 산화막 TDDB 수명이 전압의 거듭제곱에 반비례한다는 모델"
+      ],
+      "explanation": "두께 약 2 nm 이하 초박막 게이트 산화막에서는 t_BD가 전압의 거듭제곱(power-law, t_BD ∝ V^(-n))을 따르며, 수소 탈리(anode hydrogen release) 기구와 연결되고 마이크로초~수백 시간에 걸쳐 검증됐다. E-model/1/E-model은 더 두꺼운 막에 주로 쓰였다.",
+      "tags": [
+        "engineering",
+        "semiconductor"
+      ]
+    },
+    {
+      "type": "mcq",
+      "q": "BSIM 같은 compact model(소형 모델)을 회로 시뮬레이션에 쓰는 이유와 파라미터 추출에 대한 설명으로 가장 옳은 것은?",
+      "choices": [
+        "각 트랜지스터에서 매번 2D/3D Poisson·연속 방정식을 수치적으로 푸는 정밀 TCAD 모델이다",
+        "측정된 I-V/C-V 데이터에 맞춰 물리 기반 파라미터를 추출한 폐형(closed-form) 모델로, SPICE에서 수백만 소자를 빠르게 계산하기 위한 것이다",
+        "물리와 무관한 순수 다항식 곡선 맞춤이라 외삽이 항상 정확하다",
+        "공정 변동(코너)을 표현할 수 없어 단일 소자만 시뮬레이션한다"
+      ],
+      "answer": 1,
+      "glossary": [
+        "compact model｜｜소자 물리를 폐형식으로 근사해 회로 시뮬레이터에서 빠르게 평가하는 모델",
+        "TCAD｜｜소자를 물리 방정식으로 수치 해석하는 시뮬레이션"
+      ],
+      "explanation": "BSIM은 소자 물리에 기반한 해석식에 측정 데이터로 파라미터를 추출(fit)한 compact model로, TCAD처럼 매번 편미분방정식을 풀지 않고 빠른 폐형 평가가 가능해 대규모 회로 SPICE 시뮬레이션에 적합하다. 공정 코너 모델도 지원한다.",
+      "tags": [
+        "engineering",
+        "semiconductor"
+      ]
+    },
+    {
+      "type": "mcq",
+      "q": "long-channel MOSFET 모델 유도에 쓰이는 gradual channel approximation(GCA)의 핵심 가정으로 옳은 것은?",
+      "choices": [
+        "채널 전위가 소스에서 드레인까지 완전히 일정하다는 가정",
+        "드레인 전압이 항상 0이라는 가정",
+        "채널 방향(가로) 전계의 변화가 깊이 방향(세로) 전계 변화보다 훨씬 완만하여, 각 단면에서 1D 게이트 정전기로 반전 전하를 근사할 수 있다는 가정",
+        "캐리어가 모두 탄도(ballistic) 수송한다는 가정"
+      ],
+      "answer": 2,
+      "glossary": [
+        "GCA｜｜gradual channel approximation, 세로 전계가 가로 전계 변화보다 지배적이라는 근사"
+      ],
+      "explanation": "GCA는 채널을 따라가는 가로 전계의 변화율이 게이트가 만드는 세로 전계 변화율보다 훨씬 작다고 보아, 각 위치 단면을 1D MOS 정전기로 다뤄 반전 전하 Q_inv(x)를 게이트·채널 전위로 간단히 구한다. 이 가정이 성립할 때 표준 long-channel I-V가 유도된다.",
+      "tags": [
+        "engineering",
+        "semiconductor"
+      ]
+    },
+    {
+      "type": "mcq",
+      "q": "단채널 소자에서 GCA가 깨지는(non-GCA가 필요한) 영역과 그 결과에 대한 설명으로 가장 옳은 것은?",
+      "choices": [
+        "소스 근처 약반전 영역에서만 GCA가 깨진다",
+        "GCA는 채널 길이에 무관하게 항상 정확하므로 non-GCA 보정은 불필요하다",
+        "non-GCA 영역에서는 드레인 전류가 0이 된다",
+        "포화 영역의 드레인단(핀치오프 부근)에서 가로 전계가 급격히 커져 GCA가 무너지고, 2D 효과(채널 길이 변조·속도 포화)를 반영한 모델이 필요하다"
+      ],
+      "answer": 3,
+      "glossary": [
+        "채널 길이 변조｜｜CLM, 포화 시 핀치오프 점이 소스 쪽으로 이동해 유효 채널이 짧아지는 효과"
+      ],
+      "explanation": "포화 시 드레인단 핀치오프 부근에서는 가로 전계가 급격히 변해 'gradual' 가정이 깨진다. 이 좁은 영역의 2D 정전기·속도 포화를 다루려면 non-GCA(2D) 모델이 필요하며, 채널 길이 변조(CLM)에 의한 출력 컨덕턴스 증가 등이 설명된다.",
+      "tags": [
+        "engineering",
+        "semiconductor"
+      ]
+    },
+    {
+      "type": "mcq",
+      "q": "얕은 접합 단채널 소자에서 source/drain series resistance R_sd의 주된 구성 성분으로 보기 어려운 것은?",
+      "choices": [
+        "게이트 산화막을 통한 직접 터널링 누설 저항",
+        "확산 영역의 sheet resistance와 silicide/실리콘 접촉 저항",
+        "채널과 확산 영역 사이의 확산(spreading)·accumulation 저항",
+        "silicide-확산 계면의 접촉 저항"
+      ],
+      "answer": 0,
+      "glossary": [
+        "silicide｜｜금속-실리콘 화합물(예: NiSi)로 접촉/시트 저항을 낮추는 층",
+        "spreading resistance｜｜전류가 좁은 단면에서 퍼질 때 생기는 저항"
+      ],
+      "explanation": "R_sd는 확산 영역 sheet 저항, spreading/accumulation 저항, silicide-실리콘 접촉 저항 등 소스-채널-드레인 경로의 직렬 성분으로 구성된다. 게이트 산화막을 통한 터널링은 게이트 누설 경로일 뿐 소스/드레인 직렬 저항 성분이 아니다.",
+      "tags": [
+        "engineering",
+        "semiconductor"
+      ]
+    },
+    {
+      "type": "mcq",
+      "q": "단채널 MOSFET에서 self-aligned silicide(salicide)를 소스/드레인에 형성하는 1차적 목적은?",
+      "choices": [
+        "게이트 산화막의 EOT를 줄이기 위해",
+        "확산 영역의 sheet 저항과 접촉 저항을 낮춰 기생 직렬저항 R_sd를 줄이고 유효 구동전류를 회복하기 위해",
+        "채널 도핑 농도를 자동으로 높이기 위해",
+        "DIBL을 직접 제거하기 위해"
+      ],
+      "answer": 1,
+      "glossary": [
+        "salicide｜｜self-aligned silicide, 게이트/확산에 자기정렬로 형성되는 저저항 실리사이드"
+      ],
+      "explanation": "채널 길이가 짧아질수록 R_sd가 채널 저항 대비 무시할 수 없게 커져 구동전류를 깎아먹는다. silicide(예: NiSi)는 소스/드레인 위에 형성돼 sheet·접촉 저항을 크게 낮춰 기생 저항을 줄이고 Ion을 회복시킨다.",
+      "tags": [
+        "engineering",
+        "semiconductor"
+      ]
+    },
+    {
+      "type": "mcq",
+      "q": "선형 영역 전체 채널 저항을 여러 마스크 길이 소자에서 측정해 직선으로 외삽하는 Leff 추출법(채널저항 방법)의 원리로 옳은 것은?",
+      "choices": [
+        "단일 소자의 포화 전류만으로 Leff를 직접 읽는다",
+        "Leff는 항상 마스크 길이와 같으므로 추출이 불필요하다",
+        "측정 채널저항 R_m = R_ch(L) + R_sd 에서, 마스크 길이 L에 대한 R_m을 외삽해 ΔL(=L−Leff)과 R_sd를 동시에 분리한다",
+        "R_sd를 0으로 가정해야만 Leff를 구할 수 있다"
+      ],
+      "answer": 2,
+      "glossary": [
+        "Leff｜｜effective channel length, 실제 전류를 운반하는 유효 채널 길이",
+        "ΔL｜｜마스크 길이와 유효 길이의 차이(주로 측면 확산에 의함)"
+      ],
+      "explanation": "선형 영역 총저항 R_m은 채널저항(유효 길이 L−ΔL에 비례)과 길이무관 기생저항 R_sd의 합이다. 여러 게이트전압·여러 마스크 길이에서 R_m을 직선으로 맞춰 공통 교점을 찾으면 ΔL과 R_sd를 함께 추출할 수 있어 Leff=L−ΔL을 얻는다.",
+      "tags": [
+        "engineering",
+        "semiconductor"
+      ]
+    },
+    {
+      "type": "mcq",
+      "q": "디지털 CMOS의 본질적 스위칭 속도 지표로 자주 쓰이는 게이트 지연 τ ≈ C·V/I 에서 각 인자의 역할로 옳은 것은?",
+      "choices": [
+        "I가 클수록 지연이 커진다",
+        "전원전압 V를 높이면 항상 지연이 줄고 전력 문제도 없다",
+        "C는 지연과 무관하다",
+        "C는 부하/게이트 정전용량, V는 전원전압, I는 구동전류이며, 지연을 줄이려면 C·V를 낮추고 I를 키워야 한다"
+      ],
+      "answer": 3,
+      "glossary": [
+        "게이트 지연｜｜한 게이트가 출력을 스위칭하는 데 걸리는 시간, τ≈CV/I로 근사"
+      ],
+      "explanation": "τ ≈ CV/I는 용량 C를 전류 I로 V만큼 충방전하는 시간이다. 지연을 줄이려면 부하 용량과 전압 스윙(CV)을 낮추거나 구동전류 I를 키워야 한다. 단, V를 낮추면 I도 줄어 trade-off가 생긴다.",
+      "tags": [
+        "engineering",
+        "semiconductor"
+      ]
+    },
+    {
+      "type": "mcq",
+      "q": "전력지연곱 PDP = P·τ ≈ C·V^2 (동적 스위칭 에너지)에 근거할 때, 동적 에너지를 줄이는 가장 효과적인 1차 수단은?",
+      "choices": [
+        "전원전압 V를 낮춘다(에너지가 V의 제곱에 비례하므로)",
+        "전류 I를 키운다",
+        "부하 용량 C를 키운다",
+        "주파수를 높인다"
+      ],
+      "answer": 0,
+      "glossary": [
+        "PDP｜｜Power-Delay Product, 한 번 스위칭에 드는 에너지 척도(≈CV^2)"
+      ],
+      "explanation": "스위칭 에너지(PDP)는 C·V^2에 비례하므로 V를 낮추면 제곱으로 줄어 가장 효과적이다. C를 키우면 에너지가 늘고, I를 키워도 한 번 스위칭 에너지(CV^2)는 줄지 않는다. 다만 V를 낮추면 지연이 늘어 성능과 trade-off가 된다.",
+      "tags": [
+        "engineering",
+        "semiconductor"
+      ]
+    },
+    {
+      "type": "mcq",
+      "q": "MOSFET의 Ion/Ioff 설계 trade-off에 대한 설명으로 옳은 것은?",
+      "choices": [
+        "Vth를 낮추면 Ion과 Ioff가 모두 줄어든다",
+        "Vth를 낮추면 Ion이 늘지만 subthreshold 누설로 Ioff도 함께 증가하여 정적 전력이 커진다",
+        "Ion과 Ioff는 서로 독립적이라 어느 한쪽만 자유롭게 최적화할 수 있다",
+        "Ioff는 게이트 산화막 누설만으로 결정되고 Vth와 무관하다"
+      ],
+      "answer": 1,
+      "glossary": [
+        "subthreshold leakage｜｜Vth 이하 약반전에서 흐르는 게이트-오프 누설 전류, Ioff의 주성분"
+      ],
+      "explanation": "Vth를 낮추면 게이트 오버드라이브가 커져 Ion이 증가하지만, 동시에 약반전 영역이 위로 이동해 subthreshold leakage(Ioff)가 지수적으로 늘어 정적 전력이 커진다. 따라서 속도(Ion)와 누설(Ioff)은 근본적 trade-off 관계다.",
+      "tags": [
+        "engineering",
+        "semiconductor"
+      ]
+    },
+    {
+      "type": "mcq",
+      "q": "채널 길이를 줄였을 때 나타나는 단채널효과(SCE)의 대표 증상인 Vth roll-off의 물리적 원인으로 가장 옳은 것은?",
+      "choices": [
+        "짧은 채널일수록 게이트 산화막이 두꺼워져 Vth가 낮아진다",
+        "채널이 짧아지면 캐리어 이동도가 감소하여 Vth가 낮아진다",
+        "짧은 채널에서 소스/드레인 공핍 전하가 채널 공핍 전하의 상당 부분을 분담(charge sharing)하여 게이트가 제어할 전하가 줄어 Vth가 낮아진다",
+        "Vth roll-off는 채널 도핑과 무관하게 항상 일정량 발생한다"
+      ],
+      "answer": 2,
+      "glossary": [
+        "charge sharing｜｜소스/드레인 공핍 영역이 채널 아래 공핍 전하를 나눠 가져 Vth를 낮추는 효과",
+        "Vth roll-off｜｜채널 길이 감소에 따라 문턱전압이 떨어지는 SCE 증상"
+      ],
+      "explanation": "장채널에서는 채널 아래 공핍 전하를 모두 게이트가 제어하지만, 단채널에서는 소스/드레인 접합 공핍 영역이 채널 공핍 전하의 일부를 분담(charge sharing)한다. 게이트가 추가로 끌어들일 전하가 줄어 문턱전압이 낮아지는데, 이것이 Vth roll-off다.",
+      "tags": [
+        "engineering",
+        "semiconductor"
+      ]
+    },
+    {
+      "type": "mcq",
+      "q": "DIBL(Drain-Induced Barrier Lowering)에 대한 설명으로 옳은 것은?",
+      "choices": [
+        "드레인 전압을 높이면 소스단 장벽이 높아져 Vth가 증가하는 현상이다",
+        "DIBL은 게이트 전압만의 함수이고 드레인 전압과 무관하다",
+        "DIBL은 장채널 소자에서 더 심하게 나타난다",
+        "드레인 전압을 높이면 소스단 전위장벽이 낮아져 Vth가 감소하는 현상으로, 보통 ΔVth/ΔV_DS (mV/V)로 정량화한다"
+      ],
+      "answer": 3,
+      "glossary": [
+        "DIBL｜｜드레인 전압이 소스단 장벽을 낮춰 Vth를 떨어뜨리는 단채널 효과"
+      ],
+      "explanation": "DIBL은 드레인 전압의 2D 침투가 소스단 전위장벽을 낮춰(barrier lowering) 동일 게이트 전압에서 전류가 늘고 Vth가 감소하는 SCE의 일종이다. 보통 낮은 V_DS와 높은 V_DS에서의 Vth 차이를 ΔV_DS로 나눈 mV/V로 표현하며 단채널일수록 커진다.",
+      "tags": [
+        "engineering",
+        "semiconductor"
+      ]
+    }
+  ]
+}
