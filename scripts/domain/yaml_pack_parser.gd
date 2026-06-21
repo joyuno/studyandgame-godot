@@ -18,7 +18,11 @@ extends RefCounted
 # Returns the same shape PackParser does:
 # { "ok": true, "pack": Dictionary } or { "ok": false, "code": String, "message": String, "line": int }
 static func parse(text: String) -> Dictionary:
-	var lines := _strip_bom(text).split("\n")
+	# Normalize line endings. Windows editors (and `git` with core.autocrlf=true on
+	# checkout) produce CRLF; splitting on "\n" would otherwise leave a trailing
+	# "\r" on every line, so even "meta:\r" fails the top-level key match. The app
+	# also accepts user-dropped .yml files, which are frequently CRLF.
+	var lines := _strip_bom(text).replace("\r\n", "\n").replace("\r", "\n").split("\n")
 	# Drop trailing empty / pure-comment lines (so end-of-file is predictable)
 	while not lines.is_empty() and _is_blank_or_comment(lines[-1]):
 		lines.resize(lines.size() - 1)

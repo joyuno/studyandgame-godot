@@ -288,6 +288,13 @@ questions:
 	_truthy(otel.get("ok") == true,
 		"otel-collector-architecture.yml parses: %s" % str(otel))
 
+	# CRLF tolerance — Windows editors / git autocrlf checkout produce \r\n.
+	# Splitting on "\n" without normalizing leaves "meta:\r", failing the
+	# top-level key match (the bug that broke jlpt-n2-reading.yml).
+	var crlf := "meta:\r\n  title: CR\r\n  version: 0.1.0\r\nquestions:\r\n  - type: ox\r\n    q: 'x'\r\n    answer: true\r\n"
+	var crlf_result := PackParser.parse_yaml_string(crlf)
+	_truthy(crlf_result.get("ok") == true, "CRLF yaml parses: %s" % str(crlf_result))
+
 	# YAML schema errors
 	var bad_yaml := PackParser.parse_yaml_string("meta:\n  title: x\nquestions:\n  - type: typing\n    q: 'nope'\n")
 	_eq(bad_yaml.get("code"), "ERR_UNKNOWN_TYPE",
