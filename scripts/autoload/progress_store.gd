@@ -594,6 +594,16 @@ func set_timer_enabled(enabled: bool) -> void:
 	timer_enabled_changed.emit(enabled)
 
 
+func is_figures_enabled() -> bool:
+	return bool(progress.get("figuresEnabled", true))
+
+
+func set_figures_enabled(enabled: bool) -> void:
+	progress["figuresEnabled"] = enabled
+	_persist()
+	progress_changed.emit()
+
+
 func set_font_size_scale(scale: int) -> void:
 	var clamped: int = clampi(scale, 0, 2)
 	progress["fontSizeScale"] = clamped

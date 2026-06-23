@@ -45,6 +45,14 @@ var _insure_label: Label
 var _boost_icon: TextureRect
 var _insure_icon: TextureRect
 
+# Crystal-structure 3D figure (optional `figure` field) — zero-base learning aid.
+# Panel appears only for supported figures; the 3D view + caption toggle on/off.
+var _figure_panel: PanelContainer
+var _figure_view: FigureView
+var _figure_toggle: CheckButton
+var _figure_caption: Label
+var _current_figure: String = ""
+
 var _glossary_box: VBoxContainer
 # Set of the current question's card (glossary) words — excluded from dictionary
 # tagging so cards and inline tap-words never duplicate.
@@ -256,6 +264,9 @@ func _build_layout() -> void:
 
 	_passage_label = RichTextLabel.new()
 	_passage_label.bbcode_enabled = true
+	_passage_label.selection_enabled = true      # 마우스 드래그 선택 (문제 드래그 복사)
+	_passage_label.context_menu_enabled = true   # 우클릭 복사 메뉴
+	_passage_label.shortcut_keys_enabled = true  # Ctrl+C 복사
 	_passage_label.fit_content = true
 	_passage_label.scroll_active = false
 	_passage_label.add_theme_font_size_override("normal_font_size", _font_sizes["answer"])
@@ -280,6 +291,9 @@ func _build_layout() -> void:
 
 	_question_label = RichTextLabel.new()
 	_question_label.bbcode_enabled = true
+	_question_label.selection_enabled = true      # 마우스 드래그 선택 (문제 드래그 복사)
+	_question_label.context_menu_enabled = true   # 우클릭 복사 메뉴
+	_question_label.shortcut_keys_enabled = true  # Ctrl+C 복사
 	_question_label.fit_content = true
 	_question_label.scroll_active = false
 	_question_label.add_theme_font_size_override("normal_font_size", _font_sizes["question"])
@@ -287,6 +301,11 @@ func _build_layout() -> void:
 	_question_label.size_flags_horizontal = SIZE_EXPAND_FILL
 	_question_label.meta_clicked.connect(_on_gloss_meta)
 	q_margin.add_child(_question_label)
+
+	# ── Crystal-structure 3D figure (optional `figure` field)
+	# Sits right under the question. Shown only when the question carries a
+	# supported figure; a "보기" toggle hides the 3D view (and persists the choice).
+	_build_figure_panel(root)
 
 	# ── Vocab gloss cards (N3+ words in the stem — reading + Korean meaning)
 	# Populated per question from the optional `glossary` field. Helps the
@@ -528,6 +547,8 @@ func _render_question(index: int, q: Dictionary) -> void:
 	if _passage_panel.visible:
 		_passage_label.text = _gloss_markup(passage)
 	_question_label.text = "[center]%s[/center]" % _gloss_markup(String(q.get("q", "(빈 문항)")))
+	_current_figure = String(q.get("figure", ""))
+	_update_figure()
 	_render_glossary(q.get("glossary", []))
 	_hide_word_popup()
 	_progress_label.text = "%d / %d" % [index + 1, PackStore.questions_count()]
@@ -678,6 +699,72 @@ func _word_popup_stylebox() -> StyleBoxFlat:
 	sb.content_margin_top = 10
 	sb.content_margin_bottom = 10
 	return sb
+
+
+# Build the crystal-structure figure panel (header + 보기 toggle + 3D view +
+# caption). Hidden until a supported figure is rendered. The toggle state is
+# read from / written to ProgressStore so it persists across sessions.
+func _build_figure_panel(parent: Control) -> void:
+	_figure_panel = PanelContainer.new()
+	_figure_panel.size_flags_horizontal = SIZE_EXPAND_FILL
+	_figure_panel.add_theme_stylebox_override("panel", _gloss_stylebox())
+	_figure_panel.visible = false
+	parent.add_child(_figure_panel)
+
+	var m := MarginContainer.new()
+	m.add_theme_constant_override("margin_left", 12)
+	m.add_theme_constant_override("margin_right", 12)
+	m.add_theme_constant_override("margin_top", 8)
+	m.add_theme_constant_override("margin_bottom", 8)
+	_figure_panel.add_child(m)
+
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 4)
+	m.add_child(box)
+
+	var header := HBoxContainer.new()
+	box.add_child(header)
+	var title := Label.new()
+	title.text = "🧊 구조 그림 (제로베이스 도움)"
+	title.add_theme_font_size_override("font_size", maxi(11, _font_sizes["hud"] - 2))
+	title.modulate = Color(0.62, 0.76, 0.95)
+	title.size_flags_horizontal = SIZE_EXPAND_FILL
+	header.add_child(title)
+	_figure_toggle = CheckButton.new()
+	_figure_toggle.text = "보기"
+	_figure_toggle.button_pressed = ProgressStore.is_figures_enabled()
+	_figure_toggle.toggled.connect(_on_figure_toggled)
+	header.add_child(_figure_toggle)
+
+	_figure_view = FigureView.new()
+	_figure_view.custom_minimum_size = Vector2(0, 240)
+	_figure_view.size_flags_horizontal = SIZE_EXPAND_FILL
+	box.add_child(_figure_view)
+
+	_figure_caption = Label.new()
+	_figure_caption.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_figure_caption.add_theme_font_size_override("font_size", 13)
+	_figure_caption.modulate = Color(0.82, 0.86, 0.95)
+	box.add_child(_figure_caption)
+
+
+# Refresh the figure panel for the current question. The panel (incl. its toggle)
+# shows whenever the question carries a supported figure; the 3D view + caption
+# appear only when the player has the figure toggle on.
+func _update_figure() -> void:
+	var has := not _current_figure.is_empty() and FigureView.is_supported(_current_figure)
+	_figure_panel.visible = has
+	var show_figure := has and ProgressStore.is_figures_enabled()
+	_figure_view.visible = show_figure
+	_figure_caption.visible = show_figure
+	if show_figure:
+		_figure_view.set_figure(_current_figure)
+		_figure_caption.text = FigureView.caption_for(_current_figure)
+
+
+func _on_figure_toggled(pressed: bool) -> void:
+	ProgressStore.set_figures_enabled(pressed)
+	_update_figure()
 
 
 func _render_glossary(entries) -> void:
@@ -930,6 +1017,7 @@ func _render_completion(record: Dictionary) -> void:
 	_copy_button.visible = false
 	_glossary_box.visible = false
 	_passage_panel.visible = false
+	_figure_panel.visible = false
 	_hide_word_popup()
 	_advance_button.text = "📓 오답노트로" if PackStore.is_review_mode else "홈으로"
 	_advance_button.visible = true
