@@ -49,6 +49,10 @@ var _insure_icon: TextureRect
 # Panel appears only for supported figures; the 3D view + caption toggle on/off.
 var _figure_panel: PanelContainer
 var _figure_view: FigureView
+
+# 보기 탭(정답)과 드래그(텍스트 복사)를 구분하기 위한 누름 상태.
+var _choice_press_pos: Vector2 = Vector2.ZERO
+var _choice_pressed: bool = false
 var _figure_toggle: CheckButton
 var _figure_caption: Label
 var _current_figure: String = ""
@@ -565,18 +569,7 @@ func _render_question(index: int, q: Dictionary) -> void:
 		"mcq":
 			var choices: Array = q.get("choices", [])
 			for i in choices.size():
-				var btn := Button.new()
-				btn.text = "  %d.  %s" % [i + 1, str(choices[i])]
-				btn.custom_minimum_size = Vector2(0, 58)
-				btn.add_theme_font_size_override("font_size", _font_sizes["answer"])
-				btn.add_theme_stylebox_override("normal", _answer_stylebox(false))
-				btn.add_theme_stylebox_override("hover", _answer_stylebox(true))
-				btn.add_theme_stylebox_override("pressed", _answer_stylebox(true))
-				btn.add_theme_stylebox_override("focus", _answer_stylebox(true))
-				btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
-				btn.size_flags_horizontal = SIZE_EXPAND_FILL
-				btn.pressed.connect(_on_submit_mcq.bind(i))
-				_answer_area.add_child(btn)
+				_answer_area.add_child(_make_choice(i, str(choices[i])))
 		"ox":
 			var row := HBoxContainer.new()
 			row.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -598,6 +591,59 @@ func _render_question(index: int, q: Dictionary) -> void:
 			btn_x.pressed.connect(_on_submit_ox.bind(false))
 			row.add_child(btn_x)
 			_answer_area.add_child(row)
+
+
+# 보기 카드 — 탭하면 정답 선택, 드래그하면 텍스트 선택(복사). RichTextLabel selection.
+func _make_choice(idx: int, text: String) -> Control:
+	var panel := PanelContainer.new()
+	panel.add_theme_stylebox_override("panel", _answer_stylebox(false))
+	panel.custom_minimum_size = Vector2(0, 58)
+	panel.size_flags_horizontal = SIZE_EXPAND_FILL
+	var pad := MarginContainer.new()
+	pad.add_theme_constant_override("margin_left", 14)
+	pad.add_theme_constant_override("margin_right", 14)
+	pad.add_theme_constant_override("margin_top", 8)
+	pad.add_theme_constant_override("margin_bottom", 8)
+	panel.add_child(pad)
+	var rt := RichTextLabel.new()
+	rt.bbcode_enabled = false
+	rt.selection_enabled = true        # 드래그로 선택·복사
+	rt.context_menu_enabled = true     # 우클릭 복사
+	rt.shortcut_keys_enabled = true    # Ctrl+C
+	rt.fit_content = true
+	rt.scroll_active = false
+	rt.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	rt.mouse_filter = Control.MOUSE_FILTER_STOP
+	rt.add_theme_font_size_override("normal_font_size", _font_sizes["answer"])
+	rt.add_theme_color_override("default_color", ThemeSetup.C_TEXT)
+	rt.text = "  %d.  %s" % [idx + 1, text]
+	rt.gui_input.connect(_on_choice_gui_input.bind(idx, rt))
+	rt.mouse_entered.connect(func() -> void: panel.add_theme_stylebox_override("panel", _answer_stylebox(true)))
+	rt.mouse_exited.connect(func() -> void: panel.add_theme_stylebox_override("panel", _answer_stylebox(false)))
+	pad.add_child(rt)
+	return panel
+
+
+# 탭(거의 안 움직이고 선택 텍스트 없음) = 정답. 드래그(이동/선택) = 복사로 간주, 정답 미선택.
+func _on_choice_gui_input(event: InputEvent, idx: int, rt: RichTextLabel) -> void:
+	if event is InputEventMouseButton and (event as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT:
+		var mb := event as InputEventMouseButton
+		if mb.pressed:
+			_choice_press_pos = mb.position
+			_choice_pressed = true
+		elif _choice_pressed:
+			_choice_pressed = false
+			if mb.position.distance_to(_choice_press_pos) < 6.0 and rt.get_selected_text().is_empty():
+				_on_submit_mcq(idx)
+	elif event is InputEventScreenTouch:
+		var st := event as InputEventScreenTouch
+		if st.pressed:
+			_choice_press_pos = st.position
+			_choice_pressed = true
+		elif _choice_pressed:
+			_choice_pressed = false
+			if st.position.distance_to(_choice_press_pos) < 8.0 and rt.get_selected_text().is_empty():
+				_on_submit_mcq(idx)
 
 
 # Collect this question's card words so the dictionary markup can skip them
