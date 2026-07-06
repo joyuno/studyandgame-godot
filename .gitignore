@@ -39,3 +39,9 @@ _workspace/
 tests/debug_*.gd
 tests/debug_*.gd.uid
 
+# Confidential internal source docs — local-only, never publish.
+*.pdf
+# Local-only practical packs (Logpresso — internal/product-specific) — never publish.
+# Ships in the local exe (export ignores gitignore) but never committed.
+data/quizzes/logpresso-*.json
+
