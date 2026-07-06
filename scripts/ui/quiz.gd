@@ -120,21 +120,28 @@ func _build_layout() -> void:
 	outer.add_theme_constant_override("margin_bottom", 24)
 	add_child(outer)
 
-	# 세션 내용을 스크롤로 감싼다 — 해설/보기가 창보다 길면 세로 스크롤.
+	# 상단 바는 고정, 그 아래 지문·문제·보기·해설만 세로 스크롤한다.
+	var shell := VBoxContainer.new()
+	shell.size_flags_horizontal = SIZE_EXPAND_FILL
+	shell.size_flags_vertical = SIZE_EXPAND_FILL
+	shell.add_theme_constant_override("separation", 12)
+	outer.add_child(shell)
+
 	var content_scroll := ScrollContainer.new()
 	content_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	outer.add_child(content_scroll)
+	content_scroll.size_flags_vertical = SIZE_EXPAND_FILL
+	shell.add_child(content_scroll)
 
 	var root := VBoxContainer.new()
 	root.size_flags_horizontal = SIZE_EXPAND_FILL
-	root.size_flags_vertical = SIZE_EXPAND_FILL
 	root.add_theme_constant_override("separation", 12)
 	content_scroll.add_child(root)
 
 	# ── Top bar
 	var top := HBoxContainer.new()
 	top.add_theme_constant_override("separation", 14)
-	root.add_child(top)
+	shell.add_child(top)
+	shell.move_child(top, 0)  # 상단 바를 스크롤 위에 고정
 
 	var back := Button.new()
 	back.text = "← 홈"
