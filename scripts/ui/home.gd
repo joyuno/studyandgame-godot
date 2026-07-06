@@ -21,6 +21,14 @@ var _status_label: Label
 var _sword_slot: Control
 var _title_label: Label
 
+# 팩 목록 카테고리 필터 + 검색.
+var _pack_grid: GridContainer
+var _pack_entries: Array = []
+var _active_category: String = ""
+var _search_query: String = ""
+var _chip_row: HBoxContainer
+var _search_edit: LineEdit
+
 
 func _ready() -> void:
 	_build_layout()
@@ -135,25 +143,41 @@ func _build_layout() -> void:
 	btn_open.pressed.connect(_on_open_file)
 	pack_header.add_child(btn_open)
 
+	# ── 카테고리 칩 + 검색 필터 바 (헤더와 목록 사이)
+	_search_edit = LineEdit.new()
+	_search_edit.placeholder_text = "🔍 검색: 제목·태그…"
+	_search_edit.clear_button_enabled = true
+	_search_edit.size_flags_horizontal = SIZE_EXPAND_FILL
+	_search_edit.text_changed.connect(func(t: String) -> void:
+		_search_query = t
+		_apply_filter())
+	root.add_child(_search_edit)
+	var chip_scroll := ScrollContainer.new()
+	chip_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	chip_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	chip_scroll.custom_minimum_size.y = 42
+	chip_scroll.size_flags_horizontal = SIZE_EXPAND_FILL
+	_chip_row = HBoxContainer.new()
+	_chip_row.add_theme_constant_override("separation", 6)
+	chip_scroll.add_child(_chip_row)
+	root.add_child(chip_scroll)
+
 	var pack_scroll := ScrollContainer.new()
 	pack_scroll.size_flags_horizontal = SIZE_EXPAND_FILL
 	pack_scroll.size_flags_vertical = SIZE_EXPAND_FILL
 	pack_scroll.custom_minimum_size = Vector2(0, 130)
 	root.add_child(pack_scroll)
 
-	var pack_grid := GridContainer.new()
-	pack_grid.columns = 2
-	pack_grid.size_flags_horizontal = SIZE_EXPAND_FILL
-	pack_grid.add_theme_constant_override("h_separation", 12)
-	pack_grid.add_theme_constant_override("v_separation", 10)
-	pack_scroll.add_child(pack_grid)
+	_pack_grid = GridContainer.new()
+	_pack_grid.columns = 2
+	_pack_grid.size_flags_horizontal = SIZE_EXPAND_FILL
+	_pack_grid.add_theme_constant_override("h_separation", 12)
+	_pack_grid.add_theme_constant_override("v_separation", 10)
+	pack_scroll.add_child(_pack_grid)
 
-	for entry in _list_packs():
-		var btn := _make_button(entry["title"], Vector2(0, 46))
-		btn.size_flags_horizontal = SIZE_EXPAND_FILL
-		btn.tooltip_text = entry["file"]
-		btn.pressed.connect(_on_load_sample.bind(entry["path"]))
-		pack_grid.add_child(btn)
+	_pack_entries = _list_packs()
+	_rebuild_chips()
+	_apply_filter()
 
 	# ── Action row 2 — game nav
 	var nav_row := HBoxContainer.new()
@@ -243,11 +267,60 @@ func _list_packs() -> Array:
 		var path: String = best[base]["path"]
 		var title: String = String(base)
 		var r := PackParser.parse_file(path)
+		var meta: Dictionary = {}
 		if r.get("ok", false):
-			title = String((r["pack"] as Dictionary).get("meta", {}).get("title", base))
-		out.append({ "title": title, "path": path, "file": best[base]["file"] })
+			meta = (r["pack"] as Dictionary).get("meta", {})
+			title = String(meta.get("title", base))
+		out.append({ "title": title, "path": path, "file": best[base]["file"], "meta": meta })
 	out.sort_custom(func(a, b): return String(a["title"]) < String(b["title"]))
 	return out
+
+
+func _rebuild_chips() -> void:
+	for c in _chip_row.get_children():
+		c.queue_free()
+	var counts: Dictionary = {}
+	for e in _pack_entries:
+		var k := PackFilter.category_of(e.get("meta", {}))
+		counts[k] = int(counts.get(k, 0)) + 1
+	_add_chip("전체", "", _pack_entries.size())
+	for cat in PackFilter.CATEGORIES:
+		var n := int(counts.get(cat.key, 0))
+		if n > 0:
+			_add_chip(String(cat.name), String(cat.key), n)
+
+
+func _add_chip(label: String, key: String, n: int) -> void:
+	var b := Button.new()
+	b.text = "%s %d" % [label, n]
+	b.toggle_mode = true
+	b.focus_mode = Control.FOCUS_NONE
+	b.button_pressed = (_active_category == key)
+	b.set_meta("cat", key)
+	b.pressed.connect(func() -> void:
+		_active_category = key
+		_sync_chip_pressed()
+		_apply_filter())
+	_chip_row.add_child(b)
+
+
+func _sync_chip_pressed() -> void:
+	for c in _chip_row.get_children():
+		if c is Button:
+			(c as Button).button_pressed = (String((c as Button).get_meta("cat", "")) == _active_category)
+
+
+# 캐시(_pack_entries)에서 활성 카테고리 + 검색어에 맞는 팩만 그리드에 그린다.
+func _apply_filter() -> void:
+	for c in _pack_grid.get_children():
+		c.queue_free()
+	for e in _pack_entries:
+		if PackFilter.matches(e.get("meta", {}), _active_category, _search_query):
+			var btn := _make_button(String(e["title"]), Vector2(0, 46))
+			btn.size_flags_horizontal = SIZE_EXPAND_FILL
+			btn.tooltip_text = String(e["file"])
+			btn.pressed.connect(_on_load_sample.bind(e["path"]))
+			_pack_grid.add_child(btn)
 
 
 func _refresh() -> void:
