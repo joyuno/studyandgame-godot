@@ -1,4 +1,5 @@
 meta:
+  category: clickhouse
   title: ClickHouse 기초 — 용어 그래프
   version: 0.2.0
   default_time: 35

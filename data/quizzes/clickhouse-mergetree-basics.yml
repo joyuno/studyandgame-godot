@@ -1,4 +1,5 @@
 meta:
+  category: clickhouse
   title: ClickHouse MergeTree 기초
   version: 0.2.0
   default_time: 30
